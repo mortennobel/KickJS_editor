@@ -4,23 +4,60 @@
  "http://java.sun.com/dtd/web-app_2_3.dtd">
 
 <web-app xmlns="http://java.sun.com/xml/ns/javaee" version="2.5">
-    <!--<servlet>
-        <servlet-name>guestbook</servlet-name>
-        <servlet-class>guestbook.GuestbookServlet</servlet-class>
+   <servlet>
+        <servlet-name>LoginInfo</servlet-name>
+        <servlet-class>org.kickjs.editor.servlet.LoginInfoRequest</servlet-class>
     </servlet>
     <servlet-mapping>
-        <servlet-name>guestbook</servlet-name>
-        <url-pattern>/guestbook</url-pattern>
+        <servlet-name>LoginInfo</servlet-name>
+        <url-pattern>/LoginInfo</url-pattern>
     </servlet-mapping>
 
     <servlet>
-        <servlet-name>sign</servlet-name>
-        <servlet-class>guestbook.SignGuestbookServlet</servlet-class>
+        <servlet-name>Logout</servlet-name>
+        <servlet-class>org.kickjs.editor.servlet.LogoutRequest</servlet-class>
     </servlet>
     <servlet-mapping>
-        <servlet-name>sign</servlet-name>
-        <url-pattern>/sign</url-pattern>
-    </servlet-mapping>-->
+        <servlet-name>Logout</servlet-name>
+        <url-pattern>/Logout</url-pattern>
+    </servlet-mapping>
+    <servlet>
+        <servlet-name>ProjectRequest</servlet-name>
+        <servlet-class>org.kickjs.editor.servlet.ProjectRequest</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ProjectRequest</servlet-name>
+        <url-pattern>/ProjectRequest</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ResourceRequest</servlet-name>
+        <servlet-class>org.kickjs.editor.servlet.ResourceRequest</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ResourceRequest</servlet-name>
+        <url-pattern>/ResourceRequest</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ResourceUpload</servlet-name>
+        <servlet-class>org.kickjs.editor.servlet.ResourceUpload</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ResourceUpload</servlet-name>
+        <url-pattern>/ResourceUpload</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ResourceServe</servlet-name>
+        <servlet-class>org.kickjs.editor.servlet.ResourceServe</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ResourceServe</servlet-name>
+        <url-pattern>/project/*</url-pattern>
+    </servlet-mapping>
+
+
 
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>

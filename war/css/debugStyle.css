@@ -1,0 +1,30 @@
+/* arbitrary content styling */
+#hd, .yui3-g .content, #ft {
+    border: 5px solid #ccc;
+    height: 400px;
+    margin-right: 10px; /* gutter between columns */
+}
+
+#hd, #ft {
+    height: 40px;
+}
+
+#projectPanel {
+    width: 100%;
+    height: 300px;
+}
+
+#scenePanel {
+    width: 100%;
+    height: 300px;
+}
+
+#mainContent{
+    width: 100%;
+    height: 600px;
+}
+
+#propertyPanel{
+    width: 100%;
+    height: 600px;
+}
