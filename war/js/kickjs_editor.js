@@ -7,11 +7,9 @@ YUI({
     createTabView(Y,sceneEditorApp);
     sceneEditorApp.initEngine();
 
-    var sceneAssets = new SceneGameObjects(Y, sceneEditorApp);
-    sceneEditorApp.sceneAssets = sceneAssets;
+    sceneEditorApp.sceneAssets = new SceneGameObjects(Y, sceneEditorApp);
 
-    var projectAssets = ProjectAssets(Y,sceneEditorApp.engine);
-    sceneEditorApp.projectAssets = projectAssets;
+    sceneEditorApp.projectAssets = new ProjectAssets(Y,sceneEditorApp.engine);
 
     // make engien public available (for debugging purpose)
     window.engine = sceneEditorApp.engine;
@@ -227,7 +225,8 @@ function ProjectAssets(Y, engine){
         var project = engine.project,
             activeProjectUidList = project.resourceDescriptorUIDs,
             activeProjectUids = {},
-            treeValues = {};
+            treeValues = {},
+            uid;
 
         // save used elements to treeValues
         for (i=projectTreeView.size()-1;i>=0;i--){
@@ -241,7 +240,7 @@ function ProjectAssets(Y, engine){
         }
 
         // insert missing uids
-        for (var uid in activeProjectUids){
+        for (uid in activeProjectUids){
             if (!treeValues[uid]){
                 var resourceDescriptor = project.getResourceDescriptor(uid);
                 var name = resourceDescriptor.name;
@@ -258,7 +257,7 @@ function ProjectAssets(Y, engine){
             }
         }
         // delete uids not in scene
-        for (var uid in treeValues){
+        for (uid in treeValues){
             if (!activeProjectUids[uid]){
                 var node = treeValues[uid];
                 projectTreeView.remove(node.get("index"));
@@ -323,7 +322,7 @@ function createTabView(Y,sceneEditorApp){
     });
     tabview.render();
 
-    // Since a canvas does not work well inside a Treeview, it is added after the treeview and then hidden whenever the
+    // Since a canvas does not work well inside a TabView, it is added after the TabView and then hidden whenever the
     // selected index is not 0
     function adjustView(){
         sceneView.style.display = "inline";
