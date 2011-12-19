@@ -4,6 +4,7 @@
     <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.5.0pr1/build/cssgrids/grids-min.css">
     <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.5.0pr1/build/cssfonts/cssfonts-min.css">
     <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.5.0pr1/build/cssbase/cssbase-min.css">
+    <link rel="stylesheet" href="js/treeview/treeview-menu.css" type="text/css">
     <!-- CSS Button: http://yuilibrary.com/gallery/show/cssbutton -->
     <!--<link href="http://yui.yahooapis.com/gallery-2011.08.04-15-16/build/gallerycss-cssbutton/gallerycss-cssbutton.css" type="text/css" rel="stylesheet" />-->
     <!-- Font for KickJS logo -->
@@ -23,20 +24,14 @@
             <div class="panelToolbar"><button target="_blank" class="yui3-button">Upload</button><button target="_blank" class="yui3-button">Delete</button>
             </div>
             <div class="panelContent">
-                <select multiple="multiple" id="projectAssetList" class="contentList">
-                    <option>test1</option>
-                    <option>test2</option>
-                </select>
+                <ul id="projectAssetList"></ul>
             </div>
         </div>
         <div class="content" id="scenePanel">
             <div class="panelHead">Scene objects</div>
             <div class="panelToolbar"><button target="_blank" class="yui3-button">Create</button><button target="_blank" class="yui3-button">Delete</button></div>
             <div class="panelContent">
-            <select multiple="multiple" id="sceneContentList" class="contentList">
-                <option>test1</option>
-                <option>test2</option>
-            </select>
+            <ul id="sceneContentList"></ul>
             </div>
         </div>
     </div>
@@ -54,6 +49,7 @@
 <script src="http://yui.yahooapis.com/3.5.0pr1/build/yui/yui.js"></script>
 <!--<script src="http://yui.yahooapis.com/3.5.0pr1/build/yui/yui-min.js"></script>-->
 <script src="js/kickjs_editor_server.js"></script>
+<script src="js/kickjs_editor_components.js"></script>
 <script src="js/kickjs_editor.js"></script>
 </body>
 </html>

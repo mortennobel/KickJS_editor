@@ -1,0 +1,43 @@
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.5.0pr1/build/cssreset/cssreset-min.css">
+    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.5.0pr1/build/cssgrids/grids-min.css">
+    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.5.0pr1/build/cssfonts/cssfonts-min.css">
+    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.5.0pr1/build/cssbase/cssbase-min.css">
+    <link rel="stylesheet" href="../js/treeview/treeview-menu.css" type="text/css">
+</head>
+<body  class="yui3-skin-sam">
+
+<ul id="mytree">
+</ul>
+<script src="http://yui.yahooapis.com/3.5.0pr1/build/yui/yui.js"></script>
+<script type="text/javascript">
+    YUI({
+        //Last Gallery Build of this module
+        gallery: 'gallery-2011.01.03-18-30'
+    }).use('gallery-yui3treeview', function(Y) {
+
+                var treeview = new Y.TreeView({
+                    srcNode: '#mytree',
+                    contentBox: null,
+                    type: "TreeView",
+                    children: [
+                        {
+                            label: "level1-1",
+                            type: "TreeView",
+                            children: [
+                                {label: "level2-1"},
+                                {label: "level2-2"}
+                            ]
+                        },
+                        {
+                            type: "TreeView",
+                            label : "level1-2"
+                        }
+                    ]
+                });
+
+                treeview.render();
+            });</script>
+</body>
+</html>

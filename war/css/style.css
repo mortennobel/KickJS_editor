@@ -42,13 +42,22 @@ a:active {color:#CCB769;}  /* selected link */
     border: 1px solid #bbb;
 }
 
-.contentList{
-    width: 100%;
-    height: 100%;
-}
-
 #sceneView{
     border-top-width:0;
+}
+
+.panelContent{
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+}
+
+.panelContent ul{
+    list-style: none;
+    margin-left: 5px;
+    margin-top: 5px;
+    margin-right: 5px;
+    margin-bottom: 5px;
 }
 
 /* Tabview remove style */
