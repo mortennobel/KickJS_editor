@@ -7,8 +7,11 @@ YUI({
     createTabView(Y,sceneEditorApp);
     sceneEditorApp.initEngine();
 
-    var sceneAssets = new SceneAssets(Y, sceneEditorApp.engine);
+    var sceneAssets = new SceneGameObjects(Y, sceneEditorApp);
     sceneEditorApp.sceneAssets = sceneAssets;
+
+    var projectAssets = ProjectAssets(Y,sceneEditorApp.engine);
+    sceneEditorApp.projectAssets = projectAssets;
 
     // make engien public available (for debugging purpose)
     window.engine = sceneEditorApp.engine;
@@ -26,7 +29,7 @@ var SceneEditorView = function(sceneEditorApp){
     this.decorateScene = function(scene){
             editorSceneCameraObject = scene.createGameObject();
             editorSceneCameraObject.name = "__editorSceneCameraObject__";
-            editorSceneCameraObject.transform.position = [0,0,10];
+            editorSceneCameraObject.transform.position = [0,1,10];
             editorSceneCameraComponent = new KICK.scene.Camera({
                 clearColor : [0.1,0.1,0.15,1.0]
             });
@@ -76,7 +79,6 @@ var SceneEditorApp = function(){
     var _view = new SceneEditorView(this),
         _sceneAssets;
 
-
     Object.defineProperties(this,{
         sceneAssets:{
             get:function(){
@@ -100,6 +102,7 @@ var SceneEditorApp = function(){
 
     this.gameObjectSelected = function(uid){
         _sceneAssets.selectGameObject(uid);
+        console.debug("gameObjectSelected "+uid);
     };
 
     this.loadProject = function(){
@@ -132,31 +135,31 @@ var SceneEditorApp = function(){
     }
 };
 
-
-function SceneAssets(Y,engine){
-    var sceneContentList = document.getElementById('sceneContentList'),
+function SceneGameObjects(Y,sceneEditorApp){
+    var engine = sceneEditorApp.engine,
+        sceneContentList = document.getElementById('sceneContentList'),
         thisObj = this;
 
-    var treeview = new Y.TreeView({
+    var sceneTreeView = new Y.TreeView({
         srcNode: '#sceneContentList',
         contentBox: null,
         type: "TreeView",
         children: []
     });
 
-    treeview.render();
+    sceneTreeView.render();
 
     this.updateSceneContent = function(){
         var needsUpdate = false,
-            usedValues = {},
+            treeValues = {},
             activeSceneUids = {},
             activeScene,
             i;
 
-        // save used elements to usedValues
-        for (i=treeview.size()-1;i>=0;i--){
-            var element = treeview.item(i);
-            usedValues[element.get("uid")] = element;
+        // save used elements to treeValues
+        for (i=sceneTreeView.size()-1;i>=0;i--){
+            var element = sceneTreeView.item(i);
+            treeValues[element.get("uid")] = element;
         }
 
         // save all uid to activeSceneUids
@@ -168,43 +171,107 @@ function SceneAssets(Y,engine){
 
         // insert missing uids
         for (var uid in activeSceneUids){
-            if (!usedValues[uid]){
+            if (!treeValues[uid]){
                 var gameObject = activeSceneUids[uid];
                 var name = gameObject.name;
                 if (!name){
                     name = "GameObject #"+gameObject.uid;
                 }
                 if (name.indexOf('__')!==0){
-                    var list = treeview.add({childType:"TreeLeaf",label:name});
+                    var list = sceneTreeView.add({childType:"TreeLeaf",label:name});
                     list.item(0).set("uid",uid);
-                    console.log("uid "+uid);
                 }
             }
         }
         // delete uids not in scene
-        for (var uid in usedValues){
+        for (var uid in treeValues){
             if (!activeSceneUids[uid]){
-                var node = usedValues[uid];
-                treeview.remove(node.get("index"));
+                var node = treeValues[uid];
+                sceneTreeView.remove(node.get("index"));
             }
         }
     };
 
     this.selectGameObject = function(uid){
-        for (i=treeview.size()-1;i>=0;i--){
-            var element = treeview.item(i);
+        for (i=sceneTreeView.size()-1;i>=0;i--){
+            var element = sceneTreeView.item(i);
             if (parseInt(element.get("uid")) === uid){
                 element.set("selected", 1); // full selected
                 element.focus();
+                return;
             }
         }
     };
 
-    treeview.on("treeleaf:click",function(e){
-
+    sceneTreeView.on("treeleaf:click",function(e){
+        var uid = e.target.get("uid");
+        sceneEditorApp.gameObjectSelected(uid);
     });
 
     this.updateSceneContent();
+}
+
+function ProjectAssets(Y, engine){
+    var projectTreeView = new Y.TreeView({
+        srcNode: '#projectAssetList',
+        contentBox: null,
+        type: "TreeView",
+        children: [
+            {label:"test"}
+        ]
+    });
+
+    projectTreeView.render();
+
+    this.updateSceneContent = function(){
+        var project = engine.project,
+            activeProjectUidList = project.resourceDescriptorUIDs,
+            activeProjectUids = {},
+            treeValues = {};
+
+        // save used elements to treeValues
+        for (i=projectTreeView.size()-1;i>=0;i--){
+            var element = projectTreeView.item(i);
+            treeValues[element.get("uid")] = element;
+        }
+
+        // save elements in tree
+        for (i=activeProjectUidList.length-1;i>=0;i--){
+            activeProjectUids[activeProjectUidList[i]] = true;
+        }
+
+        // insert missing uids
+        for (var uid in activeProjectUids){
+            if (!treeValues[uid]){
+                var resourceDescriptor = project.getResourceDescriptor(uid);
+                var name = resourceDescriptor.name;
+                if (!name){
+                    name = "Asset #"+resourceDescriptor.uid;
+                }
+                var type = resourceDescriptor.type;
+                type = type.substring(type.lastIndexOf('.')+1);
+                name += " ("+type+")";
+                if (name.indexOf('__')!==0){
+                    var list = projectTreeView.add({childType:"TreeLeaf",label:name});
+                    list.item(0).set("uid",uid);
+                }
+            }
+        }
+        // delete uids not in scene
+        for (var uid in treeValues){
+            if (!activeProjectUids[uid]){
+                var node = treeValues[uid];
+                projectTreeView.remove(node.get("index"));
+            }
+        }
+    };
+
+    this.updateSceneContent();
+
+    projectTreeView.on("treeleaf:click",function(e){
+        var uid = e.target.get("uid");
+        console.log("uid "+uid+" selected"); // todo implement
+    });
 }
 
 function createTabView(Y,sceneEditorApp){
