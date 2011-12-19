@@ -279,8 +279,6 @@ function createTabView(Y,sceneEditorApp){
                 sceneView.style.display = "none";
                 sceneEditorApp.paused = true;
                 break;
-
         }
     });
-
-};
+}
