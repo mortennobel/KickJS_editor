@@ -20,7 +20,7 @@ var getClassName = Y.ClassNameManager.getClassName,
 
 
 /**
- * Treeview widget. Provides a tree style widget, with a hierachical representation of it's components.
+ * Treeview widget. Provides a tree style widget, with a hierarchical representation of it's components.
  * It extends WidgetParent and WidgetChild, please refer to it's documentation for more info.
  * @class TreeView
  * @constructor
@@ -133,8 +133,6 @@ Y.TreeView = Y.Base.create("treeview", Y.Widget, [Y.WidgetParent, Y.WidgetChild]
                     circular: true
                 });
             }
-
-
         },
 
 

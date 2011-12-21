@@ -60,6 +60,38 @@ a:active {color:#CCB769;}  /* selected link */
     margin-bottom: 5px;
 }
 
+.propNumber{
+    width: 100%;
+}
+
+/* debugStyle */
+
+#hd, #ft {
+    height: 40px;
+}
+
+#projectPanel {
+    width: 100%;
+    height: 300px;
+}
+
+#scenePanel {
+    width: 100%;
+    height: 300px;
+}
+
+#mainContent{
+    width: 100%;
+    height: 600px;
+}
+
+#propertyPanel{
+    width: 100%;
+    height: 600px;
+}
+
+
+
 /* Tabview remove style */
 .yui3-tabview {
     margin-bottom: 0;

@@ -1,7 +1,8 @@
 YUI({
     //Last Gallery Build of this module
     gallery: 'gallery-2011.01.03-18-30'
-}).use('tabview', 'escape', 'plugin', 'gallery-yui3treeview', function(Y) {
+})
+    .use('tabview', 'escape', 'plugin', 'gallery-yui3treeview',"widget", "widget-position", "widget-stdmod", function(Y) {
     var sceneEditorApp = new SceneEditorApp();
 
     createTabView(Y,sceneEditorApp);
@@ -10,6 +11,8 @@ YUI({
     sceneEditorApp.sceneAssets = new SceneGameObjects(Y, sceneEditorApp);
 
     sceneEditorApp.projectAssets = new ProjectAssets(Y,sceneEditorApp.engine);
+
+    sceneEditorApp.propertyEditor = new PropertyEditor(Y);
 
     // make engien public available (for debugging purpose)
     window.engine = sceneEditorApp.engine;
@@ -75,15 +78,33 @@ var SceneEditorView = function(sceneEditorApp){
 
 var SceneEditorApp = function(){
     var _view = new SceneEditorView(this),
-        _sceneAssets;
+        _sceneAssets,
+        _projectAssets,
+        _propertyEditor;
 
     Object.defineProperties(this,{
+        propertyEditor:{
+            get:function(){
+                return _propertyEditor;
+            },
+            set:function(v){
+                _propertyEditor = v;
+            }
+        },
         sceneAssets:{
             get:function(){
                 return _sceneAssets;
             },
             set:function(v){
                 _sceneAssets = v;
+            }
+        },
+        projectAssets:{
+            get:function(){
+                return _projectAssets;
+            },
+            set:function(v){
+                _projectAssets = v;
             }
         },
         view:{
@@ -100,6 +121,8 @@ var SceneEditorApp = function(){
 
     this.gameObjectSelected = function(uid){
         _sceneAssets.selectGameObject(uid);
+        var gameObject = _view.engine.activeScene.getObjectByUID(uid)
+        _propertyEditor.setContent(gameObject);
         console.debug("gameObjectSelected "+uid);
     };
 
@@ -204,6 +227,7 @@ function SceneGameObjects(Y,sceneEditorApp){
     sceneTreeView.on("treeleaf:click",function(e){
         var uid = e.target.get("uid");
         sceneEditorApp.gameObjectSelected(uid);
+        e.preventDefault ();
     });
 
     this.updateSceneContent();
@@ -270,6 +294,7 @@ function ProjectAssets(Y, engine){
     projectTreeView.on("treeleaf:click",function(e){
         var uid = e.target.get("uid");
         console.log("uid "+uid+" selected"); // todo implement
+        e.preventDefault ();
     });
 }
 

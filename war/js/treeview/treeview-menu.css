@@ -36,5 +36,7 @@
 .yui3-treeleaf-content {
     background-position: 0 -162px;
     padding-left: 38px;
+    cursor: default;
 }
+
 
