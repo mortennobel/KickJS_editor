@@ -10,7 +10,7 @@ YUI({
 
     sceneEditorApp.sceneAssets = new SceneGameObjects(Y, sceneEditorApp);
 
-    sceneEditorApp.projectAssets = new ProjectAssets(Y,sceneEditorApp.engine);
+    sceneEditorApp.projectAssets = new ProjectAssets(Y,sceneEditorApp);
 
     sceneEditorApp.propertyEditor = new PropertyEditor(Y);
 
@@ -119,11 +119,16 @@ var SceneEditorApp = function(){
         }
     });
 
+    this.projectObjectSelected = function(uid){
+        _sceneAssets.selectGameObject(uid);
+        var resourceDescriptor = _view.engine.project.getResourceDescriptor(uid);
+        _propertyEditor.setContent(resourceDescriptor);
+    };
+
     this.gameObjectSelected = function(uid){
         _sceneAssets.selectGameObject(uid);
-        var gameObject = _view.engine.activeScene.getObjectByUID(uid)
+        var gameObject = _view.engine.activeScene.getObjectByUID(uid);
         _propertyEditor.setContent(gameObject);
-        console.debug("gameObjectSelected "+uid);
     };
 
     this.loadProject = function(){
@@ -233,8 +238,9 @@ function SceneGameObjects(Y,sceneEditorApp){
     this.updateSceneContent();
 }
 
-function ProjectAssets(Y, engine){
-    var projectTreeView = new Y.TreeView({
+function ProjectAssets(Y, sceneEditorApp){
+    var engine = sceneEditorApp.engine,
+        projectTreeView = new Y.TreeView({
         srcNode: '#projectAssetList',
         contentBox: null,
         type: "TreeView",
@@ -293,7 +299,7 @@ function ProjectAssets(Y, engine){
 
     projectTreeView.on("treeleaf:click",function(e){
         var uid = e.target.get("uid");
-        console.log("uid "+uid+" selected"); // todo implement
+        sceneEditorApp.projectObjectSelected(uid);
         e.preventDefault ();
     });
 }

@@ -47,7 +47,6 @@
 <script src="js/webgl-debug.js"></script>
 <!--<script src="http://yui.yahooapis.com/3.4.1/build/yui/yui-min.js"></script>-->
 <script src="http://yui.yahooapis.com/3.5.0pr1/build/yui/yui.js"></script>
-<!--<script src="http://yui.yahooapis.com/3.5.0pr1/build/yui/yui-min.js"></script>-->
 <script src="js/kickjs_editor_server.js"></script>
 <script src="js/kickjs_editor_components.js"></script>
 <script src="js/kickjs_property_editor.js"></script>
@@ -56,6 +55,7 @@
 
     var _gaq = _gaq || [];
     _gaq.push(['_setAccount', 'UA-26354413-1']);
+    _gaq.push(['_setDomainName', 'kickjs.org']);
     _gaq.push(['_trackPageview']);
 
     (function() {
@@ -63,6 +63,7 @@
         ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
     })();
+
 </script>
 </body>
 </html>
