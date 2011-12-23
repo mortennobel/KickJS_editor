@@ -3,16 +3,16 @@ YUI({
     gallery: 'gallery-2011.01.03-18-30'
 })
     .use('tabview', 'escape', 'plugin', 'gallery-yui3treeview',"widget", "widget-position", "widget-stdmod", function(Y) {
-    var sceneEditorApp = new SceneEditorApp();
+    var sceneEditorApp = new SceneEditorApp(Y);
 
     createTabView(Y,sceneEditorApp);
     sceneEditorApp.initEngine();
 
-    sceneEditorApp.sceneAssets = new SceneGameObjects(Y, sceneEditorApp);
+    sceneEditorApp.sceneGameObjects = new SceneGameObjects(Y, sceneEditorApp);
 
     sceneEditorApp.projectAssets = new ProjectAssets(Y,sceneEditorApp);
 
-    sceneEditorApp.propertyEditor = new PropertyEditor(Y);
+    sceneEditorApp.propertyEditor = new PropertyEditor(Y,sceneEditorApp);
 
     // make engien public available (for debugging purpose)
     window.engine = sceneEditorApp.engine;
@@ -27,9 +27,53 @@ var SceneEditorView = function(sceneEditorApp){
         editorSceneCameraComponent,
         editorSceneGridObject;
 
+    function createDebugScene(scene) {
+// create material
+        var materials = [
+            new KICK.material.Material(engine, {
+                name:"White material",
+                shader:engine.resourceManager.getShader("kickjs://shader/unlit/"),
+                uniforms:{
+                    mainColor:{
+                        value:[1, 1, 1],
+                        type:KICK.core.Constants.GL_FLOAT_VEC3
+                    },
+                    mainTexture:{
+                        value:engine.resourceManager.getTexture("kickjs://texture/white/"),
+                        type:KICK.core.Constants.GL_SAMPLER_2D
+                    }
+                }
+            }),
+            new KICK.material.Material(engine, {
+                name:"Gray material",
+                shader:engine.resourceManager.getShader("kickjs://shader/unlit/"),
+                uniforms:{
+                    mainColor:{
+                        value:[1, 1, 1],
+                        type:KICK.core.Constants.GL_FLOAT_VEC3
+                    },
+                    mainTexture:{
+                        value:engine.resourceManager.getTexture("kickjs://texture/gray/"),
+                        type:KICK.core.Constants.GL_SAMPLER_2D
+                    }
+                }
+            })];
+
+        // create meshes
+        var meshes = ["kickjs://mesh/triangle/", "kickjs://mesh/cube/"];
+        for (var i = 0; i < meshes.length; i++) {
+            var gameObject = scene.createGameObject();
+            gameObject.transform.position = [-2.0 + 4 * i, 0, 0];
+            var meshRenderer = new KICK.scene.MeshRenderer();
+            meshRenderer.mesh = engine.resourceManager.getMesh(meshes[i]);
+            meshRenderer.material = materials[i];
+            gameObject.addComponent(meshRenderer);
+        }
+    }
+
     this.decorateScene = function(scene){
-            editorSceneCameraObject = scene.createGameObject();
-            editorSceneCameraObject.name = "__editorSceneCameraObject__";
+        editorSceneCameraObject = scene.createGameObject();
+        editorSceneCameraObject.name = "__editorSceneCameraObject__";
             editorSceneCameraObject.transform.position = [0,1,10];
             editorSceneCameraComponent = new KICK.scene.Camera({
                 clearColor : [0.1,0.1,0.15,1.0]
@@ -41,32 +85,9 @@ var SceneEditorView = function(sceneEditorApp){
             editorSceneGridObject.name = "__editorSceneGridObject__";
             editorSceneGridObject.addComponent(new VisualGrid());
 
-            // create material
-            var material = new KICK.material.Material(engine,{
-                shader: engine.resourceManager.getShader("kickjs://shader/unlit/"),
-                uniforms:{
-                    mainColor: {
-                        value: [1,1,1],
-                        type: KICK.core.Constants.GL_FLOAT_VEC3
-                    },
-                    mainTexture: {
-                        value: engine.resourceManager.getTexture("kickjs://texture/white/"),
-                        type: KICK.core.Constants.GL_SAMPLER_2D
-                    }
-                }
-            });
 
-            // create meshes
-            var meshes = ["kickjs://mesh/triangle/","kickjs://mesh/cube/"];
-            for (var i=0;i<meshes.length;i++){
-                var gameObject = scene.createGameObject();
-                gameObject.transform.position = [-2.0+4*i,0,0];
-                var meshRenderer = new KICK.scene.MeshRenderer();
-                meshRenderer.mesh = engine.resourceManager.getMesh(meshes[i]);
-                meshRenderer.material = material;
-                gameObject.addComponent(meshRenderer);
-            }
-        };
+        createDebugScene(scene);
+    };
     Object.defineProperties(this,{
         engine:{
             get:function(){
@@ -76,11 +97,23 @@ var SceneEditorView = function(sceneEditorApp){
     });
 };
 
-var SceneEditorApp = function(){
+var SceneEditorApp = function(Y){
     var _view = new SceneEditorView(this),
-        _sceneAssets,
+        _sceneGameObjects,
         _projectAssets,
-        _propertyEditor;
+        _propertyEditor,
+        deleteSelectedGameObject = function(){
+            var uid = _sceneGameObjects.getSelectedGameObjectUid();
+            if (!uid){
+                return;
+            }
+            var gameObject = _view.engine.activeScene.getObjectByUID(uid);
+            if (!gameObject){
+                return;
+            }
+            gameObject.destroy();
+            _sceneGameObjects.removeSelected();
+        };
 
     Object.defineProperties(this,{
         propertyEditor:{
@@ -91,12 +124,12 @@ var SceneEditorApp = function(){
                 _propertyEditor = v;
             }
         },
-        sceneAssets:{
+        sceneGameObjects:{
             get:function(){
-                return _sceneAssets;
+                return _sceneGameObjects;
             },
             set:function(v){
-                _sceneAssets = v;
+                _sceneGameObjects = v;
             }
         },
         projectAssets:{
@@ -119,16 +152,18 @@ var SceneEditorApp = function(){
         }
     });
 
-    this.projectObjectSelected = function(uid){
-        _sceneAssets.selectGameObject(uid);
+    this.projectAssetSelected = function(uid){
+        _projectAssets.selectProjectAsset(uid);
         var resourceDescriptor = _view.engine.project.getResourceDescriptor(uid);
         _propertyEditor.setContent(resourceDescriptor);
+        _sceneGameObjects.deselect();
     };
 
     this.gameObjectSelected = function(uid){
-        _sceneAssets.selectGameObject(uid);
+        _sceneGameObjects.selectGameObject(uid);
         var gameObject = _view.engine.activeScene.getObjectByUID(uid);
         _propertyEditor.setContent(gameObject);
+        _projectAssets.deselect();
     };
 
     this.loadProject = function(){
@@ -158,13 +193,30 @@ var SceneEditorApp = function(){
     this.initEngine = function(){
         _view.decorateScene(_view.engine.activeScene);
         _view.engine.canvasResized();
-    }
+    };
+
+    Y.one("#projectAssetCreate").on("click",function(){console.log("projectAssetCreate");});
+    Y.one("#projectAssetRename").on("click",function(){console.log("projectAssetRename");});
+    Y.one("#projectAssetDelete").on("click",function(){console.log("projectAssetDelete");});
+    Y.one("#gameObjectCreate").on("click",function(){_sceneGameObjects.createGameObject();});
+    Y.one("#gameObjectRename").on("click",function(){_sceneGameObjects.editSelected();});
+    Y.one("#gameObjectDelete").on("click",deleteSelectedGameObject);
 };
 
 function SceneGameObjects(Y,sceneEditorApp){
     var engine = sceneEditorApp.engine,
         sceneContentList = document.getElementById('sceneContentList'),
-        thisObj = this;
+        thisObj = this,
+        selectedTreeLeaf = null,
+        selectGameObject = function(treeLeaf){
+            if (selectedTreeLeaf){
+                selectedTreeLeaf.get("boundingBox").removeClass("selected");
+            }
+            selectedTreeLeaf = treeLeaf;
+            if (selectedTreeLeaf){
+                selectedTreeLeaf.get("boundingBox").addClass("selected");
+            }
+        };
 
     var sceneTreeView = new Y.TreeView({
         srcNode: '#sceneContentList',
@@ -203,9 +255,9 @@ function SceneGameObjects(Y,sceneEditorApp){
                 if (!name){
                     name = "GameObject #"+gameObject.uid;
                 }
-                if (name.indexOf('__')!==0){
-                    var list = sceneTreeView.add({childType:"TreeLeaf",label:name});
-                    list.item(0).set("uid",uid);
+                if (name.indexOf('__') !== 0){
+                    var treeNode = sceneTreeView.add({childType:"TreeLeaf",label:name});
+                    treeNode.item(0).set("uid",uid);
                 }
             }
         }
@@ -218,19 +270,71 @@ function SceneGameObjects(Y,sceneEditorApp){
         }
     };
 
+    this.createGameObject = function(){
+        var gameObject = engine.activeScene.createGameObject();
+        var uid = gameObject.uid;
+        var treeNodeContainer = sceneTreeView.add({childType:"TreeLeaf",label:"GameObject #"+uid});
+        var treeNode = treeNodeContainer.item(0);
+        treeNode.set("uid",uid);
+        sceneEditorApp.gameObjectSelected(uid);
+        thisObj.editSelected();
+    };
+
+    this.editSelected = function(){
+        if (selectedTreeLeaf){
+            var uid = selectedTreeLeaf.get("uid");
+            var gameObject = engine.activeScene.getObjectByUID(uid);
+            var name = gameObject.name || "GameObject #"+uid;
+            var newValue = prompt("Enter GameObjects new name",name);
+            if (newValue){
+                gameObject.name = newValue;
+                selectedTreeLeaf.get("contentBox").setContent(newValue);
+                sceneEditorApp.gameObjectSelected(uid); // forces reload of property editor
+            }
+        }
+    };
+
+    /**
+     * Deselect any gameObject
+     * @method deselect
+     */
+    this.deselect = function(){
+        selectGameObject(null);
+    };
+
     this.selectGameObject = function(uid){
         for (i=sceneTreeView.size()-1;i>=0;i--){
             var element = sceneTreeView.item(i);
             if (parseInt(element.get("uid")) === uid){
                 element.set("selected", 1); // full selected
                 element.focus();
+                selectGameObject(element);
                 return;
             }
         }
     };
 
+    this.removeSelected = function(){
+        if (selectedTreeLeaf){
+            sceneTreeView.remove(selectedTreeLeaf.get("index"));
+            selectedTreeLeaf = null;
+        }
+    };
+
+    /**
+     * @method getSelectedGameObjectUid
+     * @return selected uid or null
+     */
+    this.getSelectedGameObjectUid = function(){
+        if (selectedTreeLeaf){
+            return selectedTreeLeaf.get("uid");
+        }
+        return null;
+    };
+
     sceneTreeView.on("treeleaf:click",function(e){
-        var uid = e.target.get("uid");
+        selectGameObject(e.target);
+        var uid = selectedTreeLeaf.get("uid");
         sceneEditorApp.gameObjectSelected(uid);
         e.preventDefault ();
     });
@@ -240,6 +344,7 @@ function SceneGameObjects(Y,sceneEditorApp){
 
 function ProjectAssets(Y, sceneEditorApp){
     var engine = sceneEditorApp.engine,
+        selectedTreeLeaf = null,
         projectTreeView = new Y.TreeView({
         srcNode: '#projectAssetList',
         contentBox: null,
@@ -248,6 +353,24 @@ function ProjectAssets(Y, sceneEditorApp){
             {label:"test"}
         ]
     });
+
+    var selectProjectAsset = function(treeLeaf){
+        if (selectedTreeLeaf){
+            selectedTreeLeaf.get("boundingBox").removeClass("selected");
+        }
+        selectedTreeLeaf = treeLeaf;
+        if (selectedTreeLeaf){
+            selectedTreeLeaf.get("boundingBox").addClass("selected");
+        }
+    };
+
+    /**
+     * Deselect any gameObject
+     * @method deselect
+     */
+    this.deselect = function(){
+        selectProjectAsset(null);
+    };
 
     projectTreeView.render();
 
@@ -281,8 +404,8 @@ function ProjectAssets(Y, sceneEditorApp){
                 type = type.substring(type.lastIndexOf('.')+1);
                 name += " ("+type+")";
                 if (name.indexOf('__')!==0){
-                    var list = projectTreeView.add({childType:"TreeLeaf",label:name});
-                    list.item(0).set("uid",uid);
+                    var treeNode = projectTreeView.add({childType:"TreeLeaf",label:name});
+                    treeNode.item(0).set("uid",uid);
                 }
             }
         }
@@ -295,11 +418,24 @@ function ProjectAssets(Y, sceneEditorApp){
         }
     };
 
+    this.selectProjectAsset = function(uid){
+        for (i=projectTreeView.size()-1;i>=0;i--){
+            var element = projectTreeView.item(i);
+            if (parseInt(element.get("uid")) === uid){
+                element.set("selected", 1); // full selected
+                element.focus();
+                //selectGameObject(element);
+                return;
+            }
+        }
+    };
+
     this.updateSceneContent();
 
     projectTreeView.on("treeleaf:click",function(e){
-        var uid = e.target.get("uid");
-        sceneEditorApp.projectObjectSelected(uid);
+        selectProjectAsset(e.target);
+        var uid = selectedTreeLeaf.get("uid");
+        sceneEditorApp.projectAssetSelected(uid);
         e.preventDefault ();
     });
 }

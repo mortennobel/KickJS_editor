@@ -12,6 +12,20 @@
     <!-- Project style sheets -->
     <link rel="stylesheet" type="text/css" href="css/style.css">
     <!--<link rel="stylesheet" type="text/css" href="css/debugStyle.css">-->
+    <title>KickJS | Editor</title>
+    <script type="text/javascript">
+
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-26354413-1']);
+        _gaq.push(['_setDomainName', 'kickjs.org']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
 </head>
 <body class="yui3-skin-sam">
 <div id="hd">
@@ -21,15 +35,14 @@
     <div class="yui3-u" id="nav">
         <div class="content" id="projectPanel">
             <div class="panelHead">Project assets</div>
-            <div class="panelToolbar"><button target="_blank" class="yui3-button">Upload</button><button target="_blank" class="yui3-button">Delete</button>
-            </div>
+            <div class="panelToolbar"><button class="yui3-button" id="projectAssetCreate">Add</button><button class="yui3-button" id="projectAssetRename">Rename</button><button class="yui3-button" id="projectAssetDelete">Delete</button></div>
             <div class="panelContent">
                 <ul id="projectAssetList"></ul>
             </div>
         </div>
         <div class="content" id="scenePanel">
             <div class="panelHead">Scene objects</div>
-            <div class="panelToolbar"><button target="_blank" class="yui3-button">Create</button><button target="_blank" class="yui3-button">Delete</button></div>
+            <div class="panelToolbar"><button class="yui3-button" id="gameObjectCreate">Create</button><button class="yui3-button" id="gameObjectRename">Rename</button><button class="yui3-button" id="gameObjectDelete">Delete</button></div>
             <div class="panelContent">
             <ul id="sceneContentList"></ul>
             </div>
@@ -46,24 +59,10 @@
 <script src="js/kick-debug-0.2.0.js"></script>
 <script src="js/webgl-debug.js"></script>
 <!--<script src="http://yui.yahooapis.com/3.4.1/build/yui/yui-min.js"></script>-->
-<script src="http://yui.yahooapis.com/3.5.0pr1/build/yui/yui.js"></script>
+<script src="http://yui.yahooapis.com/3.5.0pr1/build/yui/yui.js"></script><!-- todo - user min version -->
 <script src="js/kickjs_editor_server.js"></script>
 <script src="js/kickjs_editor_components.js"></script>
 <script src="js/kickjs_property_editor.js"></script>
 <script src="js/kickjs_editor.js"></script>
-<script type="text/javascript">
-
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-26354413-1']);
-    _gaq.push(['_setDomainName', 'kickjs.org']);
-    _gaq.push(['_trackPageview']);
-
-    (function() {
-        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
-
-</script>
 </body>
 </html>
