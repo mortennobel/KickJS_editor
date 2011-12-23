@@ -218,15 +218,19 @@ var SceneEditorApp = function(Y){
     };
 
     Y.one("#projectAddMaterial").on("click",createMaterial);
-    Y.one("#projectAddShader").on("click",function(){console.log("projectAddShader");});
-    Y.one("#projectAddTexture").on("click",function(){console.log("projectAddTexture");});
-    Y.one("#projectAddMesh").on("click",function(){console.log("projectAddMesh");});
-    Y.one("#projectAddScene").on("click",function(){console.log("projectAddScene");});
+    Y.one("#projectAddShader").on("click",function(){alert("not implemented");});
+    Y.one("#projectAddTexture").on("click",function(){alert("not implemented");});
+    Y.one("#projectAddMesh").on("click",function(){alert("not implemented");});
+    Y.one("#projectAddScene").on("click",function(){alert("not implemented");});
     Y.one("#projectAssetRename").on("click",function(){_projectAssets.renameSelected();});
-    Y.one("#projectAssetDelete").on("click",function(){console.log("projectAssetDelete");});
+    Y.one("#projectAssetDelete").on("click",function(){alert("not implemented");});
     Y.one("#gameObjectCreate").on("click",function(){_sceneGameObjects.createGameObject();});
     Y.one("#gameObjectRename").on("click",function(){_sceneGameObjects.renameSelected();});
     Y.one("#gameObjectDelete").on("click",deleteSelectedGameObject);
+
+    Y.one("#componentAddMeshRenderer").on("click",function(){alert("Not implemented");});
+    Y.one("#componentAddMeshLight").on("click",function(){alert("Not implemented");});
+    Y.one("#componentAddCamera").on("click",function(){alert("Not implemented");});
 };
 
 function SceneGameObjects(Y,sceneEditorApp){
