@@ -139,6 +139,9 @@ var SceneEditorApp = function(Y){
             });
             material.name = "Material #"+engine.getUID(material);
             _projectAssets.updateProjectContent();
+            console.log("selecting "+material.uid);
+            _projectAssets.selectProjectAsset(material.uid);
+            _projectAssets.renameSelected();
         };
 
     Object.defineProperties(this,{
@@ -402,6 +405,8 @@ function ProjectAssets(Y, sceneEditorApp){
         selectedTreeLeaf = treeLeaf;
         if (selectedTreeLeaf){
             selectedTreeLeaf.get("boundingBox").addClass("selected");
+            var uid = selectedTreeLeaf.get("uid");
+            sceneEditorApp.projectAssetSelected(uid);
         }
     };
 
@@ -475,7 +480,7 @@ function ProjectAssets(Y, sceneEditorApp){
             if (parseInt(element.get("uid")) === uid){
                 element.set("selected", 1); // full selected
                 element.focus();
-                //selectGameObject(element);
+                selectProjectAsset(element);
                 return;
             }
         }
@@ -485,8 +490,6 @@ function ProjectAssets(Y, sceneEditorApp){
 
     projectTreeView.on("treeleaf:click",function(e){
         selectProjectAsset(e.target);
-        var uid = selectedTreeLeaf.get("uid");
-        sceneEditorApp.projectAssetSelected(uid);
         e.preventDefault ();
     });
 }
