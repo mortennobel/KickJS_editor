@@ -2,7 +2,7 @@ YUI({
     //Last Gallery Build of this module
     gallery: 'gallery-2011.01.03-18-30'
 })
-    .use('tabview', 'escape', 'plugin', 'gallery-yui3treeview',"widget", "widget-position", "widget-stdmod", function(Y) {
+    .use('tabview', 'escape', 'plugin', 'gallery-yui3treeview',"widget", "widget-position", "widget-stdmod", 'node-menunav', function(Y) {
     var sceneEditorApp = new SceneEditorApp(Y);
 
     createTabView(Y,sceneEditorApp);
@@ -16,7 +16,15 @@ YUI({
 
     // make engien public available (for debugging purpose)
     window.engine = sceneEditorApp.engine;
+
+    var menus =["#sceneGameObjectMenu","#projectAssetMenu","#propertyPanelMenu"];
+    for (var i=0;i<menus.length;i++){
+        var menu = Y.one(menus[i]);
+        menu.plug(Y.Plugin.NodeMenuNav);
+    }
 });
+
+
 
 var SceneEditorView = function(sceneEditorApp){
     var engine = new KICK.core.Engine('sceneView',
@@ -186,16 +194,16 @@ var SceneEditorApp = function(Y){
 
     };
 
-    this.listProjects = function(){
-
-    };
-
     this.initEngine = function(){
         _view.decorateScene(_view.engine.activeScene);
         _view.engine.canvasResized();
     };
 
-    Y.one("#projectAssetCreate").on("click",function(){console.log("projectAssetCreate");});
+    Y.one("#projectAddMaterial").on("click",function(){console.log("projectAddMaterial");});
+    Y.one("#projectAddShader").on("click",function(){console.log("projectAddShader");});
+    Y.one("#projectAddTexture").on("click",function(){console.log("projectAddTexture");});
+    Y.one("#projectAddMesh").on("click",function(){console.log("projectAddMesh");});
+    Y.one("#projectAddScene").on("click",function(){console.log("projectAddScene");});
     Y.one("#projectAssetRename").on("click",function(){console.log("projectAssetRename");});
     Y.one("#projectAssetDelete").on("click",function(){console.log("projectAssetDelete");});
     Y.one("#gameObjectCreate").on("click",function(){_sceneGameObjects.createGameObject();});

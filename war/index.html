@@ -1,9 +1,6 @@
 <html>
 <head>
-    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.5.0pr1/build/cssreset/cssreset-min.css">
-    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.5.0pr1/build/cssgrids/grids-min.css">
-    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.5.0pr1/build/cssfonts/cssfonts-min.css">
-    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.5.0pr1/build/cssbase/cssbase-min.css">
+    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/combo?3.5.0pr1/build/cssreset/reset-min.css&3.5.0pr1/build/cssfonts/fonts-min.css&3.5.0pr1/build/cssgrids/grids-min.css&3.5.0pr1/build/cssbase/base-min.css">
     <link rel="stylesheet" href="js/treeview/treeview-menu.css" type="text/css">
     <!-- CSS Button: http://yuilibrary.com/gallery/show/cssbutton -->
     <!--<link href="http://yui.yahooapis.com/gallery-2011.08.04-15-16/build/gallerycss-cssbutton/gallerycss-cssbutton.css" type="text/css" rel="stylesheet" />-->
@@ -35,14 +32,47 @@
     <div class="yui3-u" id="nav">
         <div class="content" id="projectPanel">
             <div class="panelHead">Project assets</div>
-            <div class="panelToolbar"><button class="yui3-button" id="projectAssetCreate">Add</button><button class="yui3-button" id="projectAssetRename">Rename</button><button class="yui3-button" id="projectAssetDelete">Delete</button></div>
+            <div class="panelToolbar">
+                <div id="projectAssetMenu" class="yui3-menu yui3-menu-horizontal yui3-menubuttonnav"><!-- Bounding box -->
+                    <div class="yui3-menu-content"><!-- Content box -->
+                        <ul>
+                            <li>
+                                <a class="yui3-menu-label" href="#projectAdd"><em>Add</em></a>
+                                <div id="projectAdd" class="yui3-menu">
+                                    <div class="yui3-menu-content">
+                                        <ul>
+                                            <li class="yui3-menuitem"><a class="yui3-menuitem-content" href="#" id="projectAddMaterial">Material</a></li>
+                                            <li class="yui3-menuitem"><a class="yui3-menuitem-content" href="#" id="projectAddShader">Shader</a></li>
+                                            <li class="yui3-menuitem"><a class="yui3-menuitem-content" href="#" id="projectAddTexture">Texture</a></li>
+                                            <li class="yui3-menuitem"><a class="yui3-menuitem-content" href="#" id="projectAddMesh">Mesh</a></li>
+                                            <li class="yui3-menuitem"><a class="yui3-menuitem-content" href="#" id="projectAddScene">Scene</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="yui3-menuitem"><a class="yui3-menuitem-content" id="projectAssetRename" href="#">Rename</a></li>
+                            <li class="yui3-menuitem"><a class="yui3-menuitem-content" id="projectAssetDelete" href="#">Delete</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
             <div class="panelContent">
                 <ul id="projectAssetList"></ul>
             </div>
         </div>
         <div class="content" id="scenePanel">
             <div class="panelHead">Scene objects</div>
-            <div class="panelToolbar"><button class="yui3-button" id="gameObjectCreate">Create</button><button class="yui3-button" id="gameObjectRename">Rename</button><button class="yui3-button" id="gameObjectDelete">Delete</button></div>
+            <div class="panelToolbar">
+                <div id="sceneGameObjectMenu" class="yui3-menu yui3-menu-horizontal yui3-menubuttonnav"><!-- Bounding box -->
+                    <div class="yui3-menu-content"><!-- Content box -->
+                        <ul>
+                            <li class="yui3-menuitem"><a class="yui3-menuitem-content" id="gameObjectCreate" href="#">Create</a></li>
+                            <li class="yui3-menuitem"><a class="yui3-menuitem-content" id="gameObjectRename" href="#">Rename</a></li>
+                            <li class="yui3-menuitem"><a class="yui3-menuitem-content" id="gameObjectDelete" href="#">Delete</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
             <div class="panelContent">
             <ul id="sceneContentList"></ul>
             </div>
@@ -52,7 +82,28 @@
         <div id="mainTabContainer"></div>
         <canvas id="sceneView" class="mainContent"></canvas>
     </div></div>
-    <div class="yui3-u" id="extra"><div class="content" id="propertyPanel"></div></div>
+    <div class="yui3-u" id="extra">
+        <div id="propertyPanelMenu" class="yui3-menu yui3-menu-horizontal yui3-menubuttonnav"><!-- Bounding box -->
+            <div class="yui3-menu-content"><!-- Content box -->
+                <ul>
+                    <li>
+                        <a class="yui3-menu-label" href="#componentAdd"><em>Add</em></a>
+                        <div id="componentAdd" class="yui3-menu">
+                            <div class="yui3-menu-content">
+                                <ul>
+                                    <li class="yui3-menuitem"><a class="yui3-menuitem-content" href="#" id="componentAddMeshRenderer">MeshRenderer</a></li>
+                                    <li class="yui3-menuitem"><a class="yui3-menuitem-content" href="#" id="componentAddMeshLight">Light</a></li>
+                                    <li class="yui3-menuitem"><a class="yui3-menuitem-content" href="#" id="componentAddCamera">Camera</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </li>
+
+                </ul>
+            </div>
+        </div>
+        <div class="content" id="propertyPanel"></div>
+    </div>
 </div>
 <div id="ft"></div>
 <!-- include script last to render page first -->
