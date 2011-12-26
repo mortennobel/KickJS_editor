@@ -39,7 +39,6 @@ a:active {color:#CCB769;}  /* selected link */
 .mainContent{
     width:100%;
     height:100%;
-    border: 1px solid #bbb;
 }
 
 #sceneView{
