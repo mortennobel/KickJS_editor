@@ -1,8 +1,10 @@
 var ComponentPanelModule;
 
 var PropertyEditor = function(Y,sceneEditorApp){
-    var engine = sceneEditorApp.engine;
-    var PropertyPanelModule = Y.Base.create("propertyPanelModule", Y.Widget, [Y.WidgetStdMod]),
+    var engine = sceneEditorApp.engine,
+        propertyPanelMenu = Y.one("#propertyPanelMenu"),
+        propertyPanelHeader = Y.one("#propertyPanelHeader"),
+        PropertyPanelModule = Y.Base.create("propertyPanelModule", Y.Widget, [Y.WidgetStdMod]),
         components = [],
         destroyComponents = function(){
             for (var i=0;i<components.length;i++){
@@ -26,12 +28,18 @@ var PropertyEditor = function(Y,sceneEditorApp){
         destroyComponents();
         if (!object){
             propertyPanel.hide();
+            propertyPanelMenu.hide();
+            propertyPanelHeader.hide();
             return;
         }
         propertyPanel.show();
         propertyPanel.setStdModContent("header", "Properties: "+(object.name || "GameObject #"+object.uid));
         propertyPanel.setStdModContent("body","");
         if (object instanceof KICK.scene.GameObject){
+            propertyPanelMenu.show();
+            propertyPanelHeader.show();
+            propertyPanelHeader.setContent("GameObject");
+            console.log("Show propertyPanelMenu");
             for (var i=0;i<object.numberOfComponents;i++){
                 var component = object.getComponent(i);
                 propertyPanel.setStdModContent("body", '<div id="componentContainer_'+i+'"></div>',Y.WidgetStdMod.AFTER);
@@ -39,6 +47,9 @@ var PropertyEditor = function(Y,sceneEditorApp){
                 components.push(compEditor);
             }
         } else if (object instanceof KICK.core.ResourceDescriptor){
+            propertyPanelMenu.hide();
+            propertyPanelHeader.show();
+            propertyPanelHeader.setContent("Project Asset");
             propertyPanel.setStdModContent("body", '<div id="componentContainer"></div>',Y.WidgetStdMod.AFTER);
             var resourceEditor = new ComponentEditor(Y, sceneEditorApp, object,"componentContainer");
             components.push(resourceEditor);
@@ -59,6 +70,7 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
         engine = sceneEditorApp.engine,
         componentJSON,
         isResourceDescriptor = object instanceof KICK.core.ResourceDescriptor,
+        value,
         componentPanel = new ComponentPanelModule(
         {
             contentBox: "#"+id
@@ -216,7 +228,7 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
             }
 
             if (isMaterial){
-                var value = conf[name];
+                value = conf[name];
                 switch (value.type){
                     case c.GL_INT_VEC2:
                     case c.GL_INT_VEC3:
@@ -235,7 +247,7 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
                         break;
                 }
             } else {
-                var value = object[name];
+                value = object[name];
                 var valueJson;
                 var typeofValue = typeof value;
                 if (typeofValue === "string"){

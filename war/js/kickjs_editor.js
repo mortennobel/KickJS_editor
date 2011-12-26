@@ -26,8 +26,9 @@ YUI({
 
 
 
-var SceneEditorView = function(sceneEditorApp){
-    var engine = new KICK.core.Engine('sceneView',
+var SceneEditorView = function(Y,sceneEditorApp){
+    var canvas = Y.one("#sceneView"),
+        engine = new KICK.core.Engine('sceneView',
         {
             enableDebugContext: true
         }),
@@ -35,8 +36,14 @@ var SceneEditorView = function(sceneEditorApp){
         editorSceneCameraComponent,
         editorSceneGridObject;
 
+        Y.one("window").on("resize", function(){
+            canvas.set("width",canvas.get("clientWidth"));
+            canvas.set("height",canvas.get("clientHeight"));
+            engine.canvasResized();
+        });
+
     function createDebugScene(scene) {
-// create material
+        // create material
         var materials = [
             new KICK.material.Material(engine, {
                 name:"White material",
@@ -106,7 +113,7 @@ var SceneEditorView = function(sceneEditorApp){
 };
 
 var SceneEditorApp = function(Y){
-    var _view = new SceneEditorView(this),
+    var _view = new SceneEditorView(Y,this),
         _sceneGameObjects,
         _projectAssets,
         _propertyEditor,
@@ -124,7 +131,6 @@ var SceneEditorApp = function(Y){
         },
         createMaterial = function(){
             var material = new KICK.material.Material(engine, {
-                name:"White material",
                 shader:engine.resourceManager.getShader("kickjs://shader/unlit/"),
                 uniforms:{
                     mainColor:{
@@ -457,7 +463,6 @@ function ProjectAssets(Y, sceneEditorApp){
         // insert missing uids
         for (uid in activeProjectUids){
             if (!treeValues[uid]){
-
                 var name = getAssetName(uid);
                 if (name.indexOf('__')!==0){
                     var treeNode = projectTreeView.add({childType:"TreeLeaf",label:name});

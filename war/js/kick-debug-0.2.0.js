@@ -2629,12 +2629,32 @@ KICK.namespace = function (ns_string) {
     // created by include_glsl_files.js - do not edit content
 /**
 * GLSL file content
-* @property error_fs.glsl
+* @property __error_fs.glsl
 * @type String
 */
 /**
 * GLSL file content
-* @property error_vs.glsl
+* @property __error_vs.glsl
+* @type String
+*/
+/**
+* GLSL file content
+* @property __pick_fs.glsl
+* @type String
+*/
+/**
+* GLSL file content
+* @property __pick_vs.glsl
+* @type String
+*/
+/**
+* GLSL file content
+* @property __shadowmap.glsl
+* @type String
+*/
+/**
+* GLSL file content
+* @property __shadowmap_fs.glsl
 * @type String
 */
 /**
@@ -2650,26 +2670,6 @@ KICK.namespace = function (ns_string) {
 /**
 * GLSL file content
 * @property phong_vs.glsl
-* @type String
-*/
-/**
-* GLSL file content
-* @property pick_fs.glsl
-* @type String
-*/
-/**
-* GLSL file content
-* @property pick_vs.glsl
-* @type String
-*/
-/**
-* GLSL file content
-* @property shadowmap.glsl
-* @type String
-*/
-/**
-* GLSL file content
-* @property shadowmap_fs.glsl
 * @type String
 */
 /**
@@ -2707,7 +2707,7 @@ KICK.namespace = function (ns_string) {
 * @property unlit_vs.glsl
 * @type String
 */
-{"error_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvoid main(void)\n{\ngl_FragColor = vec4(1.0,0.5, 0.9, 1.0);\n}","error_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\n} ","light.glsl":"struct DirectionalLight {\nvec3 lDir;\nvec3 colInt;\nvec3 halfV;\n};\n// assumes that normal is normalized\nvoid getDirectionalLight(vec3 normal, DirectionalLight dLight, float specularExponent, out vec3 diffuse, out float specular){\nfloat diffuseContribution = max(dot(normal, dLight.lDir), 0.0);\n\tfloat specularContribution = max(dot(normal, dLight.halfV), 0.0);\nspecular = pow(specularContribution, specularExponent);\n\tdiffuse = (dLight.colInt * diffuseContribution);\n}\nuniform DirectionalLight _dLight;\nuniform vec3 _ambient;","phong_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nvarying vec3 vNormal;\nuniform vec3 mainColor;\nuniform float specularExponent;\nuniform vec3 specularColor;\nuniform sampler2D mainTexture;\n#pragma include \"light.glsl\"\n#pragma include \"shadowmap.glsl\"\nvoid main(void)\n{\nvec3 diffuse;\nfloat specular;\ngetDirectionalLight(vNormal, _dLight, specularExponent, diffuse, specular);\nfloat visibility;\nif (SHADOWS){\ncomputeLightVisibility();\n} else {\nvisibility = 1.0;\n}\nvec3 color = max(diffuse*visibility,_ambient.xyz)*mainColor;\ngl_FragColor = texture2D(mainTexture,vUv)*vec4(color, 1.0)+vec4(specular*specularColor,0.0);\n}\n","phong_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat4 _lightMat;\nuniform mat3 _norm;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec4 vShadowMapCoord;\nvoid main(void) {\nvec4 v = vec4(vertex, 1.0);\ngl_Position = _mvProj * v;\nvUv = uv1;\nvNormal= normalize(_norm * normal);\nvShadowMapCoord = _lightMat * v;\n} ","pick_fs.glsl":"#ifdef GL_ES\nprecision mediump float;\n#endif\nvarying vec4 gameObjectUID;\nvoid main(void)\n{\ngl_FragColor = gameObjectUID;\n}","pick_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nuniform vec4 _gameObjectUID;\nvarying vec4 gameObjectUID;\nvoid main(void) {\n// compute position\ngl_Position = _mvProj * vec4(vertex, 1.0);\ngameObjectUID = _gameObjectUID;\n}","shadowmap.glsl":"varying vec4 vShadowMapCoord;\nuniform sampler2D _shadowMapTexture;\nfloat unpackDepth( const in vec4 rgba_depth ) {\nconst vec4 bit_shift = vec4( 1.0 / ( 16777216.0 ), 1.0 / ( 65536.0 ), 1.0 / 256.0, 1.0 );\nreturn dot( rgba_depth, bit_shift );\n}\nfloat computeLightVisibility(){\nvec3 shadowCoord = vShadowMapCoord.xyz / vShadowMapCoord.w;\nvec4 packedShadowDepth = texture2D(_shadowMapTexture,shadowCoord.xy);\nfloat shadowDepth = unpackDepth(packedShadowDepth);\nif (shadowDepth < shadowCoord.z){\nreturn 1.0;\n}\nreturn 0.0;\n}","shadowmap_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvec4 packDepth( const in float depth ) {\nconst vec4 bitShift = vec4( 16777216.0, 65536.0, 256.0, 1.0 );\nconst vec4 bitMask = vec4( 0.0, 1.0 / 256.0, 1.0 / 256.0, 1.0 / 256.0 );\nvec4 res = fract( depth * bitShift );\nres -= res.xxyz * bitMask;\nreturn res;\n}\nvoid main() {\ngl_FragColor = packDepth( gl_FragCoord.z );\n}\n","shadowmap_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\n} ","transparent_phong_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nvarying vec3 vNormal;\nuniform vec4 mainColor;\nuniform float specularExponent;\nuniform vec3 specularColor;\nuniform sampler2D mainTexture;\n#pragma include \"light.glsl\"\nvoid main(void)\n{\nvec3 diffuse;\nfloat specular;\ngetDirectionalLight(vNormal, _dLight, specularExponent, diffuse, specular);\nvec4 color = vec4(max(diffuse,_ambient.xyz),1.0)*mainColor;\ngl_FragColor = texture2D(mainTexture,vUv)*color+vec4(specular*specularColor,0.0);\n}\n","transparent_phong_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat3 _norm;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvoid main(void) {\n// compute position\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n// compute light info\nvNormal= normalize(_norm * normal);\n} ","transparent_unlit_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nuniform vec4 mainColor;\nuniform sampler2D mainTexture;\nvoid main(void)\n{\ngl_FragColor = texture2D(mainTexture,vUv)*mainColor;\n}\n","transparent_unlit_vs.glsl":"attribute vec3 vertex;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nvarying vec2 vUv;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n}","unlit_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nuniform vec3 mainColor;\nuniform sampler2D mainTexture;\nvoid main(void)\n{\ngl_FragColor = texture2D(mainTexture,vUv)*vec4(mainColor,1.0);\n}\n","unlit_vs.glsl":"attribute vec3 vertex;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nvarying vec2 vUv;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n}"};
+{"__error_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvoid main(void)\n{\ngl_FragColor = vec4(1.0,0.5, 0.9, 1.0);\n}","__error_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\n} ","__pick_fs.glsl":"#ifdef GL_ES\nprecision mediump float;\n#endif\nvarying vec4 gameObjectUID;\nvoid main(void)\n{\ngl_FragColor = gameObjectUID;\n}","__pick_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nuniform vec4 _gameObjectUID;\nvarying vec4 gameObjectUID;\nvoid main(void) {\n// compute position\ngl_Position = _mvProj * vec4(vertex, 1.0);\ngameObjectUID = _gameObjectUID;\n}","__shadowmap.glsl":"varying vec4 vShadowMapCoord;\nuniform sampler2D _shadowMapTexture;\nfloat unpackDepth( const in vec4 rgba_depth ) {\nconst vec4 bit_shift = vec4( 1.0 / ( 16777216.0 ), 1.0 / ( 65536.0 ), 1.0 / 256.0, 1.0 );\nreturn dot( rgba_depth, bit_shift );\n}\nfloat computeLightVisibility(){\nvec3 shadowCoord = vShadowMapCoord.xyz / vShadowMapCoord.w;\nvec4 packedShadowDepth = texture2D(_shadowMapTexture,shadowCoord.xy);\nfloat shadowDepth = unpackDepth(packedShadowDepth);\nif (shadowDepth < shadowCoord.z){\nreturn 1.0;\n}\nreturn 0.0;\n}","__shadowmap_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvec4 packDepth( const in float depth ) {\nconst vec4 bitShift = vec4( 16777216.0, 65536.0, 256.0, 1.0 );\nconst vec4 bitMask = vec4( 0.0, 1.0 / 256.0, 1.0 / 256.0, 1.0 / 256.0 );\nvec4 res = fract( depth * bitShift );\nres -= res.xxyz * bitMask;\nreturn res;\n}\nvoid main() {\ngl_FragColor = packDepth( gl_FragCoord.z );\n}\n","light.glsl":"struct DirectionalLight {\nvec3 lDir;\nvec3 colInt;\nvec3 halfV;\n};\n// assumes that normal is normalized\nvoid getDirectionalLight(vec3 normal, DirectionalLight dLight, float specularExponent, out vec3 diffuse, out float specular){\nfloat diffuseContribution = max(dot(normal, dLight.lDir), 0.0);\n\tfloat specularContribution = max(dot(normal, dLight.halfV), 0.0);\nspecular = pow(specularContribution, specularExponent);\n\tdiffuse = (dLight.colInt * diffuseContribution);\n}\nuniform DirectionalLight _dLight;\nuniform vec3 _ambient;","phong_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nvarying vec3 vNormal;\nuniform vec3 mainColor;\nuniform float specularExponent;\nuniform vec3 specularColor;\nuniform sampler2D mainTexture;\n#pragma include \"light.glsl\"\n#pragma include \"shadowmap.glsl\"\nvoid main(void)\n{\nvec3 diffuse;\nfloat specular;\ngetDirectionalLight(vNormal, _dLight, specularExponent, diffuse, specular);\nfloat visibility;\nif (SHADOWS){\ncomputeLightVisibility();\n} else {\nvisibility = 1.0;\n}\nvec3 color = max(diffuse*visibility,_ambient.xyz)*mainColor;\ngl_FragColor = texture2D(mainTexture,vUv)*vec4(color, 1.0)+vec4(specular*specularColor,0.0);\n}\n","phong_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat4 _lightMat;\nuniform mat3 _norm;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec4 vShadowMapCoord;\nvoid main(void) {\nvec4 v = vec4(vertex, 1.0);\ngl_Position = _mvProj * v;\nvUv = uv1;\nvNormal= normalize(_norm * normal);\nvShadowMapCoord = _lightMat * v;\n} ","shadowmap_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\n} ","transparent_phong_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nvarying vec3 vNormal;\nuniform vec4 mainColor;\nuniform float specularExponent;\nuniform vec3 specularColor;\nuniform sampler2D mainTexture;\n#pragma include \"light.glsl\"\nvoid main(void)\n{\nvec3 diffuse;\nfloat specular;\ngetDirectionalLight(vNormal, _dLight, specularExponent, diffuse, specular);\nvec4 color = vec4(max(diffuse,_ambient.xyz),1.0)*mainColor;\ngl_FragColor = texture2D(mainTexture,vUv)*color+vec4(specular*specularColor,0.0);\n}\n","transparent_phong_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat3 _norm;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvoid main(void) {\n// compute position\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n// compute light info\nvNormal= normalize(_norm * normal);\n} ","transparent_unlit_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nuniform vec4 mainColor;\nuniform sampler2D mainTexture;\nvoid main(void)\n{\ngl_FragColor = texture2D(mainTexture,vUv)*mainColor;\n}\n","transparent_unlit_vs.glsl":"attribute vec3 vertex;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nvarying vec2 vUv;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n}","unlit_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nuniform vec3 mainColor;\nuniform sampler2D mainTexture;\nvoid main(void)\n{\ngl_FragColor = texture2D(mainTexture,vUv)*vec4(mainColor,1.0);\n}\n","unlit_vs.glsl":"attribute vec3 vertex;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nvarying vec2 vUv;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n}"};
 })();/*!
  * New BSD License
  *
@@ -9712,7 +9712,6 @@ KICK.namespace = function (ns_string) {
                 _renderer.render(renderableComponentsOverlay,engineUniforms,shader);
             },
             renderShadowMap = function(sceneLightObj){
-                if (!thisObj.isShadowDisabled){
                 var directionalLight = sceneLightObj.directionalLight,
                     directionalLightTransform = directionalLight.gameObject.transform,
                     shadowRenderTexture = directionalLight.shadowRenderTexture,
@@ -9740,7 +9739,6 @@ KICK.namespace = function (ns_string) {
                 directionalLight.shadowRenderTextureDebug.bind();
                 gl.clear(16384 | 256);
                 renderSceneObjects(sceneLightObj);
-                }
             };
 
         /**
@@ -9758,10 +9756,11 @@ KICK.namespace = function (ns_string) {
             height = height || 1;
             if (!pickingQueue){
                 pickingQueue = [];
-                pickingShader = engine.resourceManager.getShader("kickjs://shader/pick/");
+                pickingShader = engine.resourceManager.getShader("kickjs://shader/__pick/");
                 pickingRenderTarget = new KICK.texture.RenderTexture(engine,{
                     dimension: gl.viewportSize
                 });
+                pickingRenderTarget.name = "__pickRenderTexture";
             }
             pickingQueue.push({
                 gameObjectPickedFn:gameObjectPickedFn,
@@ -9784,7 +9783,10 @@ KICK.namespace = function (ns_string) {
             gl = engine.gl;
             _scene = gameObject.scene;
             _scene.addComponentListener(thisObj);
-            _shadowmapShader = engine.resourceManager.getShader("kickjs://shader/shadowmap/");
+
+            if (engine.config.shadows){
+                _shadowmapShader = engine.resourceManager.getShader("kickjs://shader/__shadowmap/");
+            }
         };
 
         /**
@@ -9836,7 +9838,7 @@ KICK.namespace = function (ns_string) {
          * @param {KICK.scene.SceneLights} sceneLightObj
          */
         this.renderScene = function(sceneLightObj){
-            if (sceneLightObj.directionalLight && sceneLightObj.directionalLight.shadow){
+            if (_shadowmapShader && !thisObj.isShadowDisabled && sceneLightObj.directionalLight && sceneLightObj.directionalLight.shadow){
                 renderShadowMap(sceneLightObj);
             }
             setupCamera();
@@ -9896,6 +9898,14 @@ KICK.namespace = function (ns_string) {
         };
 
         Object.defineProperties(this,{
+            /**
+             * @property isShadowDisabled
+             * @type Boolean
+             */
+            isShadowDisabled:{
+                value: false,
+                writable: true
+            },
             /**
              * @property renderer
              * @type KICK.renderer.Renderer
@@ -10162,8 +10172,9 @@ KICK.namespace = function (ns_string) {
         this.toJSON = function(){
             return {
                 type:"KICK.scene.Camera",
-                uid:7,
+                uid: thisObj.uid || (engine?engine.getUID(thisObj):0),
                 config:{
+                    isShadowDisabled: thisObj.isShadowDisabled,
                     renderer:_renderer, // todo add reference
                     layerMask:_layerMask,
                     renderTarget:_renderTarget, // todo add reference
@@ -10778,6 +10789,7 @@ KICK.namespace = function (ns_string) {
             _dimension = config.dimension,
             renderBuffers = [],
             thisObj = this,
+            _name = "",
             cleanUpRenderBuffers = function(){
                 for (var i=0;i<renderBuffers.length;i++){
                     gl.deleteRenderbuffer(renderBuffers[i]);
@@ -10853,6 +10865,14 @@ KICK.namespace = function (ns_string) {
             colorTexture:{
                 get: function(){ return colorTexture; },
                 set: function(newValue){ colorTexture = newValue; initFBO(); }
+            },
+            /**
+             * @property name
+             * @type String
+             */
+            name:{
+                get: function(){ return _name;},
+                set: function(newValue){ _name = newValue;}
             }
         });
 
@@ -10874,6 +10894,7 @@ KICK.namespace = function (ns_string) {
         this.toJSON = function(){
             return {
                 uid: thisObj.uid,
+                name: _name,
                 colorTexture: KICK.core.Util.getJSONReference(engine, colorTexture)
             };
         };
@@ -11827,8 +11848,8 @@ KICK.namespace = function (ns_string) {
             _name = "",
             blendKey,
             glslConstants = material.GLSLConstants,
-            _vertexShaderSrc = glslConstants["error_vs.glsl"],
-            _fragmentShaderSrc = glslConstants["error_fs.glsl"],
+            _vertexShaderSrc = glslConstants["__error_vs.glsl"],
+            _fragmentShaderSrc = glslConstants["__error_fs.glsl"],
             _errorLog = KICK.core.Util.fail,
             /**
              * Updates the blend key that identifies blend+blendSFactor+blendDFactor<br>
@@ -12720,7 +12741,7 @@ KICK.namespace = function (ns_string) {
             }
             if (!_shader){
                 KICK.core.Util.fail("Cannot initiate shader in material "+_name);
-                _shader = engine.project.load("kickjs://shader/error/");
+                _shader = engine.project.load("kickjs://shader/__error/");
             }
             _renderOrder = _shader.renderOrder;
         };
@@ -14239,9 +14260,9 @@ KICK.namespace = function (ns_string) {
          *  <li><b>Unlit</b> Url: kickjs://shader/unlit/</li>
          *  <li><b>Transparent Phong</b> Url: kickjs://shader/transparent_phong/</li>
          *  <li><b>Transparent Unlit</b> Url: kickjs://shader/transparent_unlit/</li>
-         *  <li><b>Shadowmap</b> Url: kickjs://shader/shadowmap/</li>
-         *  <li><b>Pick</b> Url: kickjs://shader/pick/</li>
-         *  <li><b>Error</b> Url: kickjs://shader/error/<br></li>
+         *  <li><b>Shadowmap</b> Url: kickjs://shader/__shadowmap/</li>
+         *  <li><b>Pick</b> Url: kickjs://shader/__pick/</li>
+         *  <li><b>Error</b> Url: kickjs://shader/__error/<br></li>
          *  </ul>
          * @method getShaderData
          * @param {String} url
@@ -14265,13 +14286,13 @@ KICK.namespace = function (ns_string) {
                             depthMask = false;
                             renderOrder = 2000;
                         }
-                        if (shaderName==="shadowmap"){
+                        if (shaderName==="__shadowmap"){
                             polygonOffsetEnabled = true;
                         }
                     }
                     return res;
                 },
-                shaderTypes = ["phong","shadowmap","error","pick","transparent_phong","unlit","transparent_unlit"];
+                shaderTypes = ["phong","__shadowmap","__error","__pick","transparent_phong","unlit","transparent_unlit"];
             if (url === "kickjs://shader/default/"){
                 url = "kickjs://shader/phong/";
             }
@@ -14307,9 +14328,9 @@ KICK.namespace = function (ns_string) {
          *  <li><b>Unlit</b> Url: kickjs://shader/unlit/</li>
          *  <li><b>Transparent Phong</b> Url: kickjs://shader/transparent_phong/</li>
          *  <li><b>Transparent Unlit</b> Url: kickjs://shader/transparent_unlit/</li>
-         *  <li><b>Shadowmap</b> Url: kickjs://shader/shadowmap/</li>
-         *  <li><b>Pick</b> Url: kickjs://shader/pick/</li>
-         *  <li><b>Error</b> Url: kickjs://shader/error/<br></li>
+         *  <li><b>Shadowmap</b> Url: kickjs://shader/__shadowmap/</li>
+         *  <li><b>Pick</b> Url: kickjs://shader/__pick/</li>
+         *  <li><b>Error</b> Url: kickjs://shader/__error/<br></li>
          *  </ul>
          * @method getShader
          * @param {String} url
@@ -14318,6 +14339,7 @@ KICK.namespace = function (ns_string) {
         this.getShader = function(url,errorLog){
             var shader = new KICK.material.Shader(engine);
             this.getShaderData(url,shader);
+            shader.name = getUrlAsResourceName(url);
             return shader;
         };
 
