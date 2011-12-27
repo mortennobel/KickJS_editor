@@ -12,8 +12,35 @@ KICK.scene.MeshRenderer.prototype.createEditorGUI = function(propertyEditor, obj
     propertyEditor.setTitle("MeshRenderer");
     propertyEditor.addAssetPointer("material", "Material","", object.material ? object.material.uid:0 ,"KICK.material.Material");
     propertyEditor.addAssetPointer("mesh", "Mesh","", object.mesh ? object.mesh.uid:0 ,"KICK.mesh.Mesh");
+};
 
-}
+KICK.scene.Light.prototype.createEditorGUI = function(propertyEditor, object){
+    var c = KICK.core.Constants,
+        lightName;
+    switch(object.type){
+        case c._LIGHT_TYPE_AMBIENT:
+            lightName = "Ambient light";
+            break;
+        case c._LIGHT_TYPE_DIRECTIONAL:
+            lightName = "Directinoal light";
+            break;
+        case c._LIGHT_TYPE_POINT:
+            lightName = "Point light";
+            break;
+        default:
+            lightName = "Unknown light";
+            break;
+
+    }
+    propertyEditor.setTitle(lightName);
+    propertyEditor.addVector("color", "Color");
+    propertyEditor.addNumber("intensity", "Intensity");
+    if (object.type===c._LIGHT_TYPE_DIRECTIONAL){
+        propertyEditor.addBoolean("shadow", "Shadow");
+        propertyEditor.addNumber("shadowBias", "Shadow bias");
+        propertyEditor.addNumber("shadowStrength", "Shadow strength");
+    }
+};
 
 KICK.texture.Texture.prototype.createEditorGUI = function(propertyEditor, object){
     var c = KICK.core.Constants;
@@ -205,7 +232,6 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
     var c = KICK.core.Constants,
         engine = sceneEditorApp.engine,
         thisObj = this,
-        componentJSON,
         isResourceDescriptor = object instanceof KICK.core.ResourceDescriptor,
         value,
         componentPanel = new ComponentPanelModule(
@@ -261,8 +287,6 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
                         continue;
                     }
                     var selected = t.uid === uid ? "selected":"";
-                    console.log("selected: "+selected+ " value: "+uid);
-                    console.log(uid);
                     var item = Y.Node.create('<option value="'+t.uid+'" '+selected+'>'+t.name+'</option>');
                     node.append(item);
                 }
@@ -328,7 +352,6 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
                     var newValue = Y.one("#"+nodeId).get('value');
                     setValueFn = setValueFn || setValue;
                     setValueFn(name,newValue);
-                    console.log("Set "+name+" to "+object[name]+" object "+object);
                 };
                 node.on("change",updateModel);
                 node.after("click",updateModel);
@@ -350,7 +373,6 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
                     var newValue = parseFloat(Y.one("#"+nodeId).get('value'));
                     setValueFn = setValueFn || setValue;
                     setValueFn(name,newValue);
-                    console.log("Set "+name+" to "+object[name]+" object "+object);
                 };
                 node.on("change",updateModel);
                 node.after("click",updateModel);

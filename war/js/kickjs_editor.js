@@ -18,9 +18,11 @@ YUI({
     window.engine = sceneEditorApp.engine;
 
     var menus =["#sceneGameObjectMenu","#projectAssetMenu","#propertyPanelMenu"];
+    window.menus = [];
     for (var i=0;i<menus.length;i++){
         var menu = Y.one(menus[i]);
-        menu.plug(Y.Plugin.NodeMenuNav);
+        menu.plug(Y.Plugin.NodeMenuNav, {autoSubmenuDisplay:false});
+        window.menus.push(menu);
     }
 });
 
@@ -226,12 +228,18 @@ var SceneEditorApp = function(Y){
         _view.engine.canvasResized();
     };
 
-    var addComponent = function(componentType){
+    var addComponent = function(componentType,config){
         var uid = _sceneGameObjects.getSelectedGameObjectUid();
         var gameObject = _view.engine.activeScene.getObjectByUID(uid);
-        var component = new componentType({});
+        var component = new componentType(config || {});
         gameObject.addComponent(component);
         _propertyEditor.setContent(gameObject);
+        hideSubMenues("#propertyPanelMenu");
+    };
+
+    var hideSubMenues = function(menuId){
+        var menu = Y.one(menuId);
+        menu.menuNav._hideAllSubmenus(menu);
     };
 
     Y.one("#projectAddMaterial").on("click",createMaterial);
@@ -246,8 +254,12 @@ var SceneEditorApp = function(Y){
     Y.one("#gameObjectDelete").on("click",deleteSelectedGameObject);
 
     Y.one("#componentAddMeshRenderer").on("click",function(){addComponent(KICK.scene.MeshRenderer);});
-    Y.one("#componentAddMeshLight").on("click",function(){addComponent(KICK.scene.Light);});
-    Y.one("#componentAddCamera").on("click",function(){addComponent(KICK.scene.Camera);});
+    Y.one("#componentAddLightPoint").on("click",function(){addComponent(KICK.scene.Light,{type:KICK.core.Constants._LIGHT_TYPE_POINT});});
+    Y.one("#componentAddLightDirectional").on("click",function(){addComponent(KICK.scene.Light,{type:KICK.core.Constants._LIGHT_TYPE_DIRECTIONAL});});
+    Y.one("#componentAddLightAmbient").on("click",function(){addComponent(KICK.scene.Light,{type:KICK.core.Constants._LIGHT_TYPE_AMBIENT});});
+    Y.one("#componentAddCamera").on("click",function(e){
+        addComponent(KICK.scene.Camera);
+    });
 };
 
 function SceneGameObjects(Y,sceneEditorApp){
