@@ -91,17 +91,17 @@ var SceneEditorView = function(Y,sceneEditorApp){
     this.decorateScene = function(scene){
         editorSceneCameraObject = scene.createGameObject();
         editorSceneCameraObject.name = "__editorSceneCameraObject__";
-            editorSceneCameraObject.transform.position = [0,1,10];
-            editorSceneCameraComponent = new KICK.scene.Camera({
-                clearColor : [0.1,0.1,0.15,1.0]
-            });
-            editorSceneCameraObject.addComponent(editorSceneCameraComponent);
-            editorSceneCameraObject.addComponent(new CameraNavigator(sceneEditorApp));
+        editorSceneCameraObject.transform.position = [0,1,10];
+        editorSceneCameraComponent = new KICK.scene.Camera({
+            clearColor : [0.1,0.1,0.15,1.0],
+            cameraIndex: Number.MAX_VALUE
+        });
+        editorSceneCameraObject.addComponent(editorSceneCameraComponent);
+        editorSceneCameraObject.addComponent(new CameraNavigator(sceneEditorApp));
 
-            editorSceneGridObject = scene.createGameObject();
-            editorSceneGridObject.name = "__editorSceneGridObject__";
-            editorSceneGridObject.addComponent(new VisualGrid());
-
+        editorSceneGridObject = scene.createGameObject();
+        editorSceneGridObject.name = "__editorSceneGridObject__";
+        editorSceneGridObject.addComponent(new VisualGrid());
 
         createDebugScene(scene);
     };

@@ -14,6 +14,33 @@ KICK.scene.MeshRenderer.prototype.createEditorGUI = function(propertyEditor, obj
     propertyEditor.addAssetPointer("mesh", "Mesh","", object.mesh ? object.mesh.uid:0 ,"KICK.mesh.Mesh");
 };
 
+KICK.scene.Camera.prototype.createEditorGUI = function(propertyEditor, object){
+    propertyEditor.setTitle("Camera");
+    propertyEditor.addEnum("perspective", "Type",null, [
+        {value:1,name:"Perspective"},
+        {value:0,name:"Orthographic"}
+    ]);
+    propertyEditor.addNumber("fieldOfView", "Field of view Y","Perspective only");
+    propertyEditor.addNumber("near", "Near clip plane");
+    propertyEditor.addNumber("far", "Far clip plane");
+    propertyEditor.addNumber("left", "Left","Orthographic only");
+    propertyEditor.addNumber("right", "Right","Orthographic only");
+    propertyEditor.addNumber("bottom", "Bottom","Orthographic only");
+    propertyEditor.addNumber("top", "top","Orthographic only");
+    propertyEditor.addSeparator();
+    propertyEditor.addBoolean("clearFlagDepth", "Clear depth buffer");
+    propertyEditor.addBoolean("clearFlagColor", "Clear color buffer");
+    propertyEditor.addVector("clearColor", "Clear color");
+    propertyEditor.addSeparator();
+    propertyEditor.addBoolean("isShadowDisabled", "Disable shadow", "Camera renders only objects where the components layer exist in the layer mask.");
+    propertyEditor.addNumber("layerMask", "Layer mask");
+    propertyEditor.addVector("normalizedViewportRect", "Viewport", "xOffset,yOffset,xWidth,yHeight");
+    propertyEditor.addNumber("cameraIndex", "Camera Index", "The sorting order when multiple cameras exists in the scene.Cameras with lowest number is rendered first.");
+    propertyEditor.addAssetPointer("renderTarget", "Render target", "Set the render target of the camera. Null means screen framebuffer.",0,"KICK.texture.RenderTexture",null,true);
+
+
+};
+
 KICK.scene.Light.prototype.createEditorGUI = function(propertyEditor, object){
     var c = KICK.core.Constants,
         lightName;
@@ -235,9 +262,9 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
         isResourceDescriptor = object instanceof KICK.core.ResourceDescriptor,
         value,
         componentPanel = new ComponentPanelModule(
-        {
-            contentBox: "#"+id
-        }),
+            {
+                contentBox: "#"+id
+            }),
         getValue = function(name){
             if (isResourceDescriptor){
                 return object.config[name];
@@ -262,45 +289,53 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
             }
         };
     this.getNodeName = function(type,name,i){
-            return type+"_"+id+'_'+name+"_"+i;
-        };
+        return type+"_"+id+'_'+name+"_"+i;
+    };
     this.addFieldTitle = function(name, tooltip){
-            tooltip = tooltip ? tooltip.replace('"','&quot;') : "";
-            var content = '<div class="yui3-u-1"><div class="content" title="'+tooltip+'">'+name+'</div></div>';
-            componentPanel.render();
-            componentPanel.setStdModContent("body",content,Y.WidgetStdMod.AFTER);
-        };
-    this.addAssetPointer = function(name, displayname, tooltip, uid, type, setValueFn){
-            displayname = displayname ||Êname;
-            thisObj.addFieldTitle(displayname, tooltip);
-            var nodeId = thisObj.getNodeName("string",name,0);
-            var content = '<div class="yui3-u-1"><div class="content"><select class="propSelect" id="'+nodeId+'"/></div></div>';
-            componentPanel.setStdModContent("body",content,Y.WidgetStdMod.AFTER);
-            componentPanel.render();
-            var node = Y.one("#"+nodeId);
+        tooltip = tooltip ? tooltip.replace('"','&quot;') : "";
+        var content = '<div class="yui3-u-1"><div class="content" title="'+tooltip+'">'+name+'</div></div>';
+        componentPanel.render();
+        componentPanel.setStdModContent("body",content,Y.WidgetStdMod.AFTER);
+    };
+    this.addAssetPointer = function(name, displayname, tooltip, uid, type, setValueFn,allowNull){
+        displayname = displayname ||Êname;
+        thisObj.addFieldTitle(displayname, tooltip);
+        var nodeId = thisObj.getNodeName("string",name,0);
+        var content = '<div class="yui3-u-1"><div class="content"><select class="propSelect" id="'+nodeId+'"/></div></div>';
+        var selected;
+        var item;
 
-            if (node){
-                var assets = engine.project.getResourceDescriptorByType(type);
-                for (var i=0;i<assets.length;i++){
-                    var t = assets[i];
-                    if (t.name.indexOf('__')==0){
-                        continue;
-                    }
-                    var selected = t.uid === uid ? "selected":"";
-                    var item = Y.Node.create('<option value="'+t.uid+'" '+selected+'>'+t.name+'</option>');
-                    node.append(item);
-                }
+        componentPanel.setStdModContent("body",content,Y.WidgetStdMod.AFTER);
+        componentPanel.render();
+        var node = Y.one("#"+nodeId);
 
-                var updateModel = function(){
-                    var newUid = parseInt(Y.one("#"+nodeId).get('value'));
-                    setValueFn = setValueFn || setValue;
-                    setValueFn(name,newUid);
-                };
-                node.on("change",updateModel);
-                node.after("click",updateModel);
-                node.after("keyup",updateModel);
+        if (node){
+            var assets = engine.project.getResourceDescriptorByType(type);
+            if (allowNull) {
+                selected = !uid ? "selected" : "";
+                item = Y.Node.create('<option value="" ' + selected + '></option>');
+                node.append(item);
             }
-        };
+            for (var i=0;i<assets.length;i++){
+                var t = assets[i];
+                if (t.name.indexOf('__')==0){
+                    continue;
+                }
+                selected = t.uid === uid ? "selected":"";
+                item = Y.Node.create('<option value="'+t.uid+'" '+selected+'>'+t.name+'</option>');
+                node.append(item);
+            }
+
+            var updateModel = function(){
+                var newUid = parseInt(Y.one("#"+nodeId).get('value'));
+                setValueFn = setValueFn || setValue;
+                setValueFn(name,newUid);
+            };
+            node.on("change",updateModel);
+            node.after("click",updateModel);
+            node.after("keyup",updateModel);
+        }
+    };
     /**
      *
      * @param name
@@ -310,97 +345,97 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
      * @param setValueFn
      */
     this.addEnum = function(name, displayname, tooltip, enumValues, setValueFn){
-            displayname = displayname || name;
-            thisObj.addFieldTitle(displayname, tooltip);
-            var nodeId = thisObj.getNodeName("string",name,0);
-            var content = '<div class="yui3-u-1"><div class="content"><select class="propSelect" id="'+nodeId+'"/></div></div>';
-            var value = getValue(name);
-            componentPanel.setStdModContent("body",content,Y.WidgetStdMod.AFTER);
-            componentPanel.render();
-            var node = Y.one("#"+nodeId);
+        displayname = displayname || name;
+        thisObj.addFieldTitle(displayname, tooltip);
+        var nodeId = thisObj.getNodeName("string",name,0);
+        var content = '<div class="yui3-u-1"><div class="content"><select class="propSelect" id="'+nodeId+'"/></div></div>';
+        var value = getValue(name);
+        componentPanel.setStdModContent("body",content,Y.WidgetStdMod.AFTER);
+        componentPanel.render();
+        var node = Y.one("#"+nodeId);
 
-            if (node){
-                for (var i=0;i<enumValues.length;i++){
-                    var t = enumValues[i];
-                    var selected = t.value === value ? "selected":"";
-                    var item = Y.Node.create('<option value="'+t.value+'" '+selected+'>'+t.name+'</option>');
-                    node.append(item);
-                }
-
-                var updateModel = function(){
-                    var newUid = parseInt(Y.one("#"+nodeId).get('value'));
-                    setValueFn = setValueFn || setValue;
-                    setValueFn(name,newUid);
-                };
-                node.on("change",updateModel);
-                node.after("click",updateModel);
-                node.after("keyup",updateModel);
+        if (node){
+            for (var i=0;i<enumValues.length;i++){
+                var t = enumValues[i];
+                var selected = t.value === value ? "selected":"";
+                var item = Y.Node.create('<option value="'+t.value+'" '+selected+'>'+t.name+'</option>');
+                node.append(item);
             }
-        };
+
+            var updateModel = function(){
+                var newUid = parseInt(Y.one("#"+nodeId).get('value'));
+                setValueFn = setValueFn || setValue;
+                setValueFn(name,newUid);
+            };
+            node.on("change",updateModel);
+            node.after("click",updateModel);
+            node.after("keyup",updateModel);
+        }
+    };
     this.addString = function(name, displayname, tooltip, setValueFn){
-            displayname = displayname || name;
-            thisObj.addFieldTitle(displayname, tooltip);
-            var nodeId = thisObj.getNodeName("string",name,0);
-            var value = getValue(name);
-            var content = '<div class="yui3-u-1"><div class="content"><input type="text" class="propString" id="'+nodeId+'" value="'+value+'"></div></div>';
-            componentPanel.setStdModContent("body",content,Y.WidgetStdMod.AFTER);
-            componentPanel.render();
-            var node = Y.one("#"+nodeId);
+        displayname = displayname || name;
+        thisObj.addFieldTitle(displayname, tooltip);
+        var nodeId = thisObj.getNodeName("string",name,0);
+        var value = getValue(name);
+        var content = '<div class="yui3-u-1"><div class="content"><input type="text" class="propString" id="'+nodeId+'" value="'+value+'"></div></div>';
+        componentPanel.setStdModContent("body",content,Y.WidgetStdMod.AFTER);
+        componentPanel.render();
+        var node = Y.one("#"+nodeId);
 
-            if (node){
-                var updateModel = function(){
-                    var newValue = Y.one("#"+nodeId).get('value');
-                    setValueFn = setValueFn || setValue;
-                    setValueFn(name,newValue);
-                };
-                node.on("change",updateModel);
-                node.after("click",updateModel);
-                node.after("keyup",updateModel);
-            }
-        };
+        if (node){
+            var updateModel = function(){
+                var newValue = Y.one("#"+nodeId).get('value');
+                setValueFn = setValueFn || setValue;
+                setValueFn(name,newValue);
+            };
+            node.on("change",updateModel);
+            node.after("click",updateModel);
+            node.after("keyup",updateModel);
+        }
+    };
     this.addNumber= function(name, displayname, tooltip, setValueFn){
-            displayname = displayname || name;
-            thisObj.addFieldTitle(displayname, tooltip);
-            var nodeId = thisObj.getNodeName("string",name,0);
-            var value = getValue(name);
-            var content = '<div class="yui3-u-1"><div class="content"><input type="number" class="propString" id="'+nodeId+'" value="'+value+'"></div></div>';
-            componentPanel.setStdModContent("body",content,Y.WidgetStdMod.AFTER);
-            componentPanel.render();
-            var node = Y.one("#"+nodeId);
+        displayname = displayname || name;
+        thisObj.addFieldTitle(displayname, tooltip);
+        var nodeId = thisObj.getNodeName("string",name,0);
+        var value = getValue(name);
+        var content = '<div class="yui3-u-1"><div class="content"><input type="number" class="propString" id="'+nodeId+'" value="'+value+'"></div></div>';
+        componentPanel.setStdModContent("body",content,Y.WidgetStdMod.AFTER);
+        componentPanel.render();
+        var node = Y.one("#"+nodeId);
 
-            if (node){
-                var updateModel = function(){
-                    var newValue = parseFloat(Y.one("#"+nodeId).get('value'));
-                    setValueFn = setValueFn || setValue;
-                    setValueFn(name,newValue);
-                };
-                node.on("change",updateModel);
-                node.after("click",updateModel);
-                node.after("keyup",updateModel);
-            }
-        };
+        if (node){
+            var updateModel = function(){
+                var newValue = parseFloat(Y.one("#"+nodeId).get('value'));
+                setValueFn = setValueFn || setValue;
+                setValueFn(name,newValue);
+            };
+            node.on("change",updateModel);
+            node.after("click",updateModel);
+            node.after("keyup",updateModel);
+        }
+    };
     this.addBoolean = function(name, displayname, tooltip, setValueFn){
-            displayname = displayname ||Êname;
-            thisObj.addFieldTitle(displayname, tooltip);
-            var nodeId = thisObj.getNodeName("string",name,0);
-            var value = getValue(name)==true;
-            console.log(name+"="+value);
-            var content = '<div class="yui3-u-1"><div class="content"><input type="checkbox" class="propBoolean" id="'+nodeId+'" '+(value?"checked":"")+'></div></div>';
-            componentPanel.setStdModContent("body",content,Y.WidgetStdMod.AFTER);
-            componentPanel.render();
-            var node = Y.one("#"+nodeId);
+        displayname = displayname ||Êname;
+        thisObj.addFieldTitle(displayname, tooltip);
+        var nodeId = thisObj.getNodeName("string",name,0);
+        var value = getValue(name)==true;
+        console.log(name+"="+value);
+        var content = '<div class="yui3-u-1"><div class="content"><input type="checkbox" class="propBoolean" id="'+nodeId+'" '+(value?"checked":"")+'></div></div>';
+        componentPanel.setStdModContent("body",content,Y.WidgetStdMod.AFTER);
+        componentPanel.render();
+        var node = Y.one("#"+nodeId);
 
-            if (node){
-                var updateModel = function(){
-                    var newValue = Y.one("#"+nodeId).get('checked');
-                    setValueFn = setValueFn || setValue;
-                    setValueFn(name,newValue);
-                };
-                node.on("change",updateModel);
-                node.after("click",updateModel);
-                node.after("keyup",updateModel);
-            }
-        };
+        if (node){
+            var updateModel = function(){
+                var newValue = Y.one("#"+nodeId).get('checked');
+                setValueFn = setValueFn || setValue;
+                setValueFn(name,newValue);
+            };
+            node.on("change",updateModel);
+            node.after("click",updateModel);
+            node.after("keyup",updateModel);
+        }
+    };
     this.addColor = function(name, displayname, tooltip,value, setValueFn){
         // todo - make color picker
         return thisObj.addVector(name, displayname, tooltip,value, setValueFn);
@@ -410,17 +445,17 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
         displayname = displayname || name;
         thisObj.addFieldTitle(displayname, tooltip);
         value = value || getValue(name);
-        var content = "";
-        for (i = 0;i<value.length;i++){
+        var content = "",
+            valueLength = value.length;
+        for (i = 0;i<valueLength;i++){
             nodeId = thisObj.getNodeName("vector",name,i);
-            content += '<div class="yui3-u-1-3"><div class="content"><input type="number" class="propNumber" id="'+nodeId+'" value="'+value[i]+'"></a></div></div>';
+            content += '<div class="yui3-u-1-'+valueLength+'"><div class="content"><input type="number" class="propNumber" id="'+nodeId+'" value="'+value[i]+'"></a></div></div>';
         }
         componentPanel.setStdModContent("body",content,Y.WidgetStdMod.AFTER);
         componentPanel.render();
-        for (i = 0;i<value.length;i++){
+        for (i = 0;i<valueLength;i++){
             nodeId = thisObj.getNodeName("vector",name,i);
             var node = Y.one("#"+nodeId);
-
             if (node){
                 var updateModel = function(){
                     var newValue = [];
@@ -434,8 +469,10 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
                 node.after("click",updateModel);
                 node.after("keyup",updateModel);
             }
-
         }
+    };
+    this.addSeparator = function(){
+        componentPanel.setStdModContent("body","<hr/>",Y.WidgetStdMod.AFTER);
     };
 
     componentPanel.hide();

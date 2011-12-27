@@ -45,6 +45,10 @@ a:active {color:#CCB769;}  /* selected link */
     border-top-width:0;
 }
 
+#extra{
+    overflow-y: auto
+};
+
 .panelContent{
     width: 100%;
     height: 100%;
