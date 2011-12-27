@@ -8,6 +8,13 @@ KICK.scene.Transform.prototype.createEditorGUI = function(propertyEditor, object
     propertyEditor.addVector("localScale", "Scale");
 };
 
+KICK.scene.MeshRenderer.prototype.createEditorGUI = function(propertyEditor, object){
+    propertyEditor.setTitle("MeshRenderer");
+    propertyEditor.addAssetPointer("material", "Material","", object.material ? object.material.uid:0 ,"KICK.material.Material");
+    propertyEditor.addAssetPointer("mesh", "Mesh","", object.mesh ? object.mesh.uid:0 ,"KICK.mesh.Mesh");
+
+}
+
 KICK.texture.Texture.prototype.createEditorGUI = function(propertyEditor, object){
     var c = KICK.core.Constants;
     propertyEditor.setTitle("Texture");
@@ -441,9 +448,6 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
             } else if (typeofValue === "undefined"){
                 // ignore
                 thisObj.addFieldTitle(name);
-            } else if (isMaterial){
-                thisObj.addFieldTitle(name);
-                console.log("material "+name);
             } else if (value instanceof KICK.scene.GameObject){
                 thisObj.addFieldTitle(name);
                 console.debug("GameObject selection not implemented");
