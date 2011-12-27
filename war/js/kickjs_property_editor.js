@@ -37,8 +37,6 @@ KICK.scene.Camera.prototype.createEditorGUI = function(propertyEditor, object){
     propertyEditor.addVector("normalizedViewportRect", "Viewport", "xOffset,yOffset,xWidth,yHeight");
     propertyEditor.addNumber("cameraIndex", "Camera Index", "The sorting order when multiple cameras exists in the scene.Cameras with lowest number is rendered first.");
     propertyEditor.addAssetPointer("renderTarget", "Render target", "Set the render target of the camera. Null means screen framebuffer.",0,"KICK.texture.RenderTexture",null,true);
-
-
 };
 
 KICK.scene.Light.prototype.createEditorGUI = function(propertyEditor, object){
@@ -57,7 +55,6 @@ KICK.scene.Light.prototype.createEditorGUI = function(propertyEditor, object){
         default:
             lightName = "Unknown light";
             break;
-
     }
     propertyEditor.setTitle(lightName);
     propertyEditor.addVector("color", "Color");
@@ -478,7 +475,27 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
     componentPanel.hide();
 
     this.setTitle = function(title){
-        componentPanel.setStdModContent("header", title);
+        var toogleButton = '<div title="Show/Hide" class="component-toggle"/>';
+        componentPanel.setStdModContent("header", title+toogleButton);
+        componentPanel.render();
+        var header = componentPanel.getStdModNode("header");
+        header.addClass("propertyComponentHeader");
+        var toogleComponents = Y.all(".component-toggle");
+        toogleComponents.each(function(node){
+            if (node.getAttribute("clickListener")){
+                console.log("Already has listener");
+                return;
+            }
+            node.setAttribute("clickListener",true);
+            node.on("click",function(e){
+                var body = componentPanel.getStdModNode("body");
+                if (body){
+                    body.toggleClass("hiddenContent");
+                }
+                node.toggleClass("component-collapsed");
+                e.preventDefault();
+            });
+        });
     };
 
     var createGUIBasedOnJSON = function(){
