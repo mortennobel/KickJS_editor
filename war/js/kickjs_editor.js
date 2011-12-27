@@ -226,6 +226,14 @@ var SceneEditorApp = function(Y){
         _view.engine.canvasResized();
     };
 
+    var addComponent = function(componentType){
+        var uid = _sceneGameObjects.getSelectedGameObjectUid();
+        var gameObject = _view.engine.activeScene.getObjectByUID(uid);
+        var component = new componentType({});
+        gameObject.addComponent(component);
+        _propertyEditor.setContent(gameObject);
+    };
+
     Y.one("#projectAddMaterial").on("click",createMaterial);
     Y.one("#projectAddShader").on("click",function(){alert("not implemented");});
     Y.one("#projectAddTexture").on("click",function(){alert("not implemented");});
@@ -237,9 +245,9 @@ var SceneEditorApp = function(Y){
     Y.one("#gameObjectRename").on("click",function(){_sceneGameObjects.renameSelected();});
     Y.one("#gameObjectDelete").on("click",deleteSelectedGameObject);
 
-    Y.one("#componentAddMeshRenderer").on("click",function(){alert("Not implemented");});
-    Y.one("#componentAddMeshLight").on("click",function(){alert("Not implemented");});
-    Y.one("#componentAddCamera").on("click",function(){alert("Not implemented");});
+    Y.one("#componentAddMeshRenderer").on("click",function(){addComponent(KICK.scene.MeshRenderer);});
+    Y.one("#componentAddMeshLight").on("click",function(){addComponent(KICK.scene.Light);});
+    Y.one("#componentAddCamera").on("click",function(){addComponent(KICK.scene.Camera);});
 };
 
 function SceneGameObjects(Y,sceneEditorApp){

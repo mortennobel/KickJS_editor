@@ -64,8 +64,10 @@ a:active {color:#CCB769;}  /* selected link */
     text-align: right;
 }
 
-.propSelect{
-    width: 100%;;
+.propSelect,
+.propString {
+    width: 100%;
+    text-align: right;
 }
 
 /* debugStyle */
