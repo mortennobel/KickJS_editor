@@ -475,8 +475,12 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
     componentPanel.hide();
 
     this.setTitle = function(title){
-        var toogleButton = '<div title="Show/Hide" class="component-toggle"/>';
-        componentPanel.setStdModContent("header", title+toogleButton);
+        var toogleButton = '<div title="Show/Hide" class="component-toggle"></div>';
+        var deleteButton = '<a title="Delete component" class="component-delete">[X]</a>';
+        if (object instanceof KICK.scene.Transform){
+            deleteButton = "";
+        }
+        componentPanel.setStdModContent("header", title+toogleButton+deleteButton);
         componentPanel.render();
         var header = componentPanel.getStdModNode("header");
         header.addClass("propertyComponentHeader");
@@ -494,6 +498,20 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
                 }
                 node.toggleClass("component-collapsed");
                 e.preventDefault();
+            });
+        });
+        var deleteComponents = Y.all(".component-delete");
+        deleteComponents.each(function(node){
+            if (node.getAttribute("clickListener")){
+                console.log("Already has listener");
+                return;
+            }
+            node.setAttribute("clickListener",true);
+            node.on("click", function(e){
+                var gameObject = object.gameObject;
+                gameObject.removeComponent(object);
+                // reload game object
+                sceneEditorApp.gameObjectSelected(gameObject.uid);
             });
         });
     };
@@ -535,7 +553,6 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
                 var resourceDescriptor = engine.project.getResourceDescriptor(uid);
                 thisObj.addAssetPointer(name, name,null,uid,resourceDescriptor.type);
             }
-
         }
     };
 

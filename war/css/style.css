@@ -66,6 +66,15 @@ a:active {color:#CCB769;}  /* selected link */
     background-position: -0px -241px;
 }
 
+.component-delete{
+    float: right;
+    cursor: pointer;
+    color: #FF8888;
+    font-size: smaller;
+}
+.component-delete:hover{
+    color: red;
+}
 .panelContent{
     width: 100%;
     height: 100%;
