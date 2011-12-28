@@ -16,6 +16,7 @@ KICK.scene.MeshRenderer.prototype.createEditorGUI = function(propertyEditor, obj
 
 KICK.scene.Camera.prototype.createEditorGUI = function(propertyEditor, object){
     propertyEditor.setTitle("Camera");
+    propertyEditor.addBoolean("enabled", "Enabled");
     propertyEditor.addEnum("perspective", "Type",null, [
         {value:1,name:"Perspective"},
         {value:0,name:"Orthographic"}
@@ -32,8 +33,8 @@ KICK.scene.Camera.prototype.createEditorGUI = function(propertyEditor, object){
     propertyEditor.addBoolean("clearFlagColor", "Clear color buffer");
     propertyEditor.addVector("clearColor", "Clear color");
     propertyEditor.addSeparator();
-    propertyEditor.addBoolean("isShadowDisabled", "Disable shadow", "Camera renders only objects where the components layer exist in the layer mask.");
-    propertyEditor.addNumber("layerMask", "Layer mask");
+    propertyEditor.addBoolean("renderShadow", "Render shadow");
+    propertyEditor.addNumber("layerMask", "Layer mask", "Camera renders only objects where the components layer exist in the layer mask.");
     propertyEditor.addVector("normalizedViewportRect", "Viewport", "xOffset,yOffset,xWidth,yHeight");
     propertyEditor.addNumber("cameraIndex", "Camera Index", "The sorting order when multiple cameras exists in the scene.Cameras with lowest number is rendered first.");
     propertyEditor.addAssetPointer("renderTarget", "Render target", "Set the render target of the camera. Null means screen framebuffer.",0,"KICK.texture.RenderTexture",null,true);
