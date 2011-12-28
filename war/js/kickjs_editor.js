@@ -148,6 +148,19 @@ var SceneEditorApp = function(Y){
             console.log("selecting "+material.uid);
             _projectAssets.selectProjectAsset(material.uid);
             _projectAssets.renameSelected();
+        },
+        createMeshRendererComponent = function(){
+            var engine = _view.engine,
+                project = engine.project,
+                resourceManager = engine.resourceManager;
+            var mesh = resourceManager.getMesh("kickjs://mesh/cube/");
+            var materials = project.getResourceDescriptorByType("KICK.material.Material");
+            if (materials.length>0){
+                materials = [project.load(materials[0].uid)];
+            } else {
+                materials = [new KICK.material.Material(engine,{shader:resourceManager.getShader("kickjs://shader/__error/")})];
+            }
+            addComponent(KICK.scene.MeshRenderer,{mesh:mesh,materials:materials});
         };
 
     Object.defineProperties(this,{
@@ -251,7 +264,8 @@ var SceneEditorApp = function(Y){
     Y.one("#gameObjectRename").on("click",function(){_sceneGameObjects.renameSelected();});
     Y.one("#gameObjectDelete").on("click",deleteSelectedGameObject);
 
-    Y.one("#componentAddMeshRenderer").on("click",function(){addComponent(KICK.scene.MeshRenderer);});
+    Y.one("#componentAddMeshRenderer").on("click",createMeshRendererComponent);
+
     Y.one("#componentAddLightPoint").on("click",function(){addComponent(KICK.scene.Light,{type:KICK.core.Constants._LIGHT_TYPE_POINT});});
     Y.one("#componentAddLightDirectional").on("click",function(){addComponent(KICK.scene.Light,{type:KICK.core.Constants._LIGHT_TYPE_DIRECTIONAL});});
     Y.one("#componentAddLightAmbient").on("click",function(){addComponent(KICK.scene.Light,{type:KICK.core.Constants._LIGHT_TYPE_AMBIENT});});
