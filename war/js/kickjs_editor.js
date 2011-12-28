@@ -258,6 +258,11 @@ var SceneEditorApp = function(Y){
     Y.one("#componentAddCamera").on("click",function(e){
         addComponent(KICK.scene.Camera);
     });
+
+    var mainViewMenu = ["cameraWireframe","cameraShaded","cameraPerspective","cameraOrthographic","cameraSettings","cameraAlignSelected","cameraAlignCamera","cameraFrameSelected","cameraGrid","cameraGizmos"];
+    for (var i=0;i<mainViewMenu.length;i++){
+        Y.one("#"+mainViewMenu[i]).on("click",function(e){alert("Not implemented");});
+    }
 };
 
 function SceneGameObjects(Y,sceneEditorApp){

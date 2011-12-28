@@ -38,6 +38,7 @@ a:active {color:#CCB769;}  /* selected link */
 
 #mainViewMenu .yui3-menu-content{
     line-height: normal;
+    float: right;
 }
 
 .mainContent{
