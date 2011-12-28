@@ -17,12 +17,10 @@ YUI({
     // make engien public available (for debugging purpose)
     window.engine = sceneEditorApp.engine;
 
-    var menus =["#sceneGameObjectMenu","#projectAssetMenu","#propertyPanelMenu"];
-    window.menus = [];
+    var menus =["#sceneGameObjectMenu","#projectAssetMenu","#propertyPanelMenu","#mainViewMenu"];
     for (var i=0;i<menus.length;i++){
         var menu = Y.one(menus[i]);
         menu.plug(Y.Plugin.NodeMenuNav, {autoSubmenuDisplay:false});
-        window.menus.push(menu);
     }
 });
 

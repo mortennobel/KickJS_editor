@@ -80,7 +80,56 @@
     </div>
     <div class="yui3-u" id="main"><div class="content" id="mainContent">
         <div id="mainTabContainer"></div>
-        <canvas id="sceneView" class="mainContent"></canvas>
+        <div class="mainContent">
+            <div id="mainViewMenu" class="yui3-menu yui3-menu-horizontal yui3-menubuttonnav"><!-- Bounding box -->
+                <div class="yui3-menu-content"><!-- Content box -->
+                    <ul>
+                        <li>
+                            <a class="yui3-menu-label" href="#mainViewCamera"><em>Camera</em></a>
+                            <div id="mainViewCamera" class="yui3-menu">
+                                <div class="yui3-menu-content">
+                                    <ul>
+                                        <li class="yui3-menuitem"><a class="yui3-menuitem-content" href="#" id="cameraWireframe">Wireframe</a></li>
+                                        <li class="yui3-menuitem"><a class="yui3-menuitem-content" href="#" id="cameraSolid">Solid</a></li>
+                                    </ul>
+                                    <ul>
+                                        <li class="yui3-menuitem"><a class="yui3-menuitem-content" href="#" id="cameraPerspective">Perspective</a></li>
+                                        <li class="yui3-menuitem"><a class="yui3-menuitem-content" href="#" id="cameraOrthographic">Orthographic</a></li>
+                                        <li class="yui3-menuitem"><a class="yui3-menuitem-content" href="#" id="cameraSettings">Settings</a></li>
+                                    </ul>
+                                    <ul>
+                                        <li>
+                                            <a class="yui3-menu-label" href="#mainViewCameraAlign">Align</a>
+                                            <div id="mainViewCameraAlign" class="yui3-menu">
+                                                <div class="yui3-menu-content">
+                                                    <ul>
+                                                        <li class="yui3-menuitem"><a class="yui3-menuitem-content" href="#" id="cameraAlignSelected">Selected with camera</a></li>
+                                                        <li class="yui3-menuitem"><a class="yui3-menuitem-content" href="#" id="cameraAlignCamera">Camera with object</a></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li class="yui3-menuitem"><a class="yui3-menuitem-content" href="#" id="cameraFrameSelected">Frame selected</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <a class="yui3-menu-label" href="#mainViewCameraDisplay"><em>Display</em></a>
+                            <div id="mainViewCameraDisplay" class="yui3-menu">
+                                <div class="yui3-menu-content">
+                                    <ul>
+                                        <li class="yui3-menuitem"><a class="yui3-menuitem-content" href="#" id="cameraGrid">Grid</a></li>
+                                        <li class="yui3-menuitem"><a class="yui3-menuitem-content" href="#" id="cameraGizmos">Gizmos</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <canvas id="sceneView" class="mainContent"></canvas>
+        </div>
     </div></div>
     <div class="yui3-u" id="extra">
         <div class="panelHead" id="propertyPanelHeader">Properties</div>
