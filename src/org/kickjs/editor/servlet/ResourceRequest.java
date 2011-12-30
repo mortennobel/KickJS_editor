@@ -95,7 +95,7 @@ public class ResourceRequest extends JSONRequest {
             Entity entity = datastore.get(key);
             if (isNewObject){
                 if (entity != null){
-                    throw new Exception("Resource key already exist");
+                    throw new Exception("Resource key already exist '"+project+"' "+uid);
                 }
                 resource = new Resource(project, uid, contentName, contentType, user.getUserPricipal());
             } else {

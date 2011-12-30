@@ -1,0 +1,114 @@
+.yui3-mod-button {
+    -moz-border-radius: 0.4em;
+    -webkit-border-radius: 0.4em;
+    border: solid 1px;
+    cursor: pointer;
+    display: inline-block;
+    height: 2em;
+    line-height: 2em;
+    margin: 1em;
+    padding: 0 1em;
+    position: relative;
+    text-align: center;
+}
+
+.yui3-mod-button:hover {
+    border-style: solid;
+    border-width: 1px;
+}
+
+
+.yui3-mod-button-disabled,
+.yui3-mod-button-disabled:hover{
+    cursor: default;
+}
+
+.yui3-button-disabled .yui3-mod-button-icon {
+    filter: alpha(opacity=30);
+    opacity: .3;
+}
+
+/***
+    Skin: Sam
+***/
+.yui3-skin-sam .yui3-mod-button {
+    background: -moz-linear-gradient(
+        0% 100% 90deg,
+        #d8d8da 18%,
+        #f1f2f2 50%,
+        #fff 100%
+    );
+    background: -webkit-gradient(
+        linear, left bottom, left top,
+        from(#d8d8da),
+        color-stop(0.18, #d8d8da),
+        color-stop(0.5, #f1f2f2),
+        to(#fff)
+    );
+    background-color: #ececed;
+    border-color: #808080;
+    color: #000;
+}
+
+.yui3-skin-sam .yui3-mod-button:hover {
+    background: -moz-linear-gradient(
+        0% 100% 90deg,
+        #bfdaff 0%,
+        #dfedff 50%,
+        #e8f2ff 100%
+    );
+    background: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        from(#bfdaff),
+        color-stop(0.5, #dfedff),
+        to(#e8f2ff)
+    );
+    background-color: #d7e8ff;
+    border-color: #7d98b8;
+}
+
+.yui3-skin-sam .yui3-mod-button-selected,
+.yui3-skin-sam .yui3-mod-button-selected:hover {
+    background: -moz-linear-gradient(
+        0% 100% 90deg,
+        #2647a0 7%,
+        #3d67ce 50%,
+        #426fd9 100%
+    );
+    background: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        from(#2647a0),
+        color-stop(0.07, #2647a0),
+        color-stop(0.5, #3d67ce),
+        to(#426fd9)
+    );
+    background-color: #2B2D2D;
+    color: #fff;
+}
+
+.yui3-skin-sam .yui3-mod-button-disabled,
+.yui3-skin-sam .yui3-mod-button-disabled:hover{
+    background: -moz-linear-gradient(
+        0% 100% 90deg,
+        #e6e6e7 18%,
+        #fbfbfb 50%,
+        #fff 100%
+    );
+    background: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        from(#e6e6e7),
+        color-stop(0.18, #e6e6e7),
+        color-stop(0.5, #fbfbfb),
+        to(#fff)
+    );
+    border-color: #ccc;
+    color: #ccc;
+    cursor: default;
+}
+

@@ -1,0 +1,208 @@
+/* Current color theme is http://colorschemedesigner.com/#1i11UfvpEw0w0 */
+
+a:link {color:#998D62;}      /* unvisited link */
+a:visited {color:#857022;}  /* visited link */
+a:hover {color:#CCB769;}  /* mouse over link */
+a:active {color:#CCB769;}  /* selected link */
+
+#SmallKickJSTitle {
+    font-family: 'Coustard', serif;
+    font-size: 16px;
+    font-weight: 400;
+    margin-bottom: 5px;
+    margin-top: 10px;
+    margin-left: 10px;
+    margin-right: 10px;
+    float: right;
+    text-decoration:  none;
+}
+
+#layout {
+    padding-left:200px; /* "left col" width */
+    padding-right:200px; /* "right col" width */
+}
+
+#nav {
+    margin-left:-200px; /* "left col" width */
+    width:200px;
+}
+
+#extra {
+    width:200px;
+    margin-right:-200px; /* "right col" width */
+}
+
+#main {
+    width:100%;
+}
+
+#mainViewMenu .yui3-menu-content{
+    line-height: normal;
+    float: right;
+}
+
+.yui3-menuitem .yui3-menu-label-selected
+{
+    background: url(http://yui.yahooapis.com/3.5.0pr1/build/node-menunav/assets/skins/sam/vertical-menu-submenu-indicator.png) right center no-repeat;
+}
+
+.mainContent{
+    width:100%;
+    height:100%;
+}
+
+#sceneView{
+    border-top-width:0;
+}
+
+#extra{
+    overflow-y: auto
+}
+
+.projectHeader{
+    margin: 0.5em 0.5em;
+}
+
+.hiddenContent{
+    display: none;
+}
+
+#loadingPanel{
+    width: 100%;
+    margin-top: 100px;
+    text-align: center;
+}
+
+.component-toggle{
+    background-image: url(/js/treeview/sprite_tree_view_blue.gif);
+    background-repeat: no-repeat;
+    background-position: -0px -281px;
+    width:22px;
+    height:18px;
+    float: left;
+}
+
+.component-collapsed{
+    background-position: -0px -241px;
+}
+
+.component-delete{
+    float: right;
+    cursor: pointer;
+    color: #FF8888;
+    font-size: smaller;
+}
+
+.yui3-componentpanelmodule {
+    margin-top: 5px;
+}
+
+.component-delete:hover{
+    color: red;
+}
+.panelContent{
+    width: 100%;
+    height: 248px; /* todo make non hardcoded */
+    overflow: auto;
+}
+
+.panelContent ul{
+    list-style: none;
+    margin-left: 5px;
+    margin-top: 5px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+.propNumber{
+    width: 100%;
+    text-align: right;
+}
+
+.propSelect,
+.propString {
+    width: 100%;
+    text-align: right;
+}
+
+/* debugStyle */
+
+#hd, #ft {
+    height: 60px;
+}
+
+#projectPanel {
+    width: 100%;
+    height: 300px;
+}
+
+#scenePanel {
+    width: 100%;
+    height: 300px;
+}
+
+#mainContent{
+    width: 100%;
+    height: 600px;
+}
+
+#propertyPanel{
+    width: 100%;
+    height: 600px;
+}
+
+.propertyComponentHeader{
+    background: #E5E6F1;
+    font-weight: bold;
+    padding: 4px;
+}
+
+/* Tree view */
+.yui3-treeview .selected{
+    background-color: #DDD
+}
+
+/* Tabview remove style */
+.yui3-tabview {
+    margin-bottom: 0;
+}
+
+.yui3-skin-sam .yui3-tab {
+    position: relative;
+}
+
+.yui3-skin-sam .yui3-tabview-removeable .yui3-tab-label,
+.yui3-skin-sam .yui3-tabview-removeable .yui3-tab-selected .yui3-tab-label {
+    padding-right: 1.3em; /* make room for close link */
+}
+
+.yui3-skin-sam .yui3-tabview-removeable .yui3-tab-add {
+    padding-right: 0.75em; /* no close link for add tab link */
+}
+
+.yui3-skin-sam .yui3-tab-add {
+    color: #999;
+    font: bold 120%/1 verdana;
+    margin-left: 0.25em;
+}
+
+.yui3-tab-remove {
+    color: #999;
+    font:bold 80% verdana;
+    position: absolute;
+    right: 0.4em;
+    top: 0.4em;
+}
+
+.yui3-tab-remove:hover {
+    color: #666;
+}
+
+.yui3-skin-sam .yui3-tab-selected .yui3-tab-remove {
+    top: 0.52em;
+}
+
+.yui3-skin-sam .yui3-tab-selected .yui3-tab-remove:hover {
+    color: #fff;
+}
+

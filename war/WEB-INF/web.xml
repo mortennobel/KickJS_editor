@@ -56,9 +56,6 @@
         <servlet-name>ResourceServe</servlet-name>
         <url-pattern>/project/*</url-pattern>
     </servlet-mapping>
-
-
-
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>
     </welcome-file-list>

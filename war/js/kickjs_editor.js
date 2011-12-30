@@ -1,29 +1,83 @@
+var getParameter = function(name){
+    var hashString = location.hash;
+    var getOriginalParameter = function(name){
+        if (hashString.length==0){
+            return null;
+        }
+        hashString = hashString.substring(1);
+        var elements = hashString.split("&");
+        for (var i=0;i<elements.length;i++){
+            if (elements[i].indexOf(name+"=")==0){
+                return elements[i].split("=")[1];
+            }
+        }
+        return null;
+    };
+    getParameter = getOriginalParameter;
+    return getOriginalParameter(name);
+};
+
+var serverObject = getParameter("useServer")==="true"? KICKED.server:KICKED.localStorage;
+var projectName = getParameter("project");
+var debug = getParameter("debug")==="true";
+
 YUI({
     //Last Gallery Build of this module
     gallery: 'gallery-2011.01.03-18-30'
 })
     .use('tabview', 'escape', 'plugin', 'gallery-yui3treeview',"widget", "widget-position", "widget-stdmod", 'node-menunav', function(Y) {
-    var sceneEditorApp = new SceneEditorApp(Y);
+        var sceneEditorApp = new SceneEditorApp(Y);
 
-    createTabView(Y,sceneEditorApp);
-    sceneEditorApp.initEngine();
+        tabView = new TabView(Y,sceneEditorApp);
+        sceneEditorApp.initEngine();
 
-    sceneEditorApp.sceneGameObjects = new SceneGameObjects(Y, sceneEditorApp);
+        sceneEditorApp.sceneGameObjects = new SceneGameObjects(Y, sceneEditorApp);
 
-    sceneEditorApp.projectAssets = new ProjectAssets(Y,sceneEditorApp);
+        sceneEditorApp.projectAssets = new ProjectAssets(Y,sceneEditorApp);
 
-    sceneEditorApp.propertyEditor = new PropertyEditor(Y,sceneEditorApp);
+        sceneEditorApp.propertyEditor = new PropertyEditor(Y,sceneEditorApp);
 
-    // make engien public available (for debugging purpose)
-    window.engine = sceneEditorApp.engine;
+        // make engien public available (for debugging purpose)
+        window.engine = sceneEditorApp.engine;
 
-    var menus =["#sceneGameObjectMenu","#projectAssetMenu","#propertyPanelMenu","#mainViewMenu"];
-    for (var i=0;i<menus.length;i++){
-        var menu = Y.one(menus[i]);
-        menu.plug(Y.Plugin.NodeMenuNav, {autoSubmenuDisplay:false});
-    }
+        var menus =["#sceneGameObjectMenu","#projectAssetMenu","#propertyPanelMenu","#mainViewMenu"];
+        for (var i=0;i<menus.length;i++){
+            var menu = Y.one(menus[i]);
+            menu.plug(Y.Plugin.NodeMenuNav, {autoSubmenuDisplay:false});
+        }
+
+        function loadProject(){
+            var onError = function(errorObj){
+                alert("Error loading project");
+                console.log(errorObj);
+            };
+
+            var onResourceLoadSuccess = function(content){
+                var isError = content.status; // .status only available on errorObject
+                var sceneReady = function(){
+                    Y.one("#loadingPanel").addClass("hiddenContent");
+                    Y.one("#layout").removeClass("hiddenContent");
+                    tabView.adjustView();
+                };
+                if (isError){
+                    sceneEditorApp.createDefaultScene();
+                    sceneEditorApp.projectSave(sceneReady,onError,true);
+                } else {
+                    sceneEditorApp.projectLoad(content);
+                    sceneReady();
+                }
+            };
+
+            var onProjectLoad = function(resp){
+                console.log(resp.response);
+                serverObject.resource.load(projectName, 0,onResourceLoadSuccess, onResourceLoadSuccess,true);
+            };
+
+            serverObject.project.load(projectName, onProjectLoad, onError);
+        }
+
+        loadProject();
 });
-
 
 
 var SceneEditorView = function(Y,sceneEditorApp){
@@ -42,7 +96,7 @@ var SceneEditorView = function(Y,sceneEditorApp){
             engine.canvasResized();
         });
 
-    function createDebugScene(scene) {
+    this.createDefaultScene = function (scene) {
         // create material
         var materials = [
             new KICK.material.Material(engine, {
@@ -100,8 +154,6 @@ var SceneEditorView = function(Y,sceneEditorApp){
         editorSceneGridObject = scene.createGameObject();
         editorSceneGridObject.name = "__editorSceneGridObject__";
         editorSceneGridObject.addComponent(new VisualGrid());
-
-        createDebugScene(scene);
     };
     Object.defineProperties(this,{
         engine:{
@@ -117,6 +169,7 @@ var SceneEditorApp = function(Y){
         _sceneGameObjects,
         _projectAssets,
         _propertyEditor,
+        thisObj = this,
         deleteSelectedGameObject = function(){
             var uid = _sceneGameObjects.getSelectedGameObjectUid();
             if (!uid){
@@ -200,6 +253,11 @@ var SceneEditorApp = function(Y){
         }
     });
 
+    this.createDefaultScene = function(){
+        var scene = _view.engine.activeScene;
+        _view.decorateScene(scene);
+        _view.createDefaultScene(scene);
+    };
     this.projectAssetSelected = function(uid){
         _projectAssets.selectProjectAsset(uid);
         var resourceDescriptor = _view.engine.project.getResourceDescriptor(uid);
@@ -214,28 +272,50 @@ var SceneEditorApp = function(Y){
         _projectAssets.deselect();
     };
 
-    this.loadProject = function(){
-
+    this.projectSave = function(responseFn, errorFn,isNew){
+        var projectSave = Y.one("#projectSave");
+        projectSave.setContent("Saving ...");
+        var projectJSON = _view.engine.project.toJSON();
+        var projectStr = JSON.stringify(projectJSON);
+        var resetSaveButton = function(){
+            projectSave.setContent('Save');
+        };
+        var respWrap = function(resp){
+            if (responseFn){
+                responseFn(resp);
+            }
+            projectSave.setContent("Save ok!");
+            setTimeout(resetSaveButton,2000);
+        };
+        var errorWrap = function(resp){
+            if (errorFn){
+                errorFn(resp);
+            }
+            projectSave.setContent("Save error!");
+            setTimeout(resetSaveButton,2000);
+        };
+        console.log("saving : "+projectStr );
+        serverObject.resource.upload(projectName, 0, "application/json","project.json",projectStr,isNew,respWrap,errorWrap);
     };
 
-    this.saveProject = function(){
-
+    this.projectLoad = function(project){
+        _view.engine.project.loadProject(project);
+        _view.decorateScene(_view.engine.activeScene);
+        _sceneGameObjects.updateSceneContent();
+        _projectAssets.updateProjectContent();
     };
 
-    this.deleteProject = function(){
-
+    this.projectRun = function(){
+        console.log("Run");
+        alert("Not implemented");
     };
 
-    this.loadResource = function(){
-
-    };
-
-    this.saveResource = function(){
-
+    this.projectBuild = function(){
+        console.log("Build");
+        alert("Not implemented");
     };
 
     this.initEngine = function(){
-        _view.decorateScene(_view.engine.activeScene);
         _view.engine.canvasResized();
     };
 
@@ -252,6 +332,10 @@ var SceneEditorApp = function(Y){
         var menu = Y.one(menuId);
         menu.menuNav._hideAllSubmenus(menu);
     };
+
+    Y.one("#projectSave").on("click",function(){thisObj.projectSave()});
+    Y.one("#projectRun").on("click",function(){thisObj.projectRun()});
+    Y.one("#projectBuild").on("click",function(){thisObj.projectBuild()});
 
     Y.one("#projectAddMaterial").on("click",createMaterial);
     Y.one("#projectAddShader").on("click",function(){alert("not implemented");});
@@ -277,6 +361,8 @@ var SceneEditorApp = function(Y){
     for (var i=0;i<mainViewMenu.length;i++){
         Y.one("#"+mainViewMenu[i]).on("click",function(e){alert("Not implemented");});
     }
+    // test
+    Y.one("#cameraGrid").addClass("yui3-menu-label-selected");
 };
 
 function SceneGameObjects(Y,sceneEditorApp){
@@ -331,7 +417,7 @@ function SceneGameObjects(Y,sceneEditorApp){
                 if (!name){
                     name = "GameObject #"+gameObject.uid;
                 }
-                if (name.indexOf('__') !== 0){
+                if (name.indexOf('__') !== 0 || debug){
                     var treeNode = sceneTreeView.add({childType:"TreeLeaf",label:name});
                     treeNode.item(0).set("uid",uid);
                 }
@@ -536,7 +622,7 @@ function ProjectAssets(Y, sceneEditorApp){
     });
 }
 
-function createTabView(Y,sceneEditorApp){
+function TabView(Y,sceneEditorApp){
     var Removeable = function(config) {
         Removeable.superclass.constructor.apply(this, arguments);
     };
@@ -587,13 +673,13 @@ function createTabView(Y,sceneEditorApp){
 
     // Since a canvas does not work well inside a TabView, it is added after the TabView and then hidden whenever the
     // selected index is not 0
-    function adjustView(){
+    this.adjustView = function (){
         sceneView.style.display = "inline";
         sceneView.width = sceneView.clientWidth;
         sceneView.height = sceneView.clientHeight;
         sceneEditorApp.engine.canvasResized();
-    }
-    adjustView();
+    };
+    this.adjustView();
 
     tabview.on("selectionChange", function(e){
         var sceneView = document.getElementById('sceneView');

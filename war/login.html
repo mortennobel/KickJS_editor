@@ -1,0 +1,109 @@
+<html>
+<head>
+    <title>KickJS | Editor</title>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/combo?3.4.1/build/cssreset/reset-min.css&amp;3.4.1/build/cssfonts/fonts-min.css&amp;3.4.1/build/cssgrids/grids-min.css&amp;3.4.1/build/cssbase/base-min.css">
+    <link href="http://fonts.googleapis.com/css?family=Coustard:400,900" rel="stylesheet" type="text/css">
+    <link href="css/button.css" rel="stylesheet" type="text/css">
+    <link href="css/style.css" rel="stylesheet" type="text/css">
+    <script src="http://yui.yahooapis.com/3.5.0pr1/build/yui/yui.js"></script><!-- todo - user min version -->
+    <script type="text/javascript" src="js/kickjs_editor_server.js"></script>
+    <script type="text/javascript" src="js/kickjs_editor_login.js"></script>
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-26354413-1']);
+        _gaq.push(['_setDomainName', 'kickjs.org']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+    <style type="text/css">
+        #BigFont{
+
+        }
+        #SubBigFont{
+            font-size: 64px;
+            margin-bottom: 0;
+            margin-top: 10px;
+            text-align: center;
+        }
+        #SubBigFontUpper{
+            margin-bottom: 0;
+            margin-top: 0;
+            font-size: 24px;
+            position: relative;
+            top: -30px;
+        }
+
+        .mainContent{
+            margin-top: 20px;
+            text-align: center;
+            height: 100%;
+        }
+        .small{
+            font-size: small;
+        }
+        .footer{
+            margin-top: 200px;
+        }
+
+        .hiddenElement {
+            display: none;
+        }
+
+        #projects{
+            width: 100%;
+            height:100%;
+            font-size: 130%;
+        }
+
+        .footer{
+            text-align: center;
+        }
+
+        .buttonDisabled,
+        .buttonDisabled .yui3-button-content{
+            color: #808080;
+            cursor: default;
+        }
+    </style>
+
+</head>
+<body class="yui3-skin-sam">
+<div id="page">
+    <article class="content" style="padding-top: 150px;">
+        <h1 id="BigFont" style="margin-top: 0;font-size: 64px;">Kick<span id="BigUpper" style="font-size: 32px;top: -30px;">JS</span></h1>
+        <h1 id="SubBigFont">editor<span id="SubBigFontUpper">Beta 0.3</span></h1>
+        <div id="wrapper" class="clearfix">
+            <div class="mainContent">
+                <a href="#" class="yui3-mod-button hiddenElement" id="loginServer" title="">Use server version</a>
+                <a href="#" class="yui3-mod-button hiddenElement" id="loginLocal" title="">Use local storage version</a>
+                <div id="loading"><img src="images/loading.gif" alt="Loading">&nbsp;Loading</div>
+                <br clear="both">
+                <div class="small">Server version uses Google Authentication Service</div>
+            </div>
+        </div>
+    </article>
+    <footer class="footer">
+        <a href="http://editor.kickjs.org/">KickJS Editor</a> - Open Source WebGL Scene editor (BSD New License). Version 0.3. Hosted by Google App Engine.
+        <a href="http://www.kickjs.org/">KickJS</a> Open Source WebGL game engine (BSD New License).  Version 0.3.<br>
+    </footer>
+    <div id="panelContent">
+        <div class="yui3-widget-bd">
+            <select multiple="multiple" id="projects">
+            </select>
+        </div>
+    </div>
+    <div id="panelCreateProject">
+        <div class="yui3-widget-bd">
+            Project name:<br>
+            <input type="text" value="" id="projectName"><br>
+            <div id="projectNameStatus">&nbsp;</div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

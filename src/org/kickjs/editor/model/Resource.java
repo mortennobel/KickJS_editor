@@ -22,6 +22,9 @@ public class Resource implements Serializable {
     private String blobKey;
 
     public static Key getKey(Project project, long id){
+        if (id==0){ // workaround for allowing 0 keys
+            id = Long.MAX_VALUE;
+        }
         return KeyFactory.createKey(project.getKey(),ENTITY_NAME,id);
     }
     

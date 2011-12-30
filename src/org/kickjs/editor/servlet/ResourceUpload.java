@@ -25,6 +25,7 @@ public class ResourceUpload extends HttpServlet {
             throws ServletException, IOException {
         Map<String, List<BlobKey>> blobs = blobstoreService.getUploads(req);
         List<BlobKey> blobKeys = blobs.get("uploadFile");
+
         if (!blobKeys.isEmpty()){
             User user = LoginInfoRequest.getUser(req);
             String keyStr = req.getParameter("key");

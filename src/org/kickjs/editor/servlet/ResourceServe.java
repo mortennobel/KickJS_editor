@@ -49,7 +49,7 @@ public class ResourceServe extends HttpServlet {
             resp.setContentType(resource.getContentType());
             blobstoreService.serve(blobKey, resp);
         } catch (EntityNotFoundException e) {
-            throw new ServletException(e);
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
     }
 }

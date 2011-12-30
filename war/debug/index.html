@@ -8,7 +8,7 @@
 <body>
 <h1>Login test</h1>
 <script type="text/javascript">
-    KICKED.login(function(resp){
+    KICKED.server.login(function(resp){
         var strVersion = "<br><pre>"+JSON.stringify(resp,null,3)+"</pre>"
         if (resp.loginURL){
             document.getElementById('Message').innerHTML = '<a href="'+resp.loginURL+'">Login</a>'+strVersion;
@@ -22,7 +22,7 @@
 <div id="Message"></div>
 <h1>Project test</h1>
 <script type="text/javascript">
-    KICKED.login(function(resp){
+    KICKED.server.login(function(resp){
         var strVersion = "<br><pre>"+JSON.stringify(resp,null,3)+"</pre>"
         if (resp.loginURL){
             document.getElementById('Message').innerHTML = '<a href="'+resp.loginURL+'">Login</a>'+strVersion;
@@ -41,14 +41,39 @@
     
 </script>
 <input type=text id="name" value=""><br>
-<button onclick="KICKED.project.list(projectFn,errorFn)">projectList</button>
-<button onclick="KICKED.project.create(document.getElementById('name').value, projectFn,errorFn)">projectCreate</button>
-<button onclick="KICKED.project.delete(document.getElementById('name').value, projectFn,errorFn)">projectDelete</button>
-<button onclick="KICKED.project.isNameValid(document.getElementById('name').value, projectFn,errorFn)">projectIsNameValid</button>
-<button onclick="KICKED.project.load(document.getElementById('name').value, projectFn,errorFn)">load</button>
+<button onclick="KICKED.server.project.list(projectFn,errorFn)">projectList</button>
+<button onclick="KICKED.server.project.create(document.getElementById('name').value, projectFn,errorFn)">projectCreate</button>
+<button onclick="KICKED.server.project.delete(document.getElementById('name').value, projectFn,errorFn)">projectDelete</button>
+<button onclick="KICKED.server.project.isNameValid(document.getElementById('name').value, projectFn,errorFn)">projectIsNameValid</button>
+<button onclick="KICKED.server.project.load(document.getElementById('name').value, projectFn,errorFn)">load</button>
 <div id="ProjectMessage"></div>
 
 <h1>Resource test</h1>
+Projectname <input id="projectName"><br>
+uid <input id="uid"><br>
+contentType <input id="contentType"><br>
+contentName <input id="contentName"><br>
+<form id="resourceForm" method="post" enctype="multipart/form-data">
+    <input name="uploadFile" type="file" id="uploadFile">
+    <input type="submit">
+</form>
+<button onclick="initResource();">init</button>
+<button onclick="updateResource();">update</button>
+<button onclick="uploadResource(true);">initUpload</button>
+<button onclick="uploadResource(false);">updateUpload</button>
+<button onclick="uploadResource(true,'test');">initUpload_TXT</button>
+<button onclick="uploadResource(false,'test');">updateUpload_TXT</button>
+<button onclick="loadResource();">load</button>
+<button onclick="listResources();">list</button>
+<button onclick="deleteResource();">delete</button>
+<button onclick="loadResourceData();">loadData</button>
+<hr>
+Response message:<br>
+<div id="ResourceMessage"><img src="" style="clear: both;"></div>
+<hr>
+Response content:<br>
+<div id="ResourceContent"><img src=""></div>
+<hr>
 <script type="text/javascript">
     function resourceFn(resp){
         document.getElementById('ResourceMessage').innerHTML = JSON.stringify(resp,null,3);
@@ -67,24 +92,24 @@
         var uid = parseInt(document.getElementById('uid').value);
         var contentType = document.getElementById('contentType').value;
         var contentName = document.getElementById('contentName').value;
-        KICKED.resource.init(projectName, uid, contentType,contentName,initUploadFn,errorFn)
+        KICKED.server.resource.init(projectName, uid, contentType,contentName,initUploadFn,errorFn)
     }
     function updateResource(){
         var projectName = document.getElementById('projectName').value;
         var uid = parseInt(document.getElementById('uid').value);
         var contentType = document.getElementById('contentType').value;
         var contentName = document.getElementById('contentName').value;
-        KICKED.resource.update(projectName, uid, contentType,contentName,initUploadFn,errorFn)
+        KICKED.server.resource.update(projectName, uid, contentType,contentName,initUploadFn,errorFn)
     }
     function deleteResource(){
         var projectName = document.getElementById('projectName').value;
         var uid = parseInt(document.getElementById('uid').value);
-        KICKED.resource.delete(projectName, uid, resourceFn,errorFn)
+        KICKED.server.resource.delete(projectName, uid, resourceFn,errorFn)
     }
     function listResources(){
         var projectName = document.getElementById('projectName').value;
         var uid = parseInt(document.getElementById('uid').value);
-        KICKED.resource.list(projectName, resourceFn,errorFn)
+        KICKED.server.resource.list(projectName, resourceFn,errorFn)
     }
     function loadResource(){
         var projectName = document.getElementById('projectName').value;
@@ -93,20 +118,44 @@
         var url = '/project/'+projectName+"/"+uid;
         resourceMessage.innerHTML = '<img src="'+url+'">';
     }
+
+    function loadResourceData(){
+        var projectName = document.getElementById('projectName').value;
+        var uid = parseInt(document.getElementById('uid').value);
+        var response = function(content){
+            document.getElementById('ResourceContent').innerHTML = content;
+        };
+        KICKED.server.resource.load(projectName, uid,response,errorFn);
+    }
+
+    function uploadResource(isNew,content){
+        if ((files && files.length>0) || content){
+            var projectName = document.getElementById('projectName').value;
+            var uid = parseInt(document.getElementById('uid').value);
+            var fileObject = content || files[0];
+            var contentType = document.getElementById('contentType').value;
+            var contentName = document.getElementById('contentName').value;
+
+            var response = function(content){
+                console.log(content);
+                document.getElementById('ResourceContent').innerHTML = content;
+            };
+            KICKED.server.resource.upload(projectName, uid,contentType ,contentName,fileObject,isNew,response,errorFn);
+        } else {
+            alert("Nothing to upload");
+        }
+    }
+
+    var files = null;
+    var inputElement = document.getElementById("uploadFile");
+    inputElement.addEventListener("change", handleFiles, false);
+
+    function handleFiles() {
+        files = this.files;
+        console.log("Selected files "+files.length);
+    }
+
 </script>
-Projectname <input id="projectName"><br>
-uid <input id="uid"><br>
-contentType <input id="contentType"><br>
-contentName <input id="contentName"><br>
-<form id="resourceForm" method="post" enctype="multipart/form-data">
-    <input name="uploadFile" type="file">
-    <input type="submit">
-</form>
-<button onclick="initResource();">init</button>
-<button onclick="updateResource();">update</button>
-<button onclick="loadResource();">load</button>
-<button onclick="listResources();">list</button>
-<button onclick="deleteResource();">delete</button>
-<div id="ResourceMessage"><img src=""></div>
+
 </body>
 </html>
