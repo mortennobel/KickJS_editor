@@ -478,7 +478,7 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
     this.setTitle = function(title){
         var toogleButton = '<div title="Show/Hide" class="component-toggle"></div>';
         var deleteButton = '<a title="Delete component" class="component-delete">[X]</a>';
-        if (object instanceof KICK.scene.Transform){
+        if (object instanceof KICK.scene.Transform || isResourceDescriptor){
             deleteButton = "";
         }
         componentPanel.setStdModContent("header", title+toogleButton+deleteButton);
