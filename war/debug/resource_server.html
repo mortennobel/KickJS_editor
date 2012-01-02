@@ -3,7 +3,7 @@
 <html>
 <head>
     <title></title>
-    <script type="text/javascript" src="/js/kickjs_editor_server.js"></script>
+    <script type="text/javascript" src="../js/kickjs_editor_server.js"></script>
 </head>
 <body>
 <h1>Login test</h1>
@@ -40,12 +40,17 @@
     var errorFn = projectFn;
     
 </script>
+Persistence type: <select id="persistence_type">
+    <option value="server" selected=selected>Server</option>
+    <option value="local">Local</option>
+</select>
+<br><br>
 <input type=text id="name" value=""><br>
-<button onclick="KICKED.server.project.list(projectFn,errorFn)">projectList</button>
-<button onclick="KICKED.server.project.create(document.getElementById('name').value, projectFn,errorFn)">projectCreate</button>
-<button onclick="KICKED.server.project.delete(document.getElementById('name').value, projectFn,errorFn)">projectDelete</button>
-<button onclick="KICKED.server.project.isNameValid(document.getElementById('name').value, projectFn,errorFn)">projectIsNameValid</button>
-<button onclick="KICKED.server.project.load(document.getElementById('name').value, projectFn,errorFn)">load</button>
+<button onclick="server.project.list(projectFn,errorFn)">projectList</button>
+<button onclick="server.project.create(document.getElementById('name').value, projectFn,errorFn)">projectCreate</button>
+<button onclick="server.project.delete(document.getElementById('name').value, projectFn,errorFn)">projectDelete</button>
+<button onclick="server.project.isNameValid(document.getElementById('name').value, projectFn,errorFn)">projectIsNameValid</button>
+<button onclick="server.project.load(document.getElementById('name').value, projectFn,errorFn)">load</button>
 <div id="ProjectMessage"></div>
 
 <h1>Resource test</h1>
@@ -75,6 +80,9 @@ Response content:<br>
 <div id="ResourceContent"><img src=""></div>
 <hr>
 <script type="text/javascript">
+
+    var server =  KICKED.server;
+
     function resourceFn(resp){
         document.getElementById('ResourceMessage').innerHTML = JSON.stringify(resp,null,3);
     }
@@ -92,24 +100,24 @@ Response content:<br>
         var uid = parseInt(document.getElementById('uid').value);
         var contentType = document.getElementById('contentType').value;
         var contentName = document.getElementById('contentName').value;
-        KICKED.server.resource.init(projectName, uid, contentType,contentName,initUploadFn,errorFn)
+        server.resource.init(projectName, uid, contentType,contentName,initUploadFn,errorFn)
     }
     function updateResource(){
         var projectName = document.getElementById('projectName').value;
         var uid = parseInt(document.getElementById('uid').value);
         var contentType = document.getElementById('contentType').value;
         var contentName = document.getElementById('contentName').value;
-        KICKED.server.resource.update(projectName, uid, contentType,contentName,initUploadFn,errorFn)
+        server.resource.update(projectName, uid, contentType,contentName,initUploadFn,errorFn)
     }
     function deleteResource(){
         var projectName = document.getElementById('projectName').value;
         var uid = parseInt(document.getElementById('uid').value);
-        KICKED.server.resource.delete(projectName, uid, resourceFn,errorFn)
+        server.resource.delete(projectName, uid, resourceFn,errorFn)
     }
     function listResources(){
         var projectName = document.getElementById('projectName').value;
         var uid = parseInt(document.getElementById('uid').value);
-        KICKED.server.resource.list(projectName, resourceFn,errorFn)
+        server.resource.list(projectName, resourceFn,errorFn)
     }
     function loadResource(){
         var projectName = document.getElementById('projectName').value;
@@ -125,7 +133,7 @@ Response content:<br>
         var response = function(content){
             document.getElementById('ResourceContent').innerHTML = content;
         };
-        KICKED.server.resource.load(projectName, uid,response,errorFn);
+        server.resource.load(projectName, uid,response,errorFn);
     }
 
     function uploadResource(isNew,content){
@@ -140,7 +148,7 @@ Response content:<br>
                 console.log(content);
                 document.getElementById('ResourceContent').innerHTML = content;
             };
-            KICKED.server.resource.upload(projectName, uid,contentType ,contentName,fileObject,isNew,response,errorFn);
+            server.resource.upload(projectName, uid,contentType ,contentName,fileObject,isNew,response,errorFn);
         } else {
             alert("Nothing to upload");
         }
@@ -154,6 +162,17 @@ Response content:<br>
         files = this.files;
         console.log("Selected files "+files.length);
     }
+
+    var persistenceType = document.getElementById('persistence_type');
+    persistenceType.addEventListener('change',function(){
+        if (persistenceType.selectedIndex==0){
+            server =  KICKED.server;
+            console.log("server");
+        } else {
+            server =  KICKED.localStorage;
+            console.log("localStorage");
+        }
+    },true);
 
 </script>
 
