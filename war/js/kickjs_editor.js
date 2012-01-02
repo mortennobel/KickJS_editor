@@ -623,7 +623,8 @@ function ProjectAssets(Y, sceneEditorApp){
 }
 
 function TabView(Y,sceneEditorApp){
-    var Removeable = function(config) {
+    var thisObj = this,
+        Removeable = function(config) {
         Removeable.superclass.constructor.apply(this, arguments);
     };
 
@@ -685,7 +686,7 @@ function TabView(Y,sceneEditorApp){
         var sceneView = document.getElementById('sceneView');
         switch (e.newVal.get('index')){
             case 0:
-                adjustView();
+                thisObj.adjustView();
                 if (sceneEditorApp.paused){
                     sceneEditorApp.paused = false;
                 }
