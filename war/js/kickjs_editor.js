@@ -19,7 +19,7 @@ var getParameter = function(name){
 
 var serverObject = getParameter("useServer")==="true"? KICKED.server:KICKED.localStorage;
 var projectName = getParameter("project");
-var debug = getParameter("debug")==="true";
+var debug = getParameter("debug") === "true";
 
 YUI({
     //Last Gallery Build of this module
@@ -138,22 +138,29 @@ var SceneEditorView = function(Y,sceneEditorApp){
             meshRenderer.material = materials[i];
             gameObject.addComponent(meshRenderer);
         }
-    }
+    };
 
     this.decorateScene = function(scene){
-        editorSceneCameraObject = scene.createGameObject();
-        editorSceneCameraObject.name = "__editorSceneCameraObject__";
-        editorSceneCameraObject.transform.position = [0,1,10];
-        editorSceneCameraComponent = new KICK.scene.Camera({
-            clearColor : [0.1,0.1,0.15,1.0],
-            cameraIndex: Number.MAX_VALUE
-        });
-        editorSceneCameraObject.addComponent(editorSceneCameraComponent);
-        editorSceneCameraObject.addComponent(new CameraNavigator(sceneEditorApp));
-
-        editorSceneGridObject = scene.createGameObject();
-        editorSceneGridObject.name = "__editorSceneGridObject__";
-        editorSceneGridObject.addComponent(new VisualGrid());
+        var cameraName = "__editorSceneCameraObject__";
+        editorSceneCameraObject = scene.getGameObjectByName(cameraName);
+        if (!editorSceneCameraObject){
+            editorSceneCameraObject = scene.createGameObject();
+            editorSceneCameraObject.name = cameraName;
+            editorSceneCameraObject.transform.position = [0,1,10];
+            editorSceneCameraComponent = new KICK.scene.Camera({
+                clearColor : [0.1,0.1,0.15,1.0],
+                cameraIndex: Number.MAX_VALUE
+            });
+            editorSceneCameraObject.addComponent(editorSceneCameraComponent);
+            editorSceneCameraObject.addComponent(new CameraNavigator(sceneEditorApp));
+        }
+        var gridName = "__editorSceneGridObject__";
+        editorSceneGridObject = scene.getGameObjectByName(gridName);
+        if (!editorSceneGridObject){
+            editorSceneGridObject = scene.createGameObject();
+            editorSceneGridObject.name = gridName;
+            editorSceneGridObject.addComponent(new VisualGrid());
+        }
     };
     Object.defineProperties(this,{
         engine:{
@@ -183,7 +190,8 @@ var SceneEditorApp = function(Y){
             _sceneGameObjects.removeSelected();
         },
         createMaterial = function(){
-            var material = new KICK.material.Material(engine, {
+            var engine = _view.engine,
+                material = new KICK.material.Material(engine, {
                 shader:engine.resourceManager.getShader("kickjs://shader/unlit/"),
                 uniforms:{
                     mainColor:{
@@ -214,6 +222,27 @@ var SceneEditorApp = function(Y){
                 materials = [new KICK.material.Material(engine,{shader:resourceManager.getShader("kickjs://shader/__error/")})];
             }
             addComponent(KICK.scene.MeshRenderer,{mesh:mesh,materials:materials});
+        },
+        addScene = function(){
+            var engine = _view.engine,
+                newScene = KICK.scene.Scene.createDefault(engine);
+            engine.activeScene = newScene ;
+            _view.decorateScene(newScene );
+            _propertyEditor.setContent(null);
+            _sceneGameObjects.updateSceneContent();
+            _projectAssets.updateProjectContent();
+            _projectAssets.selectProjectAsset(newScene.uid);
+            _projectAssets.renameSelected();
+        },
+        loadScene = function(uid){
+            var engine = _view.engine,
+                project = engine.project,
+                newScene = project.load(parseInt(uid));
+            engine.activeScene = newScene;
+            console.log("Active scene is now "+engine.activeScene.uid);
+            _view.decorateScene(newScene);
+            _propertyEditor.setContent(null);
+            _sceneGameObjects.updateSceneContent();
         };
 
     Object.defineProperties(this,{
@@ -261,7 +290,11 @@ var SceneEditorApp = function(Y){
     this.projectAssetSelected = function(uid){
         _projectAssets.selectProjectAsset(uid);
         var resourceDescriptor = _view.engine.project.getResourceDescriptor(uid);
-        _propertyEditor.setContent(resourceDescriptor);
+        if (resourceDescriptor.type === "KICK.scene.Scene"){
+            loadScene(uid);
+        } else {
+            _propertyEditor.setContent(resourceDescriptor);
+        }
         _sceneGameObjects.deselect();
     };
 
@@ -341,7 +374,7 @@ var SceneEditorApp = function(Y){
     Y.one("#projectAddShader").on("click",function(){alert("not implemented");});
     Y.one("#projectAddTexture").on("click",function(){alert("not implemented");});
     Y.one("#projectAddMesh").on("click",function(){alert("not implemented");});
-    Y.one("#projectAddScene").on("click",function(){alert("not implemented");});
+    Y.one("#projectAddScene").on("click",addScene);
     Y.one("#projectAssetRename").on("click",function(){_projectAssets.renameSelected();});
     Y.one("#projectAssetDelete").on("click",function(){alert("not implemented");});
     Y.one("#gameObjectCreate").on("click",function(){_sceneGameObjects.createGameObject();});
@@ -416,6 +449,8 @@ function SceneGameObjects(Y,sceneEditorApp){
                 var name = gameObject.name;
                 if (!name){
                     name = "GameObject #"+gameObject.uid;
+                } else if (debug){
+                    name += " #"+gameObject.uid;
                 }
                 if (name.indexOf('__') !== 0 || debug){
                     var treeNode = sceneTreeView.add({childType:"TreeLeaf",label:name});
@@ -513,7 +548,6 @@ function ProjectAssets(Y, sceneEditorApp){
             contentBox: null,
             type: "TreeView",
             children: [
-                {label:"test"}
             ]
         }),
         getAssetName = function (uid){
@@ -527,6 +561,10 @@ function ProjectAssets(Y, sceneEditorApp){
             return name + " ("+type+")";
         };
 
+    /**
+     * Invoken when an asset is selected in the tree menu
+     * @param treeLeaf
+     */
     var selectProjectAsset = function(treeLeaf){
         if (selectedTreeLeaf){
             selectedTreeLeaf.get("boundingBox").removeClass("selected");
@@ -587,6 +625,9 @@ function ProjectAssets(Y, sceneEditorApp){
         for (uid in activeProjectUids){
             if (!treeValues[uid]){
                 var name = getAssetName(uid);
+                if (debug){
+                    name += " #"+uid;
+                }
                 if (name.indexOf('__')!==0){
                     var treeNode = projectTreeView.add({childType:"TreeLeaf",label:name});
                     treeNode.item(0).set("uid",uid);
