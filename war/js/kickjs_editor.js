@@ -28,8 +28,10 @@ YUI({
     .use('tabview', 'escape', 'plugin', 'gallery-yui3treeview',"widget", "widget-position", "widget-stdmod", 'node-menunav', function(Y) {
         var sceneEditorApp = new SceneEditorApp(Y);
 
-        tabView = new TabView(Y,sceneEditorApp);
+
         sceneEditorApp.initEngine();
+
+        sceneEditorApp.tabView = new TabView(Y,sceneEditorApp);
 
         sceneEditorApp.sceneGameObjects = new SceneGameObjects(Y, sceneEditorApp);
 
@@ -57,7 +59,7 @@ YUI({
                 var sceneReady = function(){
                     Y.one("#loadingPanel").addClass("hiddenContent");
                     Y.one("#layout").removeClass("hiddenContent");
-                    tabView.adjustView();
+                    sceneEditorApp.tabView.adjustView();
                 };
                 if (isError){
                     sceneEditorApp.createDefaultScene();
@@ -175,6 +177,7 @@ var SceneEditorApp = function(Y){
     var _view = new SceneEditorView(Y,this),
         _sceneGameObjects,
         _projectAssets,
+        _tabView,
         _propertyEditor,
         thisObj = this,
         deleteSelectedGameObject = function(){
@@ -232,7 +235,10 @@ var SceneEditorApp = function(Y){
             _sceneGameObjects.updateSceneContent();
             _projectAssets.updateProjectContent();
             _projectAssets.selectProjectAsset(newScene.uid);
-            _projectAssets.renameSelected();
+            var afterRename = function(){
+                thisObj.tabView.updateSceneName(newScene.name,newScene.uid);
+            };
+            _projectAssets.renameSelected(afterRename );
         },
         loadScene = function(uid){
             var engine = _view.engine,
@@ -243,9 +249,18 @@ var SceneEditorApp = function(Y){
             _view.decorateScene(newScene);
             _propertyEditor.setContent(null);
             _sceneGameObjects.updateSceneContent();
+            thisObj.tabView.updateSceneName(newScene.name,newScene.uid);
         };
 
     Object.defineProperties(this,{
+        tabView:{
+            get:function(){
+                return _tabView;
+            },
+            set:function(newValue){
+                _tabView = newValue;
+            }
+        },
         propertyEditor:{
             get:function(){
                 return _propertyEditor;
@@ -333,7 +348,7 @@ var SceneEditorApp = function(Y){
 
     this.projectLoad = function(project){
         _view.engine.project.loadProject(project);
-        _view.decorateScene(_view.engine.activeScene);
+        loadScene(_view.engine.activeScene.uid);
         _sceneGameObjects.updateSceneContent();
         _projectAssets.updateProjectContent();
     };
@@ -577,7 +592,7 @@ function ProjectAssets(Y, sceneEditorApp){
         }
     };
 
-    this.renameSelected = function(){
+    this.renameSelected = function(afterRenameFn){
         if (selectedTreeLeaf){
             var uid = selectedTreeLeaf.get("uid");
             var asset = engine.project.load(uid);
@@ -586,6 +601,9 @@ function ProjectAssets(Y, sceneEditorApp){
                 var newName = prompt("Enter asset name", name);
                 if (newName && newName.length>0 && newName.indexOf('__')!==0){
                     asset.name = newName;
+                    if (afterRenameFn){
+                        afterRenameFn();
+                    }
                 }
                 engine.project.release(uid);
                 selectedTreeLeaf.get("contentBox").setContent(getAssetName(uid));
@@ -712,6 +730,22 @@ function TabView(Y,sceneEditorApp){
         plugins: [Removeable]
     });
     tabview.render();
+
+    this.updateSceneName = function(sceneName,uid){
+        tabview.item(0).set("label", sceneName);
+        tabview.item(0).set("uid", uid);
+    };
+
+    this.selectTabByUID = function(uid){
+        for (var i = 0;i<tabview.size();i++){
+            if (tabview.get("uid") == uid){
+                tabview.selectChild(i);
+                break;
+            }
+        }
+    };
+
+
 
     // Since a canvas does not work well inside a TabView, it is added after the TabView and then hidden whenever the
     // selected index is not 0
