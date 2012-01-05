@@ -56,6 +56,18 @@
         <servlet-name>ResourceServe</servlet-name>
         <url-pattern>/project/*</url-pattern>
     </servlet-mapping>
+
+
+    <servlet>
+        <servlet-name>ProjectPassThrough</servlet-name>
+        <servlet-class>org.kickjs.editor.servlet.ProjectPassThrough</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ProjectPassThrough</servlet-name>
+        <url-pattern>/p/*</url-pattern>
+    </servlet-mapping>
+
+
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>
     </welcome-file-list>
