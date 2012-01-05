@@ -453,7 +453,7 @@ KICKED.localStorage.resource.load = function(projectName,uid,responseFn,errorFn,
 
 KICKED.localStorage.resource.upload = function(projectName, uid, contentType,contentName, content, newResource ,responseFn,errorFn){
     var reader = new FileReader();
-    reader.onload = function (e) {
+    var onload =  function (e) {
         var value = e.target.result;
         var key = projectName+"?"+uid;
         var metaKey = projectName+"?meta"+uid;
@@ -472,13 +472,14 @@ KICKED.localStorage.resource.upload = function(projectName, uid, contentType,con
             message:"Upload ok"
         }})
     };
+    reader.onload = onload;
     reader.onerror = function(e){
         errorFn({
             "error":e
         });
     };
     if (typeof content === 'string'){
-        reader.onload({target:{result:content}});
+        onload({target:{result:content}});
     } else {
         reader.readAsText(content);
     }
