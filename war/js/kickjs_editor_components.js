@@ -15,7 +15,7 @@ var VisualGrid = function VisualGrid(){ // use explicit function name to support
         gl = engine.gl;
         gridShader = engine.resourceManager.getShader("kickjs://shader/unlit/");
         shaderMaterial = new KICK.material.Material(engine,{
-            name:"__Grid",
+            name:"__Grid__",
             shader: gridShader,
             uniforms:{
                 mainColor: {

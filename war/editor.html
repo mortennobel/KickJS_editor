@@ -33,7 +33,7 @@
     <a class="yui3-mod-button" style="margin: auto;" id="projectBuild">Build and download</a>
 </div>
 <div id="loadingPanel">
-    <img src="images/loading.gif" alt="Loading">&nbsp;Loading
+    <img src="/images/loading.gif" alt="Loading">&nbsp;Loading
 </div>
 <div class="yui3-g hiddenContent" id="layout">
     <div class="yui3-u" id="nav">
@@ -57,8 +57,18 @@
                                     </div>
                                 </div>
                             </li>
-                            <li class="yui3-menuitem"><a class="yui3-menuitem-content" id="projectAssetRename" href="#">Rename</a></li>
-                            <li class="yui3-menuitem"><a class="yui3-menuitem-content" id="projectAssetDelete" href="#">Delete</a></li>
+                            <li>
+                                <a class="yui3-menu-label" href="#projectEdit"><em>Edit</em></a>
+                                <div id="projectEdit" class="yui3-menu">
+                                    <div class="yui3-menu-content">
+                                        <ul>
+                                            <li class="yui3-menuitem"><a class="yui3-menuitem-content" id="projectAssetRename" href="#">Rename</a></li>
+                                            <li class="yui3-menuitem"><a class="yui3-menuitem-content" id="projectAssetDelete" href="#">Delete</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="yui3-menuitem"><a class="yui3-menuitem-content" id="projectAssetRefresh" href="#" title="Refresh">&#x27F3;</a></li>
                         </ul>
                     </div>
                 </div>
@@ -74,8 +84,18 @@
                     <div class="yui3-menu-content"><!-- Content box -->
                         <ul>
                             <li class="yui3-menuitem"><a class="yui3-menuitem-content" id="gameObjectCreate" href="#">Create</a></li>
-                            <li class="yui3-menuitem"><a class="yui3-menuitem-content" id="gameObjectRename" href="#">Rename</a></li>
-                            <li class="yui3-menuitem"><a class="yui3-menuitem-content" id="gameObjectDelete" href="#">Delete</a></li>
+                            <li>
+                                <a class="yui3-menu-label" href="#gameObjectEdit"><em>Edit</em></a>
+                                <div id="gameObjectEdit" class="yui3-menu">
+                                    <div class="yui3-menu-content">
+                                        <ul>
+                                            <li class="yui3-menuitem"><a class="yui3-menuitem-content" id="gameObjectRename" href="#">Rename</a></li>
+                                            <li class="yui3-menuitem"><a class="yui3-menuitem-content" id="gameObjectDelete" href="#">Delete</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="yui3-menuitem"><a class="yui3-menuitem-content" id="gameObjectRefresh" href="#" title="Refresh">&#x27F3;</a></li>
                         </ul>
                     </div>
                 </div>
@@ -176,5 +196,7 @@
 <script src="/js/kickjs_editor_components.js"></script>
 <script src="/js/kickjs_property_editor.js"></script>
 <script src="/js/kickjs_editor.js"></script>
+
+
 </body>
 </html>

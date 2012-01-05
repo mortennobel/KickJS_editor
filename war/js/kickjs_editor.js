@@ -210,7 +210,7 @@ var SceneEditorApp = function(Y){
             material.name = "Material #"+engine.getUID(material);
             _projectAssets.updateProjectContent();
             console.log("selecting "+material.uid);
-            _projectAssets.selectProjectAsset(material.uid);
+            _projectAssets.selectProjectAssetById(material.uid);
             _projectAssets.renameSelected();
         },
         createMeshRendererComponent = function(){
@@ -234,7 +234,7 @@ var SceneEditorApp = function(Y){
             _propertyEditor.setContent(null);
             _sceneGameObjects.updateSceneContent();
             _projectAssets.updateProjectContent();
-            _projectAssets.selectProjectAsset(newScene.uid);
+            _projectAssets.selectProjectAssetById(newScene.uid);
             var afterRename = function(){
                 thisObj.tabView.updateSceneName(newScene.name,newScene.uid);
             };
@@ -303,7 +303,7 @@ var SceneEditorApp = function(Y){
         _view.createDefaultScene(scene);
     };
     this.projectAssetSelected = function(uid){
-        _projectAssets.selectProjectAsset(uid);
+        _projectAssets.selectProjectAssetById(uid);
         var resourceDescriptor = _view.engine.project.getResourceDescriptor(uid);
         if (resourceDescriptor.type === "KICK.scene.Scene"){
             loadScene(uid);
@@ -323,7 +323,15 @@ var SceneEditorApp = function(Y){
     this.projectSave = function(responseFn, errorFn,isNew){
         var projectSave = Y.one("#projectSave");
         projectSave.setContent("Saving ...");
-        var projectJSON = _view.engine.project.toJSON();
+        var filter = function(object){
+            if (object instanceof KICK.scene.GameObject || object instanceof KICK.core.ResourceDescriptor){
+                var name = object.name || "";
+                return name.indexOf("__")!==0;
+            }
+            return true;
+        };
+        var projectJSON = _view.engine.project.toJSON(filter);
+        console.log(projectJSON);
         var projectStr = JSON.stringify(projectJSON);
         var resetSaveButton = function(){
             projectSave.setContent('Save');
@@ -392,10 +400,20 @@ var SceneEditorApp = function(Y){
     Y.one("#projectAddScene").on("click",addScene);
     Y.one("#projectAssetRename").on("click",function(){_projectAssets.renameSelected();});
     Y.one("#projectAssetDelete").on("click",function(){alert("not implemented");});
+    if (debug){
+        Y.one("#projectAssetRefresh").on("click",function(){_projectAssets.updateProjectContent();});
+    } else {
+        Y.one("#projectAssetRefresh").remove(true);
+    }
+
     Y.one("#gameObjectCreate").on("click",function(){_sceneGameObjects.createGameObject();});
     Y.one("#gameObjectRename").on("click",function(){_sceneGameObjects.renameSelected();});
     Y.one("#gameObjectDelete").on("click",deleteSelectedGameObject);
-
+    if (debug){
+        Y.one("#gameObjectRefresh").on("click",function(){_sceneGameObjects.updateSceneContent();});
+    } else {
+        Y.one("#gameObjectRefresh").remove(true);
+    }
     Y.one("#componentAddMeshRenderer").on("click",createMeshRendererComponent);
 
     Y.one("#componentAddLightPoint").on("click",function(){addComponent(KICK.scene.Light,{type:KICK.core.Constants._LIGHT_TYPE_POINT});});
@@ -592,6 +610,8 @@ function ProjectAssets(Y, sceneEditorApp){
         }
     };
 
+
+
     this.renameSelected = function(afterRenameFn){
         if (selectedTreeLeaf){
             var uid = selectedTreeLeaf.get("uid");
@@ -646,7 +666,7 @@ function ProjectAssets(Y, sceneEditorApp){
                 if (debug){
                     name += " #"+uid;
                 }
-                if (name.indexOf('__')!==0){
+                if (name.indexOf('__')!==0 || debug){
                     var treeNode = projectTreeView.add({childType:"TreeLeaf",label:name});
                     treeNode.item(0).set("uid",uid);
                 }
@@ -661,7 +681,11 @@ function ProjectAssets(Y, sceneEditorApp){
         }
     };
 
-    this.selectProjectAsset = function(uid){
+    /**
+     * @method selectProjectAssetById
+     * @param {Number} uid
+     */
+    this.selectProjectAssetById = function(uid){
         for (i=projectTreeView.size()-1;i>=0;i--){
             var element = projectTreeView.item(i);
             if (parseInt(element.get("uid")) === uid){

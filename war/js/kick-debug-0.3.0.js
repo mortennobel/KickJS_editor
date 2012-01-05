@@ -6287,11 +6287,11 @@ KICK.namespace = function (ns_string) {
             resourceReferenceCount = {},
             thisObj = this,
             _maxUID = 0,
-            refreshResourceDescriptor = function(uid){
+            refreshResourceDescriptor = function(uid,filter){
                 if (resourceDescriptorsByUID[uid] instanceof core.ResourceDescriptor){
                     var liveObject = resourceCache[uid];
                     if (liveObject){
-                        resourceDescriptorsByUID[uid].updateConfig(liveObject);
+                        resourceDescriptorsByUID[uid].updateConfig(liveObject,filter);
                     }
                 }
             };
@@ -6460,10 +6460,12 @@ KICK.namespace = function (ns_string) {
         /**
          * Updates the resourceDescriptors with data from the initialized objects
          * @method refreshResourceDescriptors
+         * @param {Function} filter Optional. Filter with function(object): return boolean, where true means include in export.
          */
-        this.refreshResourceDescriptors = function(){
+        this.refreshResourceDescriptors = function(filter){
+            filter = filter || function(){return true;};
             for (var uid in resourceDescriptorsByUID){
-                refreshResourceDescriptor(uid);
+                refreshResourceDescriptor(uid,filter);
             }
         };
 
@@ -6525,13 +6527,17 @@ KICK.namespace = function (ns_string) {
 
         /**
          * @method toJSON
+         * @param {Function} filter Optional. Filter with function(object): return boolean, where true means include in export.
+         * @return Object
          */
-        this.toJSON = function(){
+        this.toJSON = function(filter){
             var res = [];
-            thisObj.refreshResourceDescriptors();
+            filter = filter || function(){return true;};
+            thisObj.refreshResourceDescriptors(filter);
             for (var uid in resourceDescriptorsByUID){
-                if (resourceDescriptorsByUID[uid] instanceof core.ResourceDescriptor){
-                    res.push(resourceDescriptorsByUID[uid].toJSON());
+                var rd = resourceDescriptorsByUID[uid];
+                if (rd instanceof core.ResourceDescriptor && filter(rd)){
+                    res.push(rd.toJSON(filter));
                 }
             }
             return {
@@ -6636,10 +6642,11 @@ KICK.namespace = function (ns_string) {
         /**
          * Updates the configuration with the one from object
          * @method updateConfig
+         * @param {Function} filter Optional. Filter with function(object): return boolean, where true means include in export.
          * @param {Object} object
          */
-        this.updateConfig = function(object){
-            resourceConfig = object.toJSON();
+        this.updateConfig = function(object,filter){
+            resourceConfig = object.toJSON(filter);
         };
 
         /**
@@ -8799,7 +8806,7 @@ KICK.namespace = function (ns_string) {
             meshVertexIndexBuffers = [],
             _name,
             _meshData,
-            _urlResource,
+            _dataURI,
             _aabb = null,
             thisObj = this,
             c = KICK.core.Constants,
@@ -8839,7 +8846,11 @@ KICK.namespace = function (ns_string) {
                 interleavedArrayFormat = _meshData.interleavedArrayFormat;
                 vertexAttrLength = _meshData.vertexAttrLength;
                 meshType = _meshData.meshType;
-
+                if (ASSERT){
+                    if (typeof meshType === "undefined"){
+                        fail("meshType is undefined");
+                    }
+                }
 
                 meshVertexAttBuffer = gl.createBuffer();
                 gl.bindBuffer(34962, meshVertexAttBuffer);
@@ -8907,18 +8918,18 @@ KICK.namespace = function (ns_string) {
             },
             /**
              * The resource url of the mesh. Setting this property will try to load the meshData.
-             * @property urlResource
+             * @property dataURI
              * @type String
              */
-            urlResource:{
+            dataURI:{
                 get:function(){
-                    return _urlResource;
+                    return _dataURI;
                 },
                 set:function(newValue){
-                    if (newValue !== _urlResource){
+                    if (newValue !== _dataURI){
                         engine.resourceManager.getMeshData(newValue,thisObj);
                     }
-                    _urlResource = newValue;
+                    _dataURI = newValue;
                 }
             }
         });
@@ -9030,10 +9041,15 @@ KICK.namespace = function (ns_string) {
          * @return {Object} data object
          */
         this.toJSON = function(){
+            if (ASSERT){
+                if (!_dataURI){
+                    fail("_dataURI not defined");
+                }
+            }
             return {
                 uid: thisObj.uid,
                 name:_name,
-                urlResource:_urlResource
+                dataURI:_dataURI
             };
         };
     };
@@ -10086,12 +10102,17 @@ KICK.namespace = function (ns_string) {
 
         /**
          * @method toJSON
+         * @param {Function} filter Optional. Filter with function(object): return boolean, where true means include in export.
          * @return {Object}
          */
-        this.toJSON = function (){
+        this.toJSON = function (filterFn){
             var gameObjectsCopy = [];
+            filterFn = filterFn || function(){return true;}
             for (var i=0;i<gameObjects.length;i++){
-                gameObjectsCopy.push(gameObjects[i].toJSON());
+                var gameObject = gameObjects[i];
+                if (filterFn(gameObject)){
+                    gameObjectsCopy.push(gameObject.toJSON());
+                }
             }
             return {
                 uid: thisObj.uid,
@@ -14597,9 +14618,11 @@ KICK.namespace = function (ns_string) {
      * @constructor
      */
     core.ResourceManager = function (engine) {
-        var resourceProviders = [
-            new core.URLResourceProvider(engine),
-            new core.BuiltInResourceProvider(engine)],
+        var resourceProviders =
+            [
+                new core.URLResourceProvider(engine),
+                new core.BuiltInResourceProvider(engine)
+            ],
             buildCache = function(){
                 return {
                     ref: {},
@@ -14628,10 +14651,20 @@ KICK.namespace = function (ns_string) {
              * @return {Function} getter function with the signature function(url)
              * @private
              */
-            buildGetFunc = function(cache,methodName){
+            buildGetFunc = function(cache,methodName,type){
                 return function(url){
-                    var res = getFromCache(cache,url),
-                        i;
+                    var i,
+                        res;
+                    if (type){
+                        var projectResources = engine.project.getResourceDescriptorByType(type);
+                        for (i=0;i<projectResources.length;i++){
+                            var projectResource = projectResources[i];
+                            if (projectResource.config.dataURI === url){
+                                return engine.project.load(projectResource.uid);
+                            }
+                        }
+                    }
+                    res = getFromCache(cache,url);
                     if (res){
                         return res;
                     }
@@ -14686,7 +14719,6 @@ KICK.namespace = function (ns_string) {
          */
         this.getShaderData = buildCallbackFunc("getShaderData");
 
-
         /**
          * @method getMesh
          * @param {String} uri
@@ -14694,20 +14726,22 @@ KICK.namespace = function (ns_string) {
          * @deprecated
          */
         this.getMesh = buildGetFunc(meshCache,"getMesh");
+
         /**
          * @method getShader
          * @param {String} uri
          * @return {KICK.material.Shader}
          * @deprecated
          */
-        this.getShader = buildGetFunc(shaderCache,"getShader");
+        this.getShader = buildGetFunc(shaderCache,"getShader", "KICK.material.Shader");
+
         /**
          * @method getTexture
          * @param {String} uri
-         * @return {KICK.material.Shader}
+         * @return {KICK.texture.Texture}
          * @deprecated
          */
-        this.getTexture = buildGetFunc(textureCache,"getTexture");
+        this.getTexture = buildGetFunc(textureCache,"getTexture","KICK.texture.Texture");
 
         /**
          * Release a reference to the resource.
@@ -14853,10 +14887,10 @@ KICK.namespace = function (ns_string) {
 
         /**
          * <ul>
-         * <li><b>Triangle</b> Url: kickjs://meshdata/triangle/</li>
-         * <li><b>Plane</b> Url: kickjs://meshdata/plane/<br></li>
-         * <li><b>UVSphere</b> Url: kickjs://meshdata/uvsphere/?slides=20&stacks=10&radius=1.0<br>Note that the parameters is optional</li>
-         * <li><b>Cube</b> Url: kickjs://meshdata/cube/?length=1.0<br>Note that the parameters is optional</li>
+         * <li><b>Triangle</b> Url: kickjs://mesh/triangle/</li>
+         * <li><b>Plane</b> Url: kickjs://mesh/plane/<br></li>
+         * <li><b>UVSphere</b> Url: kickjs://mesh/uvsphere/?slides=20&stacks=10&radius=1.0<br>Note that the parameters is optional</li>
+         * <li><b>Cube</b> Url: kickjs://mesh/cube/?length=1.0<br>Note that the parameters is optional</li>
          * </ul>
          * @param {String} url
          * @param {KICK.mesh.Mesh} meshDestination
@@ -14865,16 +14899,16 @@ KICK.namespace = function (ns_string) {
             var meshDataObj,
                 getParameterInt = core.Util.getParameterInt,
                 getParameterFloat = core.Util.getParameterFloat;
-            if (url.indexOf("kickjs://meshdata/triangle/")==0){
+            if (url.indexOf("kickjs://mesh/triangle/")==0){
                 meshDataObj = mesh.MeshFactory.createTriangleData();
-            } else if (url.indexOf("kickjs://meshdata/plane/")==0){
+            } else if (url.indexOf("kickjs://mesh/plane/")==0){
                 meshDataObj = mesh.MeshFactory.createPlaneData();
-            } else if (url.indexOf("kickjs://meshdata/uvsphere/")==0){
+            } else if (url.indexOf("kickjs://mesh/uvsphere/")==0){
                 var slices = getParameterInt(url, "slices"),
                     stacks = getParameterInt(url, "stacks"),
                     radius = getParameterFloat(url, "radius");
                 meshDataObj = mesh.MeshFactory.createUVSphereData(slices, stacks, radius);
-            } else if (url.indexOf("kickjs://meshdata/cube/")==0){
+            } else if (url.indexOf("kickjs://mesh/cube/")==0){
                 var length = getParameterFloat(url, "length");
                 meshDataObj = mesh.MeshFactory.createCubeData(length);
             } else {
@@ -14928,8 +14962,10 @@ KICK.namespace = function (ns_string) {
                 return null;
             }
 
+
             if (meshDataObj){
                 config.meshData = meshDataObj;
+                config.dataURI = url;
                 return new mesh.Mesh(engine,config);
             }
         };
@@ -15023,6 +15059,7 @@ KICK.namespace = function (ns_string) {
             var shader = new KICK.material.Shader(engine);
             this.getShaderData(url,shader);
             shader.name = getUrlAsResourceName(url);
+            shader.dataURI = url;
             return shader;
         };
 

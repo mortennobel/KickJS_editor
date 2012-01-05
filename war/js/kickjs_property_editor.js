@@ -99,6 +99,9 @@ KICK.texture.Texture.prototype.createEditorGUI = function(propertyEditor, object
         {value:c.GL_CLAMP_TO_EDGE,name:"Clamp to edge"},
         {value:c.GL_REPEAT,name:"Repeat"}
     ]);
+    if (debug){
+        propertyEditor.addInfo("dataURI",object.config.dataURI);
+    }
 };
 
 KICK.material.Shader.prototype.createEditorGUI = function(propertyEditor, object){
@@ -144,6 +147,16 @@ KICK.material.Shader.prototype.createEditorGUI = function(propertyEditor, object
         {value:c.GL_GEQUAL,name:"GL_GEQUAL"},
         {value:c.GL_ALWAYS,name:"GL_ALWAYS"}
     ]);
+    if (debug){
+        propertyEditor.addInfo("dataURI",object.config.dataURI);
+    }
+};
+
+KICK.mesh.Mesh.prototype.createEditorGUI = function(propertyEditor, object){
+    propertyEditor.setTitle("Mesh");
+    propertyEditor.addInfo("MeshData",object.config.meshData);
+    propertyEditor.addInfo("Name",object.config.name);
+    propertyEditor.addInfo("dataURI",object.config.dataURI);
 };
 
 KICK.material.Material.prototype.createEditorGUI = function(propertyEditor, object){
@@ -482,6 +495,10 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
                 node.after("keyup",updateModel);
             }
         }
+    };
+    this.addInfo = function(name,info){
+        thisObj.addFieldTitle(name);
+        thisObj.addFieldTitle(info);
     };
     this.addSeparator = function(){
         componentPanel.setStdModContent("body","<hr/>",Y.WidgetStdMod.AFTER);
