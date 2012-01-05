@@ -105,7 +105,7 @@ KICK.material.Shader.prototype.createEditorGUI = function(propertyEditor, object
     var c = KICK.core.Constants;
     propertyEditor.setTitle("Shader");
     propertyEditor.addBoolean("blend", "Blend","In RGBA mode, pixels can be drawn using a function that blends the incoming (source) RGBA values with the RGBA values that are already in the frame buffer (the destination values");
-    propertyEditor.addEnum("blendSFactor", "Blend S Factor",null, [
+    var blendFactorOptions = [
         {value:c.GL_ZERO,name:"Zero"},
         {value:c.GL_ONE,name:"One"},
         {value:c.GL_SRC_COLOR,name:"Src color"},
@@ -120,7 +120,9 @@ KICK.material.Shader.prototype.createEditorGUI = function(propertyEditor, object
         {value:c.GL_CONSTANT_ALPHA,name:"Constant alpha"},
         {value:c.GL_ONE_MINUS_CONSTANT_ALPHA,name:"One minus constant alpha"},
         {value:c.GL_SRC_ALPHA_SATURATE,name:"Src alpha saturate"}
-    ]);
+    ];
+    propertyEditor.addEnum("blendSFactor", "Blend S Factor",null, blendFactorOptions);
+    propertyEditor.addEnum("blendDFactor", "Blend D Factor",null, blendFactorOptions);
     propertyEditor.addBoolean("depthMask", "Depth mask","Enable or disable writing into the depth buffer");
     propertyEditor.addEnum("faceCulling", "Face Culling","Note that in faceCulling = FRONT, BACK or FRONT_AND_BACK with face culling enabled faceCulling = NONE means face culling disabled", [
         {value:c.GL_FRONT,name:"Front"},
@@ -147,7 +149,7 @@ KICK.material.Shader.prototype.createEditorGUI = function(propertyEditor, object
 KICK.material.Material.prototype.createEditorGUI = function(propertyEditor, object){
     var c = KICK.core.Constants,
         uniforms = object.config.uniforms,
-        setValue = function(name, value){
+        setValueTexture = function(name, value){
             var uid = object.uid;
             var projectAsset = engine.project.load(uid);
             var uniforms = projectAsset.uniforms;
@@ -159,9 +161,21 @@ KICK.material.Material.prototype.createEditorGUI = function(propertyEditor, obje
             }
             projectAsset.uniforms = uniforms;
             engine.project.release(uid);
+        },
+        setValueShader = function(name,value){
+            var uid = object.uid;
+            var projectAsset = engine.project.load(uid);
+            var shader = engine.project.load(value);
+            if (shader){
+                projectAsset[name].value = shader;
+            } else {
+                console.log("Cannot find shader "+uid);
+            }
+            engine.project.release(uid);
         };
 
     propertyEditor.setTitle("Material");
+    propertyEditor.addAssetPointer("shader", "Shader","", object.shader ? object.shader.uid:0 ,"KICK.material.Shader",setValueShader);
     for (var name in uniforms){
         value = uniforms[name];
         switch (value.type){
@@ -172,14 +186,14 @@ KICK.material.Material.prototype.createEditorGUI = function(propertyEditor, obje
             case c.GL_FLOAT_VEC3:
             case c.GL_FLOAT_VEC4:
                 if (name.toLowerCase().indexOf("color")>=0 && (value.type === c.GL_FLOAT_VEC3 || value.type === c.GL_FLOAT_VEC3)){
-                    propertyEditor.addColor(name, name,null,value.value, setValue);
+                    propertyEditor.addColor(name, name,null,value.value, setValueTexture);
                 } else {
-                    propertyEditor.addVector(name, name,null,value.value, setValue);
+                    propertyEditor.addVector(name, name,null,value.value, setValueTexture);
                 }
                 break;
             case c.GL_SAMPLER_2D:
             case c.GL_SAMPLER_CUBE:
-                propertyEditor.addAssetPointer(name, name,null,value.value.ref,"KICK.texture.Texture", setValue);
+                propertyEditor.addAssetPointer(name, name,null,value.value.ref,"KICK.texture.Texture", setValueTexture);
                 break;
             default:
                 console.log("Not mapped "+value.type);
