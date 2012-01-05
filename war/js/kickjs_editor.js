@@ -1,25 +1,23 @@
 var getParameter = function(name){
-    var hashString = location.hash;
-    var getOriginalParameter = function(name){
-        if (hashString.length==0){
-            return null;
-        }
-        hashString = hashString.substring(1);
-        var elements = hashString.split("&");
-        for (var i=0;i<elements.length;i++){
-            if (elements[i].indexOf(name+"=")==0){
-                return elements[i].split("=")[1];
-            }
-        }
+    var pathName = location.pathname;
+    pathName = pathName.substring(1);
+    var splittedPathName = pathName.split("/");
+    if (pathName.length == 0) {
         return null;
-    };
-    getParameter = getOriginalParameter;
-    return getOriginalParameter(name);
+    }
+    if (name === "useServer") {
+        return splittedPathName[1] === "server";
+    } else if (name === "project") {
+        return decodeURIComponent(splittedPathName[2]);
+    } else if (name === "debug") {
+        return splittedPathName.length >=4 && splittedPathName[3] === "debug";
+    }
+    return null;
 };
 
-var serverObject = getParameter("useServer")==="true"? KICKED.server:KICKED.localStorage;
+var serverObject = getParameter("useServer")? KICKED.server:KICKED.localStorage;
 var projectName = getParameter("project");
-var debug = getParameter("debug") === "true";
+var debug = getParameter("debug");
 
 YUI({
     //Last Gallery Build of this module
@@ -71,14 +69,16 @@ YUI({
             };
 
             var onProjectLoad = function(resp){
-                console.log(resp.response);
                 serverObject.resource.load(projectName, 0,onResourceLoadSuccess, onResourceLoadSuccess,true);
+                sceneEditorApp.projectAssets.updateProjectContent();
+                sceneEditorApp.sceneGameObjects.updateSceneContent();
             };
 
             serverObject.project.load(projectName, onProjectLoad, onError);
         }
 
         loadProject();
+        Y.one("#projectTitel").setContent(projectName);
 });
 
 

@@ -6366,6 +6366,9 @@ KICK.namespace = function (ns_string) {
             for (var uid in resourceDescriptorsByUID){
                 thisObj.removeResourceDescriptor(uid);
             }
+            resourceDescriptorsByUID = {};
+            resourceCache = {};
+            resourceReferenceCount = {};
         };
 
         /**
@@ -6575,12 +6578,13 @@ KICK.namespace = function (ns_string) {
                 for (var name in config){
                     if (hasProperty(config,name)){
                         var value = config[name];
-                        var reftype = value.reftype;
-                        if (value && value.ref && reftype){
+                        var reftype = value?value.reftype:null;
+                        var ref = value?value.ref:null;
+                        if (value && ref && reftype){
                             if (reftype === "resource"){
-                                value = engine.resourceManager[value.refMethod](value.ref);
+                                value = engine.resourceManager[value.refMethod](ref);
                             } else if (reftype === "project"){
-                                value = engine.project.load(value.ref);
+                                value = engine.project.load(ref);
                             }
                         }
                         res[name] = value;
@@ -7213,6 +7217,7 @@ KICK.namespace = function (ns_string) {
         componentToJSON: function(engine, component,componentType){
             var name,
                 config = {},
+                functionReturnType = {},
                 res = {
                     type: componentType || component.constructor.name,
                     uid: engine.getUID(component),
@@ -7221,20 +7226,35 @@ KICK.namespace = function (ns_string) {
             if (res.type === ""){
                 core.Util.fail("Cannot serialize object type. Either provide toJSON function or use explicit function name 'function SomeObject(){}' ");
             }
+            var serializeObject = function(o){
+                if (Array.isArray(o)){
+                    var result = [];
+                    for (var i=0;i<o.length;i++){
+                        var r = serializeObject(o[i]);
+                        result.push(r);
+                    }
+                    return result;
+                }
+                var typeofO = typeof o;
+                if (typeofO !== 'function'){
+                    if (o && o.buffer instanceof ArrayBuffer){
+                        // is typed array
+                        return core.Util.typedArrayToArray(o);
+                    } else if (typeofO === 'object'){
+                        return core.Util.getJSONReference(engine,o);
+                    } else {
+                        return o;
+                    }
+                }
+                return functionReturnType;
+            };
             // init config object
             for (name in component){
                 if (core.Util.hasProperty(component,name) && name !== "gameObject"){
-                    var o = component[name],
-                        typeofO = typeof o;
-                    if (typeofO !== 'function'){
-                        if (o && o.buffer instanceof ArrayBuffer){
-                            // is typed array
-                            config[name] = core.Util.typedArrayToArray(o);
-                        } else if (typeofO === 'object'){
-                            config[name] = core.Util.getJSONReference(engine,o);
-                        } else {
-                            config[name] = o;
-                        }
+                    var o = component[name];
+                    var serializedObject = serializeObject(o);
+                    if (serializedObject !== functionReturnType){
+                        config[name] = serializedObject;
                     }
                 }
             }
@@ -10101,19 +10121,32 @@ KICK.namespace = function (ns_string) {
                 })();
 
                 var createConfigWithReferences = function (config){
+                    // deserialize an object (recursively if the object is an array
+                    var deserialize = function(value){
+                        if (typeof value === 'number'){
+                            return value;
+                        }
+                        if (Array.isArray(value)){
+                            for (var i=0;i<value.length;i++){
+                                value[i] = deserialize(value[i]);
+                            }
+                        } else if (value){
+                            if (value && value.ref && value.reftype){
+                                if (value.reftype === "project"){
+                                    value = engine.project.load(value.ref);
+                                } else if (value.reftype === "gameobject" || value.reftype === "component"){
+                                    value = thisObj.getObjectByUID(value.ref);
+                                }
+                            }
+                        }
+                        return value;
+                    };
+
                     var configCopy = {};
                     for (var name in config){
                         if (hasProperty(config,name)){
                             var value = config[name];
-                            if (value){
-                                if (value && value.ref && value.reftype){
-                                    if (value.reftype === "project"){
-                                        value = engine.project.load(value.ref);
-                                    } else if (value.reftype === "gameobject" || value.reftype === "component"){
-                                        value = thisObj.getObjectByUID(value.ref);
-                                    }
-                                }
-                            }
+                            value = deserialize(value);
                             configCopy[name] = value;
                         }
                     }
@@ -10543,7 +10576,11 @@ KICK.namespace = function (ns_string) {
             renderer:{
                 get:function(){ return _renderer;},
                 set:function(newValue){
-                    if (typeof newValue.render === "function"){
+                    if (typeof newValue === "string"){
+                        var constructor = KICK.namespace(newValue);
+                        newValue = new constructor();
+                    }
+                    if (newValue && typeof newValue.render === "function"){
                         _renderer = newValue;
                     } else if (true){
                         KICK.core.Util.fail("Camera.renderer should be a KICK.renderer.Renderer (must implement render function)");
@@ -10804,7 +10841,7 @@ KICK.namespace = function (ns_string) {
                 config:{
                     enabled: _enabled,
                     renderShadow: _renderShadow,
-                    renderer:_renderer, // todo add reference
+                    renderer:_renderer.name,
                     layerMask:_layerMask,
                     renderTarget:_renderTarget, // todo add reference
                     fieldOfView:_fieldOfView,
@@ -12355,6 +12392,12 @@ KICK.namespace = function (ns_string) {
      * @param engineUniforms
      * @param overwriteShader
      */
+    /**
+     * Name of the class
+     * @property
+     * @name name
+     * @type String
+     */
 
     /**
      * Does not render any components
@@ -12365,9 +12408,9 @@ KICK.namespace = function (ns_string) {
      */
     renderer.NullRenderer = function () {};
 
-
     renderer.NullRenderer.prototype.render = function (renderableComponents,engineUniforms,overwriteShader) {};
-    
+
+    renderer.NullRenderer.prototype.name = "KICK.renderer.NullRenderer";
     /**
      * Forward renderer
      * @class ForwardRenderer
@@ -12388,6 +12431,8 @@ KICK.namespace = function (ns_string) {
                 renderableComponents[j].render(engineUniforms,overwriteShader);
             }
         };
+
+        this.name = "KICK.renderer.ForwardRenderer";
     };
 }());
 /*!
@@ -12842,7 +12887,7 @@ KICK.namespace = function (ns_string) {
                             value !== 772 &&
                             value !== 773 &&
                             value !== 32769 &&
-                            value !== 32770,
+                            value !== 32770 &&
                             value !== 32771 &&
                             value !== 32772 &&
                             value !== 776){
@@ -12865,7 +12910,7 @@ KICK.namespace = function (ns_string) {
              * 32769, 32770, 32771, 32772, and
              * 771.<br>
              * See <a href="http://www.opengl.org/sdk/docs/man/xhtml/glBlendFunc.xml">glBlendFunc on opengl.org</a>
-             * @property blendSFactor
+             * @property blendDFactor
              * @type {Number}
              */
             blendDFactor:{
@@ -12884,7 +12929,7 @@ KICK.namespace = function (ns_string) {
                             value !== 772 &&
                             value !== 773 &&
                             value !== 32769 &&
-                            value !== 32770,
+                            value !== 32770 &&
                             value !== 32771 &&
                             value !== 32772){
                             KICK.core.Util.fail("Shader.blendSFactor must be a one of 0, 1, 768, " +
@@ -13053,6 +13098,7 @@ KICK.namespace = function (ns_string) {
                 name:_name,
                 blend:_blend,
                 blendSFactor:_blendSFactor,
+                blendDFactor:_blendDFactor,
                 dataURI:_dataURI,
                 depthMask:_depthMask,
                 faceCulling:_faceCulling,
@@ -13298,6 +13344,13 @@ KICK.namespace = function (ns_string) {
             _renderOrder,
             gl = engine.gl;
         Object.defineProperties(this,{
+            /**
+             * @property engine
+             * @type KICK.core.Engine
+             */
+            engine:{
+                value:engine
+            },
              /**
               * @property name
               * @type String
@@ -13406,6 +13459,7 @@ KICK.namespace = function (ns_string) {
             return {
                 uid: thisObj.uid,
                 name:_name,
+                shader: KICK.core.Util.getJSONReference(engine,_shader),
                 uniforms: filteredUniforms
             };
         };

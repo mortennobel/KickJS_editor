@@ -198,7 +198,7 @@ YUI().use('node','panel', function(Y) {
      * @param {String} projectName
      */
     var loadProject = function(projectName){
-        document.location.href = "/editor.html#useServer="+(serverObject===KICKED.server)+"&project="+encodeURIComponent(projectName);
+        document.location.href = "/p/"+(serverObject===KICKED.server ? "server":"localStorage")+"/"+encodeURIComponent(projectName)+"/";
     };
 
     /**
