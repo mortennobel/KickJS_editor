@@ -422,12 +422,22 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
             node.after("keyup",updateModel);
         }
     };
-    this.addNumber= function(name, displayname, tooltip, setValueFn){
+    this.addNumber= function(name, displayname, tooltip, setValueFn, min, max, step){
+        if (typeof min !== "number"){
+            min = Number.MIN_VALUE;
+        }
+        if (typeof max !== "number"){
+            max = Number.MAX_VALUE;
+        }
+        if (typeof step !== "number"){
+            step = 1;
+        }
+
         displayname = displayname || name;
         thisObj.addFieldTitle(displayname, tooltip);
         var nodeId = thisObj.getNodeName("string",name,0);
         var value = getValue(name);
-        var content = '<div class="yui3-u-1"><div class="content"><input type="number" class="propString" id="'+nodeId+'" value="'+value+'"></div></div>';
+        var content = '<div class="yui3-u-1"><div class="content"><input type="number" class="propString" id="'+nodeId+'" value="'+value+'" min="'+min+'" max="'+max+'" step="'+step+'"></div></div>';
         componentPanel.setStdModContent("body",content,Y.WidgetStdMod.AFTER);
         componentPanel.render();
         var node = Y.one("#"+nodeId);
@@ -467,10 +477,19 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
     };
     this.addColor = function(name, displayname, tooltip,value, setValueFn){
         // todo - make color picker
-        return thisObj.addVector(name, displayname, tooltip,value, setValueFn);
+        return thisObj.addVector(name, displayname, tooltip,value, setValueFn, 0,1,0.05);
     };
-    this.addVector = function(name, displayname, tooltip,value, setValueFn){
+    this.addVector = function(name, displayname, tooltip,value, setValueFn, min, max, step){
         var i,nodeId;
+        if (typeof min !== "number"){
+            min = Number.MIN_VALUE;
+        }
+        if (typeof max !== "number"){
+            max = Number.MAX_VALUE;
+        }
+        if (typeof step !== "number"){
+            step = 1;
+        }
         displayname = displayname || name;
         thisObj.addFieldTitle(displayname, tooltip);
         value = value || getValue(name);
@@ -478,7 +497,7 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
             valueLength = value.length;
         for (i = 0;i<valueLength;i++){
             nodeId = thisObj.getNodeName("vector",name,i);
-            content += '<div class="yui3-u-1-'+valueLength+'"><div class="content"><input type="number" class="propNumber" id="'+nodeId+'" value="'+value[i]+'"></a></div></div>';
+            content += '<div class="yui3-u-1-'+valueLength+'"><div class="content"><input type="number" class="propNumber" id="'+nodeId+'" value="'+value[i]+'" min="'+min+'" max="'+max+'" step="'+step+'"></a></div></div>';
         }
         componentPanel.setStdModContent("body",content,Y.WidgetStdMod.AFTER);
         componentPanel.render();
