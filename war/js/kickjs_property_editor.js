@@ -162,13 +162,17 @@ KICK.mesh.Mesh.prototype.createEditorGUI = function(propertyEditor, object){
 KICK.material.Material.prototype.createEditorGUI = function(propertyEditor, object){
     var c = KICK.core.Constants,
         uniforms = object.config.uniforms,
-        setValueTexture = function(name, value){
+        setValueOrTexture = function(name, value){
             var uid = object.uid;
             var projectAsset = engine.project.load(uid);
             var uniforms = projectAsset.uniforms;
             var type = uniforms[name].type;
             if (type === c.GL_SAMPLER_2D || type === c.GL_SAMPLER_CUBE){
                 uniforms[name].value = engine.project.load(value);
+            } else if (Array.isArray(value)) {
+                for (var i=0;i<value.length;i++){
+                    uniforms[name].value[i] = value[i];
+                }
             } else {
                 uniforms[name].value = value;
             }
@@ -199,14 +203,14 @@ KICK.material.Material.prototype.createEditorGUI = function(propertyEditor, obje
             case c.GL_FLOAT_VEC3:
             case c.GL_FLOAT_VEC4:
                 if (name.toLowerCase().indexOf("color")>=0 && (value.type === c.GL_FLOAT_VEC3 || value.type === c.GL_FLOAT_VEC3)){
-                    propertyEditor.addColor(name, name,null,value.value, setValueTexture);
+                    propertyEditor.addColor(name, name,null,value.value, setValueOrTexture);
                 } else {
-                    propertyEditor.addVector(name, name,null,value.value, setValueTexture);
+                    propertyEditor.addVector(name, name,null,value.value, setValueOrTexture);
                 }
                 break;
             case c.GL_SAMPLER_2D:
             case c.GL_SAMPLER_CUBE:
-                propertyEditor.addAssetPointer(name, name,null,value.value.ref,"KICK.texture.Texture", setValueTexture);
+                propertyEditor.addAssetPointer(name, name,null,value.value.ref,"KICK.texture.Texture", setValueOrTexture);
                 break;
             default:
                 console.log("Not mapped "+value.type);
