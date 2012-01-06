@@ -41,7 +41,7 @@
         .mainContent{
             margin-top: 20px;
             text-align: center;
-            height: 100%;
+            height: 280px;
         }
         .small{
             font-size: small;
@@ -88,22 +88,24 @@
         </div>
     </article>
     <footer class="footer">
-        <a href="http://editor.kickjs.org/">KickJS Editor</a> - Open Source WebGL Scene editor (BSD New License). Version 0.3. Hosted by Google App Engine.
+        <a href="http://editor.kickjs.org/">KickJS Editor</a> - Open Source WebGL Scene editor (BSD New License). Version 0.3. Hosted by Google App Engine.<br>
         <a href="http://www.kickjs.org/">KickJS</a> Open Source WebGL game engine (BSD New License).  Version 0.3.<br>
     </footer>
+
     <div id="panelContent">
         <div class="yui3-widget-bd">
             <select multiple="multiple" id="projects">
             </select>
         </div>
     </div>
-    <div id="panelCreateProject">
+    <div id="panelCreateProject" class="hiddenElement">
         <div class="yui3-widget-bd">
             Project name:<br>
             <input type="text" value="" id="projectName"><br>
             <div id="projectNameStatus">&nbsp;</div>
         </div>
     </div>
+
 </div>
 </body>
 </html>

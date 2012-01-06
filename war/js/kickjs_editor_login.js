@@ -132,6 +132,7 @@ YUI().use('node','panel', function(Y) {
                 panelCreateProject.show();
                 return;
             }
+            Y.one("#panelCreateProject").removeClass("hiddenElement");
 
             /**
              * Create panelCreateProject panel
