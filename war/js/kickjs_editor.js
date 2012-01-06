@@ -397,7 +397,23 @@ var SceneEditorApp = function(Y){
     Y.one("#projectAddMaterial").on("click",createMaterial);
     Y.one("#projectAddShader").on("click",function(){alert("not implemented");});
     Y.one("#projectAddTexture").on("click",function(){alert("not implemented");});
-    Y.one("#projectAddMesh").on("click",function(){alert("not implemented");});
+//    Y.one("#projectAddMesh").on("click",function(){alert("not implemented");});
+    Y.one("#projectUploadModel").on("click",function(){
+        collapseMenu("#projectAssetMenu");
+        alert("projectUploadModel not implemented");
+    });
+    Y.one("#projectAddMeshPlane").on("click",function(){
+        collapseMenu("#projectAssetMenu");
+        alert("projectAddMeshPlane not implemented");
+    });
+    Y.one("#projectAddMeshCube").on("click",function(){
+        collapseMenu("#projectAssetMenu");
+        alert("projectAddMeshCube not implemented");
+    });
+    Y.one("#projectAddMeshSphere").on("click",function(){
+        collapseMenu("#projectAssetMenu");
+        alert("projectAddMeshSphere not implemented");
+    });
     Y.one("#projectAddScene").on("click",addScene);
     Y.one("#projectAssetRename").on("click",function(){
         collapseMenu("#projectAssetMenu");
