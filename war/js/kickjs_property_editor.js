@@ -246,6 +246,8 @@ var PropertyEditor = function(Y,sceneEditorApp){
     this.setContent = function(object){
         destroyComponents();
         if (!object){
+            propertyPanel.setStdModContent("header", "");
+            propertyPanel.setStdModContent("body","");
             propertyPanel.hide();
             propertyPanelMenu.hide();
             propertyPanelHeader.hide();
