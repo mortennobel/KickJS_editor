@@ -23,7 +23,7 @@ YUI({
     //Last Gallery Build of this module
     gallery: 'gallery-2011.01.03-18-30'
 })
-    .use('tabview', 'escape', 'plugin', 'gallery-yui3treeview',"widget", "widget-position", "widget-stdmod", 'node-menunav', function(Y) {
+    .use('tabview', 'escape', 'plugin', 'gallery-yui3treeview',"widget", "widget-position", "widget-stdmod", 'panel', 'node-menunav', function(Y) {
         var sceneEditorApp = new SceneEditorApp(Y);
 
 
@@ -256,6 +256,76 @@ var SceneEditorApp = function(Y){
             collapseMenu("#projectAssetMenu");
             engine.resourceManager.getMesh(url);
             _projectAssets.updateProjectContent();
+        },
+        panel = new Y.Panel({
+            srcNode      : '#popupDialog',
+            headerContent: 'Open/Create project',
+            width        : 350,
+            zIndex       : 5,
+            centered     : true,
+            modal        : true,
+            visible      : false,
+            render       : true
+        }),
+        uploadMesh = function(){
+            var selectedFile = null,
+                uploadButton,
+                fileExt;
+            collapseMenu("#projectAssetMenu");
+            panel.set("headerContent", "Model upload");
+            panel.setStdModContent(Y.WidgetStdMod.BODY, Y.one("#fileUploadForm").getDOMNode().innerHTML);
+            panel.set("buttons", []);
+            panel.addButton({
+                value  : 'Cancel',
+                section: Y.WidgetStdMod.FOOTER,
+                action : function (e) {
+                    panel.hide();
+                }
+            });
+            panel.addButton({
+                value  : 'Upload',
+                classNames: ['disabledButton'],
+                section: Y.WidgetStdMod.FOOTER,
+                action : function (e) {
+                    if (!selectedFile){
+                        return;
+                    }
+                    var uploadModelNormals = Y.one("#uploadModelNormals").get("checked"),
+                        uploadModelNormalsRecalc = Y.one("#uploadModelNormalsRecalc").get("checked"),
+                        uploadModelUV1 = Y.one("#uploadModelUV1").get("checked"),
+                        uploadModelTangent = Y.one("#uploadModelTangent").get("checked"),
+                        uploadModelTangentRecalc = Y.one("#uploadModelTangentRecalc").get("checked"),
+                        uploadModelCreateGameObjects = Y.one("#uploadModelCreateGameObjects").get("checked"),
+                        uploadModelCreateMaterials = Y.one("#uploadModelCreateMaterials").get("checked");
+
+
+                    alert("not implemented upload of "+selectedFile.name+" file ext "+fileExt);
+                    panel.hide();
+                }
+            });
+            panel.render();
+
+            uploadButton = panel._buttonsArray[1].node;
+            Y.one("#uploadModelFile").on("change",function(e){
+                console.log(e);
+                var fileName = "";
+                selectedFile = null;
+                if (e._event.target.files.length){
+                    selectedFile = e._event.target.files[0];
+                    fileExt = selectedFile.name.toLowerCase().split(".");
+                    fileExt = fileExt[fileExt.length-1];
+                    if (fileExt === "dae" || fileExt === "obj"){
+                        uploadButton.removeClass('disabledButton');
+                    } else {
+                        uploadButton.addClass('disabledButton');
+                        selectedFile = null;
+                    }
+                } else {
+                    uploadButton.addClass('disabledButton');
+                }
+            });
+
+            panel.show();
         };
 
     Object.defineProperties(this,{
@@ -403,10 +473,7 @@ var SceneEditorApp = function(Y){
     Y.one("#projectAddShader").on("click",function(){alert("not implemented");});
     Y.one("#projectAddTexture").on("click",function(){alert("not implemented");});
 //    Y.one("#projectAddMesh").on("click",function(){alert("not implemented");});
-    Y.one("#projectUploadModel").on("click",function(){
-        collapseMenu("#projectAssetMenu");
-        alert("projectUploadModel not implemented");
-    });
+    Y.one("#projectUploadModel").on("click",function(){uploadMesh()});
 
     Y.one("#projectAddMeshPlane").on("click",function(){createMesh("kickjs://mesh/plane/");});
     Y.one("#projectAddMeshCube").on("click",function(){createMesh("kickjs://mesh/cube/")});

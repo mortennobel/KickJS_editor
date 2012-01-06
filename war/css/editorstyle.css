@@ -59,6 +59,41 @@ a:active {color:#CCB769;}  /* selected link */
     overflow-y: auto
 }
 
+.disabledButton,
+.disabledButton span {
+    color: lightgray;
+    cursor: not-allowed;
+}
+
+.uploadFile{
+    padding-bottom: 10px;
+    padding-top: 10px;
+}
+
+.fieldsetPopup {
+    width: 295px;
+    padding: 10px 10px 10px 10px;
+    border:solid 2px #b7ddf2;
+    background: #ebf4fb;
+    margin: 6px;
+    border-radius: 1.2em;
+    -moz-border-radius: 1.2em;
+    -webkit-border-radius: 1.2em;
+    -o-border-radius: 1.2em;
+    background: -moz-linear-gradient(100% 100% 90deg, #ebf4fb, #FFFFFF);
+    background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#FFFFFF), to(#ebf4fb));
+}
+
+.legend {
+    font-family: arial;
+    font-size: 14px;
+    font-weight: bold;
+    margin-left: 1em;
+    padding: 0 10px 0 0;
+    color: #000000;
+    font-weight: bold;
+}
+
 .projectHeader{
     margin: 0.5em 0.5em;
 }

@@ -202,6 +202,25 @@
     </div>
 </div>
 <div id="ft"></div>
+<div id="popupDialog">
+    <div class="yui3-widget-bd">
+
+    </div>
+</div>
+<script id="fileUploadForm" type="no/such-thing">
+    File (Collada (.dae) or Wavefront (.obj)): <br>
+    <input type="file" id="uploadModelFile" class="uploadFile"><br>
+    <h2>Include</h2>
+    <input type="checkbox" checked id="uploadModelNormals"> Normals<br>
+    &nbsp;&nbsp;<input type="checkbox" checked id="uploadModelNormalsRecalc"> Recalculate normals<br>
+    <input type="checkbox" checked id="uploadModelUV1"> UV1<br>
+    <input type="checkbox" checked id="uploadModelUV2"> UV2<br>
+    <input type="checkbox" checked id="uploadModelTangent"> Tangent<br>
+    &nbsp;&nbsp;<input type="checkbox" checked id="uploadModelTangentRecalc"> Tangent recalc<br>
+    <h2>Game objects</h2>
+    <input type="checkbox" checked id="uploadModelCreateGameObjects"> Create gameObjects<br>
+    &nbsp;&nbsp; <input type="checkbox" checked id="uploadModelCreateMaterials"> Create materials<br>
+</script>
 <!-- include script last to render page first -->
 <script src="/js/kick-debug-0.3.0.js"></script>
 <script src="/js/webgl-debug.js"></script>
@@ -211,7 +230,5 @@
 <script src="/js/kickjs_editor_components.js"></script>
 <script src="/js/kickjs_property_editor.js"></script>
 <script src="/js/kickjs_editor.js"></script>
-
-
 </body>
 </html>
