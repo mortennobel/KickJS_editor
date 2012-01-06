@@ -484,3 +484,17 @@ KICKED.localStorage.resource.upload = function(projectName, uid, contentType,con
         reader.readAsText(content);
     }
 };
+
+/**
+ * Delete all (for debugging purpose)
+ */
+KICKED.localStorage.deleteAll = function(){
+    var keys = [];
+    for (var i=0;i<localStorage.length;i++){
+        var key = localStorage.key(i);
+        keys.push(key);
+    }
+    for (var i=0;i<keys.length;i++){
+        localStorage.removeItem(keys[i]);
+    }
+};
