@@ -251,6 +251,11 @@ var SceneEditorApp = function(Y){
             _propertyEditor.setContent(null);
             _sceneGameObjects.updateSceneContent();
             thisObj.tabView.updateSceneName(newScene.name,newScene.uid);
+        },
+        createMesh = function(url){
+            collapseMenu("#projectAssetMenu");
+            engine.resourceManager.getMesh(url);
+            _projectAssets.updateProjectContent();
         };
 
     Object.defineProperties(this,{
@@ -402,18 +407,10 @@ var SceneEditorApp = function(Y){
         collapseMenu("#projectAssetMenu");
         alert("projectUploadModel not implemented");
     });
-    Y.one("#projectAddMeshPlane").on("click",function(){
-        collapseMenu("#projectAssetMenu");
-        alert("projectAddMeshPlane not implemented");
-    });
-    Y.one("#projectAddMeshCube").on("click",function(){
-        collapseMenu("#projectAssetMenu");
-        alert("projectAddMeshCube not implemented");
-    });
-    Y.one("#projectAddMeshSphere").on("click",function(){
-        collapseMenu("#projectAssetMenu");
-        alert("projectAddMeshSphere not implemented");
-    });
+
+    Y.one("#projectAddMeshPlane").on("click",function(){createMesh("kickjs://mesh/plane/");});
+    Y.one("#projectAddMeshCube").on("click",function(){createMesh("kickjs://mesh/cube/")});
+    Y.one("#projectAddMeshSphere").on("click",function(){createMesh("kickjs://mesh/uvsphere/")});
     Y.one("#projectAddScene").on("click",addScene);
     Y.one("#projectAssetRename").on("click",function(){
         collapseMenu("#projectAssetMenu");
