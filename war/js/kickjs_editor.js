@@ -181,6 +181,7 @@ var SceneEditorApp = function(Y){
         _propertyEditor,
         thisObj = this,
         deleteSelectedGameObject = function(){
+            collapseMenu("#sceneGameObjectMenu");
             var uid = _sceneGameObjects.getSelectedGameObjectUid();
             if (!uid){
                 return;
@@ -381,10 +382,10 @@ var SceneEditorApp = function(Y){
         var component = new componentType(config || {});
         gameObject.addComponent(component);
         _propertyEditor.setContent(gameObject);
-        hideSubMenues("#propertyPanelMenu");
+        collapseMenu("#propertyPanelMenu");
     };
 
-    var hideSubMenues = function(menuId){
+    var collapseMenu = function(menuId){
         var menu = Y.one(menuId);
         menu.menuNav._hideAllSubmenus(menu);
     };
@@ -398,8 +399,14 @@ var SceneEditorApp = function(Y){
     Y.one("#projectAddTexture").on("click",function(){alert("not implemented");});
     Y.one("#projectAddMesh").on("click",function(){alert("not implemented");});
     Y.one("#projectAddScene").on("click",addScene);
-    Y.one("#projectAssetRename").on("click",function(){_projectAssets.renameSelected();});
-    Y.one("#projectAssetDelete").on("click",function(){alert("not implemented");});
+    Y.one("#projectAssetRename").on("click",function(){
+        collapseMenu("#projectAssetMenu");
+        _projectAssets.renameSelected();}
+    );
+    Y.one("#projectAssetDelete").on("click",function(){
+        collapseMenu("#projectAssetMenu");
+        alert("not implemented");
+    });
     if (debug){
         Y.one("#projectAssetRefresh").on("click",function(){_projectAssets.updateProjectContent();});
     } else {
@@ -407,7 +414,10 @@ var SceneEditorApp = function(Y){
     }
 
     Y.one("#gameObjectCreate").on("click",function(){_sceneGameObjects.createGameObject();});
-    Y.one("#gameObjectRename").on("click",function(){_sceneGameObjects.renameSelected();});
+    Y.one("#gameObjectRename").on("click",function(){
+        collapseMenu("#sceneGameObjectMenu");
+        _sceneGameObjects.renameSelected();
+    });
     Y.one("#gameObjectDelete").on("click",deleteSelectedGameObject);
     if (debug){
         Y.one("#gameObjectRefresh").on("click",function(){_sceneGameObjects.updateSceneContent();});
@@ -624,6 +634,7 @@ function ProjectAssets(Y, sceneEditorApp){
                     if (afterRenameFn){
                         afterRenameFn();
                     }
+                    sceneEditorApp.tabView.updateSceneName(newName,uid);
                 }
                 engine.project.release(uid);
                 selectedTreeLeaf.get("contentBox").setContent(getAssetName(uid));
