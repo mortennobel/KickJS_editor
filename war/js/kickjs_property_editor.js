@@ -31,7 +31,7 @@ KICK.scene.Camera.prototype.createEditorGUI = function(propertyEditor, object){
     propertyEditor.addSeparator();
     propertyEditor.addBoolean("clearFlagDepth", "Clear depth buffer");
     propertyEditor.addBoolean("clearFlagColor", "Clear color buffer");
-    propertyEditor.addVector("clearColor", "Clear color");
+    propertyEditor.addColor("clearColor", "Clear color");
     propertyEditor.addSeparator();
     propertyEditor.addBoolean("renderShadow", "Render shadow");
     propertyEditor.addNumber("layerMask", "Layer mask", "Camera renders only objects where the components layer exist in the layer mask.");
@@ -58,7 +58,7 @@ KICK.scene.Light.prototype.createEditorGUI = function(propertyEditor, object){
             break;
     }
     propertyEditor.setTitle(lightName);
-    propertyEditor.addVector("color", "Color");
+    propertyEditor.addColor("color", "Color");
     propertyEditor.addNumber("intensity", "Intensity");
     if (object.type===c._LIGHT_TYPE_DIRECTIONAL){
         propertyEditor.addBoolean("shadow", "Shadow");
