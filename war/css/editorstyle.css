@@ -59,15 +59,18 @@ a:active {color:#CCB769;}  /* selected link */
     overflow-y: auto
 }
 
+.errorMsg{
+    color:red;
+}
+
 .disabledButton,
 .disabledButton span {
     color: lightgray;
     cursor: not-allowed;
 }
 
+/* Skins the <input type=file> tag in model upload / texture upload*/
 .uploadFile{
-    padding-bottom: 10px;
-    padding-top: 10px;
 }
 
 .fieldsetPopup {

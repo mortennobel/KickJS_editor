@@ -5,7 +5,7 @@ KICK.scene.Transform.prototype.createEditorGUI = function(propertyEditor, object
     propertyEditor.setTitle("Transform");
     propertyEditor.addVector("position", "Position");
     propertyEditor.addVector("rotationEuler", "Rotation");
-    propertyEditor.addVector("localScale", "Scale");
+    propertyEditor.addVector("localScale", "Scale",null,null,null,null,null,0.1);
 };
 
 KICK.scene.MeshRenderer.prototype.createEditorGUI = function(propertyEditor, object){
@@ -192,7 +192,7 @@ KICK.material.Material.prototype.createEditorGUI = function(propertyEditor, obje
         };
 
     propertyEditor.setTitle("Material");
-    propertyEditor.addAssetPointer("shader", "Shader","", object.shader ? object.shader.uid:0 ,"KICK.material.Shader",setValueShader);
+    propertyEditor.addAssetPointer("shader", "Shader","", object.config.shader.ref ,"KICK.material.Shader",setValueShader);
     for (var name in uniforms){
         value = uniforms[name];
         switch (value.type){
@@ -329,7 +329,7 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
         componentPanel.setStdModContent("body",content,Y.WidgetStdMod.AFTER);
     };
     this.addAssetPointer = function(name, displayname, tooltip, uid, type, setValueFn,allowNull){
-        displayname = displayname ||Êname;
+        displayname = displayname || name;
         thisObj.addFieldTitle(displayname, tooltip);
         var nodeId = thisObj.getNodeName("string",name,0);
         var content = '<div class="yui3-u-1"><div class="content"><select class="propSelect" id="'+nodeId+'"/></div></div>';
@@ -349,10 +349,11 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
             }
             for (var i=0;i<assets.length;i++){
                 var t = assets[i];
-                if (t.name.indexOf('__')==0){
+                if (t.name && t.name.indexOf('__')==0){
                     continue;
                 }
-                selected = t.uid === uid ? "selected":"";
+                var name = t.name || "No name";
+                selected = t.config.uid === uid ? "selected":"";
                 item = Y.Node.create('<option value="'+t.uid+'" '+selected+'>'+t.name+'</option>');
                 node.append(item);
             }

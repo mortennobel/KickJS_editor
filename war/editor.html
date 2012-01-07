@@ -211,6 +211,7 @@
 <script id="fileUploadForm" type="no/such-thing">
     File (Collada (.dae) or Wavefront (.obj)): <br>
     <input type="file" id="uploadModelFile" class="uploadFile"><br>
+    <div id="uploadModelErrorMsg" class="errorMsg">&nbsp;</div>
     <h2>Include</h2>
     <input type="checkbox" checked id="uploadModelNormals"> Normals<br>
     &nbsp;&nbsp;<input type="checkbox" checked id="uploadModelNormalsRecalc"> Recalculate normals<br>
@@ -221,6 +222,7 @@
     <h2>Game objects</h2>
     <input type="checkbox" checked id="uploadModelCreateGameObjects"> Create gameObjects<br>
     &nbsp;&nbsp; <input type="checkbox" checked id="uploadModelCreateMaterials"> Create materials<br>
+    <input type="checkbox" checked id="uploadModelRotate90x"> Rotate 90 degree around X-axis<br>
 </script>
 <!-- include script last to render page first -->
 <script src="/js/kick-debug-0.3.0.js"></script>

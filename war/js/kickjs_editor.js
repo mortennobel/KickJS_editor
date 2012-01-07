@@ -277,7 +277,41 @@ var SceneEditorApp = function(Y){
         uploadMesh = function(){
             var selectedFile = null,
                 uploadButton,
-                fileExt;
+                fileExt,
+                doUpload = function(e){
+                    if (!selectedFile){
+                        return;
+                    }
+                    var uploadModelNormals = Y.one("#uploadModelNormals").get("checked"),
+                        uploadModelNormalsRecalc = Y.one("#uploadModelNormalsRecalc").get("checked"),
+                        uploadModelUV1 = Y.one("#uploadModelUV1").get("checked"),
+                        uploadModelTangent = Y.one("#uploadModelTangent").get("checked"),
+                        uploadModelTangentRecalc = Y.one("#uploadModelTangentRecalc").get("checked"),
+                        uploadModelCreateGameObjects = Y.one("#uploadModelCreateGameObjects").get("checked"),
+                        uploadModelCreateMaterials = Y.one("#uploadModelCreateMaterials").get("checked"),
+                        uploadModelRotate90x = Y.one("#uploadModelRotate90x").get("checked");
+
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        var fileAsString = e.target.result;
+                        var modelImport;
+                        if (fileExt === "dae"){
+                            modelImport = KICK.importer.ColladaImporter;
+                        } else if (fileExt === "obj"){
+                            modelImport = KICK.importmodelImporter;
+                        }
+                        var gameObjects = modelImport.import(fileAsString,_view.engine,_view.engine.activeScene,uploadModelRotate90x);
+                        _sceneGameObjects.updateSceneContent();
+                        _projectAssets.updateProjectContent();
+                        panel.hide();
+                    };
+                    reader.onerror = function(e){
+                        alert("Error loading file");
+                        panel.hide();
+                    };
+                    reader.readAsText(selectedFile);
+
+                };
             collapseMenu("#projectAssetMenu");
             panel.set("headerContent", "Model upload");
             panel.setStdModContent(Y.WidgetStdMod.BODY, Y.one("#fileUploadForm").getDOMNode().innerHTML);
@@ -293,29 +327,12 @@ var SceneEditorApp = function(Y){
                 value  : 'Upload',
                 classNames: ['disabledButton'],
                 section: Y.WidgetStdMod.FOOTER,
-                action : function (e) {
-                    if (!selectedFile){
-                        return;
-                    }
-                    var uploadModelNormals = Y.one("#uploadModelNormals").get("checked"),
-                        uploadModelNormalsRecalc = Y.one("#uploadModelNormalsRecalc").get("checked"),
-                        uploadModelUV1 = Y.one("#uploadModelUV1").get("checked"),
-                        uploadModelTangent = Y.one("#uploadModelTangent").get("checked"),
-                        uploadModelTangentRecalc = Y.one("#uploadModelTangentRecalc").get("checked"),
-                        uploadModelCreateGameObjects = Y.one("#uploadModelCreateGameObjects").get("checked"),
-                        uploadModelCreateMaterials = Y.one("#uploadModelCreateMaterials").get("checked");
-
-
-                    alert("not implemented upload of "+selectedFile.name+" file ext "+fileExt);
-                    panel.hide();
-                }
+                action : doUpload
             });
             panel.render();
 
             uploadButton = panel._buttonsArray[1].node;
             Y.one("#uploadModelFile").on("change",function(e){
-                console.log(e);
-                var fileName = "";
                 selectedFile = null;
                 if (e._event.target.files.length){
                     selectedFile = e._event.target.files[0];
@@ -323,9 +340,12 @@ var SceneEditorApp = function(Y){
                     fileExt = fileExt[fileExt.length-1];
                     if (fileExt === "dae" || fileExt === "obj"){
                         uploadButton.removeClass('disabledButton');
+                        Y.one("#uploadModelErrorMsg").setContent("&nbsp;");
+
                     } else {
                         uploadButton.addClass('disabledButton');
                         selectedFile = null;
+                        Y.one("#uploadModelErrorMsg").setContent("Only Collada (.dae) and Wavefront (.obj) files supported");
                     }
                 } else {
                     uploadButton.addClass('disabledButton');
