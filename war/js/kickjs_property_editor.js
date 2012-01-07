@@ -352,9 +352,9 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
                 if (t.name && t.name.indexOf('__')==0){
                     continue;
                 }
-                var name = t.name || "No name";
+                var optionName = t.name || "No name";
                 selected = t.config.uid === uid ? "selected":"";
-                item = Y.Node.create('<option value="'+t.uid+'" '+selected+'>'+t.name+'</option>');
+                item = Y.Node.create('<option value="'+t.uid+'" '+selected+'>'+optionName+'</option>');
                 node.append(item);
             }
 
