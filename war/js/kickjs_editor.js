@@ -132,6 +132,7 @@ var SceneEditorView = function(Y,sceneEditorApp){
 
         // create meshes
         var meshes = ["kickjs://mesh/triangle/", "kickjs://mesh/cube/"];
+        var objectNames = ["Triangle", "Cube"];
         for (var i = 0; i < meshes.length; i++) {
             var gameObject = scene.createGameObject();
             gameObject.transform.position = [-2.0 + 4 * i, 0, 0];
@@ -139,7 +140,13 @@ var SceneEditorView = function(Y,sceneEditorApp){
             meshRenderer.mesh = engine.resourceManager.getMesh(meshes[i]);
             meshRenderer.material = materials[i];
             gameObject.addComponent(meshRenderer);
+            gameObject.name = objectNames[i];
         }
+
+        var cameraGameObject = scene.createGameObject();
+        cameraGameObject.addComponent(new KICK.scene.Camera());
+        cameraGameObject.name = "Camera";
+        cameraGameObject.transform.position = [0,1,10];
     };
 
     this.decorateScene = function(scene){
