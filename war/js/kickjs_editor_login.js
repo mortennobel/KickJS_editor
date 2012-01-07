@@ -67,7 +67,7 @@ YUI().use('node','panel', function(Y) {
         var projectNameStatus = Y.one("#projectNameStatus");
         if (valid){
             node.removeClass("buttonDisabled");
-            projectNameStatus.setContent("");
+            projectNameStatus.setContent("&nbsp;");
         } else {
             node.addClass("buttonDisabled");
             var name = projectNameElement.get("value");
@@ -188,9 +188,9 @@ YUI().use('node','panel', function(Y) {
             var value = options[selectedIndex].get("value");
             if (value && value.length){
                 panel.hide();
-                e.preventDefault();
                 loadProject(value);
             }
+            e.preventDefault();
         }
     });
 
@@ -227,25 +227,28 @@ YUI().use('node','panel', function(Y) {
                 loginServerButton.setContent("Login to use Server version");
                 loginServerButton.set("href",response.loginURL);
             } else {
-                loginServerButton.on("click",function(){
+                loginServerButton.on("click",function(e){
                     serverObject = KICKED.server;
                     listProjects();
+                    e.preventDefault();
                 });
             }
             loginServerButton.removeClass("hiddenElement");
             loginLocalButton.removeClass("hiddenElement");
-            loginLocalButton.on("click",function(){
+            loginLocalButton.on("click",function(e){
                 serverObject = KICKED.localStorage;
                 listProjects();
+                e.preventDefault();
             });
             hideLoading();
         };
         var responseError = function(e){
             alert("Server error - only local storage available");
             loginLocalButton.removeClass("hiddenElement");
-            loginLocalButton.on("click",function(){
+            loginLocalButton.on("click",function(e){
                 serverObject = KICKED.localStorage;
                 listProjects();
+                e.preventDefault();
             });
             hideLoading();
         };
