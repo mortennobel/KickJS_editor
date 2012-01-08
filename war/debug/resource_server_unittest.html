@@ -1,0 +1,311 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title></title>
+    <script type="text/javascript" src="../js/kickjs_editor_server.js"></script>
+
+    <link rel="stylesheet" href="http://yui.yahooapis.com/combo?3.4.1/build/cssreset/reset-min.css&amp;3.4.1/build/cssfonts/fonts-min.css&amp;3.4.1/build/cssgrids/grids-min.css&amp;3.4.1/build/cssbase/base-min.css">
+    <link rel="stylesheet" href="http://yui.yahooapis.com/3.4.1/build/cssgrids/grids-min.css">
+    <script src="http://yui.yahooapis.com/3.4.1/build/yui/yui-min.js"></script>
+</head>
+<body class="yui3-skin-sam">
+<h1>Resource server unit test</h1>
+Note this test must be run from a webserver.<br>
+<div id="testLogger"></div>
+<script>
+    YUI().use('node', 'console', 'test', function (Y) {
+
+        Y.namespace("example.test");
+
+
+        Y.example.test.KICKLocalStorateCase = new Y.Test.Case({
+
+            //name of the test case - if not provided, one is auto-generated
+            name : "Array Tests",
+
+            //---------------------------------------------------------------------
+            // setUp and tearDown methods - optional
+            //---------------------------------------------------------------------
+
+            /*
+             * Sets up data that is needed by each test.
+             */
+            setUp : function () {
+                this.data = [0,1,2,3,4]
+            },
+
+            /*
+             * Cleans up everything that was created by setUp().
+             */
+            tearDown : function () {
+                delete this.data;
+            },
+
+            testCreateProject : function () {
+                var Assert = Y.Assert;
+
+                var success = false;
+                var error;
+
+                KICKED.localStorage.project.create("tmp_unit_test_name",function(){success = true;}, function(e){error = e;});
+                this.wait(function(){
+                    Assert.isTrue(success);
+                }, 200);
+            },
+
+            testLoadProject : function () {
+                var Assert = Y.Assert;
+
+                var success = false;
+                var error;
+
+                KICKED.localStorage.project.load("tmp_unit_test_name",function(){success = true;}, function(e){error = e;});
+                this.wait(function(){
+                    Assert.isTrue(success);
+                }, 200);
+            },
+            testListResourcesProject : function () {
+                var Assert = Y.Assert;
+
+                var success = false;
+                var error;
+                KICKED.localStorage.resource.list("tmp_unit_test_name",function(resp){
+                    console.log(resp);
+                    success = resp.response.resources.length===0;
+                }, function(e){
+                    error = e;
+                    console.log(e);
+                    debugger;
+                });
+                this.wait(function(){
+                    Assert.isTrue(success);
+                }, 200);
+            },
+            testCreateTxtResourcesProject : function () {
+                var Assert = Y.Assert;
+
+                var success = false;
+                var error;
+                KICKED.localStorage.resource.upload("tmp_unit_test_name",1,"text/plain","name", "Hello world",true,function(resp){
+                    console.log(resp);
+                    success = true;
+                }, function(e){
+                    error = e;
+                    console.log(e);
+                    debugger;
+                });
+                this.wait(function(){
+                    Assert.isTrue(success);
+                }, 200);
+            },
+            testLoadTxtResourcesProject : function () {
+                var Assert = Y.Assert;
+
+                var success = false;
+                var error;
+                KICKED.localStorage.resource.load("tmp_unit_test_name",1,function(resp){
+                    console.log(resp);
+                    success = resp === "Hello world";
+                }, function(e){
+                    error = e;
+                    console.log(e);
+                    debugger;
+                });
+                this.wait(function(){
+                    Assert.isTrue(success);
+                }, 200);
+            },
+            testUpdateTxtResourcesProject : function () {
+                var Assert = Y.Assert;
+
+                var success = false;
+                var error;
+                KICKED.localStorage.resource.upload("tmp_unit_test_name",1,"text/plain","name", "Hello world2",true,function(resp){
+                    console.log(resp);
+                    success = true;
+                }, function(e){
+                    error = e;
+                    console.log(e);
+                    debugger;
+                });
+                this.wait(function(){
+                    Assert.isTrue(success);
+                }, 200);
+            },
+            testLoadTxtResourcesProject2 : function () {
+                var Assert = Y.Assert;
+
+                var success = false;
+                var error;
+                KICKED.localStorage.resource.load("tmp_unit_test_name",1,function(resp){
+                    console.log(resp);
+                    success = resp === "Hello world2";
+                }, function(e){
+                    error = e;
+                    console.log(e);
+                    debugger;
+                });
+                this.wait(function(){
+                    Assert.isTrue(success);
+                }, 200);
+            },
+            testListResourcesProjectWithOneResource : function () {
+                var Assert = Y.Assert;
+
+                var success = false;
+                var error;
+                KICKED.localStorage.resource.list("tmp_unit_test_name",function(resp){
+                    console.log(resp);
+                    success = resp.response.resources.length===1;
+                }, function(e){
+                    error = e;
+                    console.log(e);
+                    debugger;
+                });
+                this.wait(function(){
+                    Assert.isTrue(success);
+                }, 200);
+            },
+            testDeleteTxtResources: function () {
+                var Assert = Y.Assert;
+
+                var success = false;
+                var error;
+                KICKED.localStorage.resource.delete("tmp_unit_test_name",1,function(resp){
+                    console.log(resp);
+                    success = true;
+                }, function(e){
+                    error = e;
+                    console.log(e);
+                    debugger;
+                });
+                this.wait(function(){
+                    Assert.isTrue(success);
+                }, 200);
+            },
+            testJSONResources: function () {
+                var Assert = Y.Assert;
+
+                var success = false;
+                var error;
+
+                KICKED.localStorage.resource.upload("tmp_unit_test_name",2,"text/plain","name", {o:"Hello world"},true,function(resp){
+                    console.log(resp);
+                    success = true;
+                }, function(e){
+                    error = e;
+                    console.log("Problem uploading");
+                    console.log(e);
+                    debugger;
+                });
+                this.wait(function(){
+                    Assert.isTrue(success,"Upload");
+                    success = false;
+
+                    KICKED.localStorage.resource.load("tmp_unit_test_name",2,function(resp){
+                        console.log(resp);
+                        success = resp.o === "Hello world";
+                    }, function(e){
+                        error = e;
+                        console.log(e,"Load");
+                        debugger;
+                    });
+                    this.wait(function(){
+                        Assert.isTrue(success);
+                        success = false;
+                        KICKED.localStorage.resource.delete("tmp_unit_test_name",2,function(resp){
+                            console.log(resp,"Delete");
+                            success = true;
+                        }, function(e){
+                            error = e;
+                            console.log(e);
+                            debugger;
+                        });
+                        this.wait(function(){
+                            Assert.isTrue(success);
+                        }, 200);
+                    }, 200);
+                }, 200);
+
+            },
+            testArrayBufferResources: function () {
+                var Assert = Y.Assert;
+
+                var success = false;
+                var error;
+                var floatArray = new Float32Array([0,1,2,3,3.14157]);
+
+                KICKED.localStorage.resource.upload("tmp_unit_test_name",2,"text/plain","name", floatArray.buffer,true,function(resp){
+                    console.log(resp);
+                    success = true;
+                }, function(e){
+                    error = e;
+                    console.log("Problem uploading");
+                    console.log(e);
+                    debugger;
+                });
+                this.wait(function(){
+                    Assert.isTrue(success,"Upload");
+                    success = false;
+
+                    KICKED.localStorage.resource.load("tmp_unit_test_name",2,function(resp){
+                        console.log(resp);
+                        success = resp instanceof ArrayBuffer;
+                    }, function(e){
+                        error = e;
+                        console.log(e,"Load");
+                        debugger;
+                    });
+                    this.wait(function(){
+                        Assert.isTrue(success);
+                        success = false;
+                        KICKED.localStorage.resource.delete("tmp_unit_test_name",2,function(resp){
+                            console.log(resp,"Delete");
+                            success = true;
+                        }, function(e){
+                            error = e;
+                            console.log(e);
+                            debugger;
+                        });
+                        this.wait(function(){
+                            Assert.isTrue(success);
+                        }, 200);
+                    }, 200);
+                }, 200);
+
+            },
+
+            testDeleteProject : function () {
+                var Assert = Y.Assert;
+
+                var success = false;
+                var error;
+
+                KICKED.localStorage.project.delete("tmp_unit_test_name",function(){success = true;}, function(e){error = e;});
+                this.wait(function(){
+                    Assert.isTrue(success);
+                }, 200);
+            }
+        });
+
+        Y.example.test.ExampleSuite = new Y.Test.Suite("Example Suite");
+        Y.example.test.ExampleSuite.add(Y.example.test.KICKLocalStorateCase);
+
+        //create the console
+        var r = new Y.Console({
+            newestOnTop : false,
+            style: 'block' // to anchor in the example content
+        });
+
+        r.render('#testLogger');
+
+        Y.Test.Runner.add(Y.example.test.ExampleSuite);
+
+        //run the tests
+        Y.Test.Runner.run();
+
+    });
+</script>
+</body>
+</html>

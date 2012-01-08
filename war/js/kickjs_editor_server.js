@@ -506,6 +506,17 @@ KICKED.localStorage.resource.load = function(projectName,uid,responseFn,errorFn,
     };
 };
 
+/**
+ *
+ * @param {String} projectName
+ * @param {Number} uid
+ * @param {String} contentType
+ * @param {String} contentName
+ * @param {String | ArrayBuffer |ÊObject} content
+ * @param {boolean} newResource
+ * @param {Function} responseFn
+ * @param {Function} errorFn
+ */
 KICKED.localStorage.resource.upload = function(projectName, uid, contentType,contentName, content, newResource ,responseFn,errorFn){
     var onload =  function (e) {
 
@@ -531,13 +542,13 @@ KICKED.localStorage.resource.upload = function(projectName, uid, contentType,con
         request.onerror = errorFn;
     };
 
-    if (typeof content === 'string'){
-        onload({target:{result:content}});
-    } else {
+    if (content instanceof File){
         var reader = new FileReader();
         reader.onload = onload;
         reader.onerror = errorFn;
         reader.readAsText(content);
+    } else {
+        onload({target:{result:content}});
     }
 };
 
