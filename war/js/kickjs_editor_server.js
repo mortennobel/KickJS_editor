@@ -271,6 +271,10 @@ KICKED.server.resource.load = function(projectName,uid,responseFn,errorFn, conve
 
 
 KICKED.localStorage = {};
+KICKED.localStorage.db = null;
+var indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB;
+var IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction;
+var IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange;
 
 /**
  * @class project
@@ -374,16 +378,46 @@ KICKED.localStorage.project.isNameValid = function(name,responseFn, errorFn){
 
 /**
  * @method load
- * @param responseFn Callback function with the signature
+ * @param onSuccessFn Callback function with the signature
  */
-KICKED.localStorage.project.load = function(name,responseFn, errorFn){
+KICKED.localStorage.project.load = function(name,onSuccessFn, errorFn){
     var list = KICKED.localStorage.project.list();
     list = list.response.projects;
-    for (var i=0;i<list.length;i++){
-        if (list[i]===name){
-            responseFn({response:{
+    var openProject = function(){
+        var dbVersion = 2;
+        var request = indexedDB.open(name, dbVersion);
+
+        request.onerror = errorFn;
+        var versionChange = function(event) {
+            KICKED.localStorage.db.createObjectStore("asset", { keyPath: "uid" });
+            console.log("IndexedDB created");
+            onSuccessFn({response:{
                 loaded:"ok"
             }});
+        };
+        request.onupgradeneeded = versionChange;
+        request.onsuccess = function(){
+            console.log("IndexedDB opened");
+            var db = request.result;
+            KICKED.localStorage.db = db;
+            if(dbVersion != db.version) {
+                if (db.setVersion){
+                    var setVrequest = db.setVersion(dbVersion);
+
+                    // onsuccess is the only place we can create Object Stores
+                    setVrequest.onfailure = errorFn;
+                    setVrequest.onsuccess = versionChange;
+                }
+            } else {
+                onSuccessFn({response:{
+                    loaded:"ok"
+                }});
+            }
+        };
+    };
+    for (var i=0;i<list.length;i++){
+        if (list[i]===name){
+            openProject();
             return;
         }
     }
@@ -400,15 +434,18 @@ KICKED.localStorage.resource = {};
  * @method delete
  */
 KICKED.localStorage.resource.delete = function(projectName, uid, responseFn,errorFn){
-    var key = projectName+"?"+uid;
-    var metaKey = projectName+"?meta"+uid;
-    localStorage.removeItem(key);
-    localStorage.removeItem(metaKey);
-    responseFn({
-        response:{
-            message:"Deleted ok"
-        }
-    })
+    var db = KICKED.localStorage.db;
+    var request = db.transaction(["asset"], IDBTransaction.READ_WRITE)
+        .objectStore("asset")
+        .delete(uid);
+    request.onerror = errorFn;
+    request.onsuccess = function(event) {
+        responseFn({
+            response:{
+                message:"Deleted ok"
+            }
+        });
+    };
 };
 
 /**
@@ -416,18 +453,28 @@ KICKED.localStorage.resource.delete = function(projectName, uid, responseFn,erro
  */
 KICKED.localStorage.resource.list = function(projectName,responseFn,errorFn){
     var list = [];
-    var metaPrefix = projectName+"?meta";
-    for (var i=0;i<localStorage.length;i++){
-        var key = localStorage.key(i);
-        if (key.indexOf(metaPrefix)==0){
-            list.push(JSON.parse(localStorage.getItem(key)));
+    var db = KICKED.localStorage.db;
+    var trans = db.transaction(["asset"]);
+    var store = trans.objectStore("asset");
+
+    // Get everything in the store;
+    var keyRange = IDBKeyRange.lowerBound(0);
+    var cursorRequest = store.openCursor(keyRange);
+
+    cursorRequest.onsuccess = function(e) {
+        var result = e.target.result;
+        if(result){
+            list.push(result.value.uid);
+            result["continue"]();     // avoid syntax highlight error in IntelliJ
+        } else {
+            responseFn({
+                response:{
+                    resources: list
+                }
+            });
         }
-    }
-    responseFn({
-        response:{
-            resources: list
-        }
-    });
+    };
+    cursorRequest.onerror = errorFn;
 };
 
 /**
@@ -439,48 +486,57 @@ KICKED.localStorage.resource.list = function(projectName,responseFn,errorFn){
  * @param {boolean} convertToJSON Optional default false. Otherwise
  */
 KICKED.localStorage.resource.load = function(projectName,uid,responseFn,errorFn, convertToJSON){
-    var key = projectName+"?"+uid;
-    var value = localStorage.getItem(key);
-    if (value) {
-        if (convertToJSON){
-            value = JSON.parse(value);
+    var db = KICKED.localStorage.db;
+    var transaction = db.transaction(["asset"]);
+    var objectStore = transaction.objectStore("asset");
+    var request = objectStore.get(uid);
+    request.onerror = errorFn;
+    request.onsuccess = function(){
+        var value = request.result;
+        if (!value){ // value not found (null values are now 'allowed' in my table
+            errorFn({message:"Row not found"});
         }
-        responseFn(value);
-    } else {
-        errorFn({status:404,message:"Key not found"});
-    }
+        else {
+            value = value.value;
+            if (convertToJSON){
+                value = JSON.parse(value);
+            }
+            responseFn(value);
+        }
+    };
 };
 
 KICKED.localStorage.resource.upload = function(projectName, uid, contentType,contentName, content, newResource ,responseFn,errorFn){
-    var reader = new FileReader();
     var onload =  function (e) {
-        var value = e.target.result;
-        var key = projectName+"?"+uid;
-        var metaKey = projectName+"?meta"+uid;
-        localStorage.setItem(key,value);
-        localStorage.setItem(metaKey, JSON.stringify({
-            "uid": uid,
-            "project": projectName,
-            "userPrincipal": "localuser",
-            "created": new Date().toGMTString(),
-            "name": contentName,
-            "contentType": contentType,
-            "modified": new Date().toGMTString()
-        } ));
 
-        responseFn({response:{
-            message:"Upload ok"
-        }})
+        var value = e.target.result;
+        var valueContainer = {
+            uid: uid,
+            project: projectName,
+            userPrincipal: "localuser",
+            name: contentName,
+            contentType: contentType,
+            modified: new Date().toGMTString(),
+            value:value
+        };
+        var db = KICKED.localStorage.db;
+        var request = db.transaction(["asset"], IDBTransaction.READ_WRITE)
+            .objectStore("asset")
+            .put(valueContainer);
+        request.onsuccess = function(){
+            responseFn({response:{
+                message:"Upload ok"
+            }});
+        };
+        request.onerror = errorFn;
     };
-    reader.onload = onload;
-    reader.onerror = function(e){
-        errorFn({
-            "error":e
-        });
-    };
+
     if (typeof content === 'string'){
         onload({target:{result:content}});
     } else {
+        var reader = new FileReader();
+        reader.onload = onload;
+        reader.onerror = errorFn;
         reader.readAsText(content);
     }
 };

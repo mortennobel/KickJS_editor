@@ -52,9 +52,10 @@ YUI({
                 console.log(errorObj);
             };
 
-            var onResourceLoadSuccess = function(content){
-                var isError = content.status; // .status only available on errorObject
+            var onResourceLoadSuccess = function(content, isError){
                 var sceneReady = function(){
+                    sceneEditorApp.projectAssets.updateProjectContent();
+                    sceneEditorApp.sceneGameObjects.updateSceneContent();
                     Y.one("#loadingPanel").addClass("hiddenContent");
                     Y.one("#layout").removeClass("hiddenContent");
                     sceneEditorApp.tabView.adjustView();
@@ -67,11 +68,11 @@ YUI({
                     sceneReady();
                 }
             };
-
+            var onResourceLoadError = function(content, isError){
+                onResourceLoadSuccess(null,true);
+            };
             var onProjectLoad = function(resp){
-                serverObject.resource.load(projectName, 0,onResourceLoadSuccess, onResourceLoadSuccess,true);
-                sceneEditorApp.projectAssets.updateProjectContent();
-                sceneEditorApp.sceneGameObjects.updateSceneContent();
+                serverObject.resource.load(projectName, 0,onResourceLoadSuccess, onResourceLoadError,true);
             };
 
             serverObject.project.load(projectName, onProjectLoad, onError);
