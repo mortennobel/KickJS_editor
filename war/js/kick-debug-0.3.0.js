@@ -11737,6 +11737,7 @@ KICK.namespace = function (ns_string) {
         };
 
         /**
+         * Calling this function has the side effect of enabling floating point texture (in available on platform)
          * @method isFPTexturesSupported
          * @return {Boolean}
          */
@@ -14667,8 +14668,11 @@ KICK.namespace = function (ns_string) {
              * @return {Function} getter function with the signature function(url)
              * @private
              */
-            buildGetFunc = function(cache,methodName,type){
+            buildGetFunc = function(cache,methodName,type,deprecated){
                 return function(url){
+                    if (deprecated){
+                        console.log("Warn "+methodName+" is deprecated");
+                    }
                     var i,
                         res;
                     if (type){
@@ -14741,7 +14745,7 @@ KICK.namespace = function (ns_string) {
          * @return {KICK.mesh.Mesh}
          * @deprecated
          */
-        this.getMesh = buildGetFunc(meshCache,"getMesh");
+        this.getMesh = buildGetFunc(meshCache,"getMesh",true);
 
         /**
          * @method getShader
@@ -14749,7 +14753,7 @@ KICK.namespace = function (ns_string) {
          * @return {KICK.material.Shader}
          * @deprecated
          */
-        this.getShader = buildGetFunc(shaderCache,"getShader", "KICK.material.Shader");
+        this.getShader = buildGetFunc(shaderCache,"getShader", "KICK.material.Shader",true);
 
         /**
          * @method getTexture
@@ -14757,7 +14761,27 @@ KICK.namespace = function (ns_string) {
          * @return {KICK.texture.Texture}
          * @deprecated
          */
-        this.getTexture = buildGetFunc(textureCache,"getTexture","KICK.texture.Texture");
+        this.getTexture = buildGetFunc(textureCache,"getTexture","KICK.texture.Texture",true);
+
+        /**
+         * @method addResourceProvider
+         * @param {KICK.resource.ResourceProvider} resourceProvider
+         */
+        this.addResourceProvider = function(resourceProvider){
+            resourceProviders.push(resourceProvider);
+        };
+
+        /**
+         * @method removeResourceProvider
+         * @param {KICK.resource.ResourceProvider} resourceProvider
+         */
+        this.removeResourceProvider = function(resourceProvider){
+            for (var i=resourceProvider.length-1;i>=0;i--){
+                if (resourceProviders[i] === resourceProvider){
+                    resourceProviders.splice(i,1);
+                }
+            }
+        };
 
         /**
          * Release a reference to the resource.
@@ -14788,10 +14812,9 @@ KICK.namespace = function (ns_string) {
      * @namespace KICK.core
      * @constructor
      * @param {String} protocol
-     * @private
      */
     /**
-     * Protocol of the resource, such as http, kickjs<br>
+     * Protocol of the resource, such as http://, kickjs://<br>
      * The protocol must uniquely identify a resource provider
      * @property protocol
      * @type String
@@ -14897,7 +14920,7 @@ KICK.namespace = function (ns_string) {
              * @type String
              */
             protocol:{
-                value:"kickjs"
+                value:"kickjs://"
             }
         });
 
@@ -14954,8 +14977,10 @@ KICK.namespace = function (ns_string) {
          * @method getMesh
          * @param {String} url
          * @return {KICK.mesh.Mesh}
+         * @deprecated
          */
         this.getMesh = function(url){
+            console.log("getMesh is deprecated. Use getMeshData instead");
             var meshDataObj,
                 getParameterInt = core.Util.getParameterInt,
                 getParameterFloat = core.Util.getParameterFloat,
@@ -15072,6 +15097,7 @@ KICK.namespace = function (ns_string) {
          * @return {KICK.material.Shader} Shader or null if not found
          */
         this.getShader = function(url,errorLog){
+            console.log("getShader is deprecated");
             var shader = new KICK.material.Shader(engine);
             this.getShaderData(url,shader);
             shader.name = getUrlAsResourceName(url);
@@ -15128,6 +15154,7 @@ KICK.namespace = function (ns_string) {
          * @return {KICK.texture.Texture} Texture object - or null if no texture is found for the specified url
          */
         this.getTexture = function(url){
+            console.log("getTexture is deprecated!");
             var name = getUrlAsResourceName(url);
             var texture = new KICK.texture.Texture(engine,{
                 name:name,
