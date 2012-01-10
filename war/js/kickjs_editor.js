@@ -104,41 +104,41 @@ var SceneEditorView = function(Y,sceneEditorApp){
         var materials = [
             new KICK.material.Material(engine, {
                 name:"White material",
-                shader:engine.resourceManager.getShader("kickjs://shader/unlit/"),
+                shader: engine.project.load(engine.project.ENGINE_SHADER_UNLIT),
                 uniforms:{
                     mainColor:{
                         value:[1, 1, 1],
                         type:KICK.core.Constants.GL_FLOAT_VEC3
                     },
                     mainTexture:{
-                        value:engine.resourceManager.getTexture("kickjs://texture/white/"),
+                        value:engine.project.load(engine.project.ENGINE_TEXTURE_WHITE),
                         type:KICK.core.Constants.GL_SAMPLER_2D
                     }
                 }
             }),
             new KICK.material.Material(engine, {
                 name:"Gray material",
-                shader:engine.resourceManager.getShader("kickjs://shader/unlit/"),
+                shader:engine.project.load(engine.project.ENGINE_SHADER_UNLIT),
                 uniforms:{
                     mainColor:{
                         value:[1, 1, 1],
                         type:KICK.core.Constants.GL_FLOAT_VEC3
                     },
                     mainTexture:{
-                        value:engine.resourceManager.getTexture("kickjs://texture/gray/"),
+                        value:engine.project.load(engine.project.ENGINE_TEXTURE_GRAY),
                         type:KICK.core.Constants.GL_SAMPLER_2D
                     }
                 }
             })];
 
         // create meshes
-        var meshes = ["kickjs://mesh/triangle/", "kickjs://mesh/cube/"];
+        var meshes = [engine.project.ENGINE_MESH_TRIANGLE, engine.project.ENGINE_MESH_CUBE];
         var objectNames = ["Triangle", "Cube"];
         for (var i = 0; i < meshes.length; i++) {
             var gameObject = scene.createGameObject();
             gameObject.transform.position = [-2.0 + 4 * i, 0, 0];
             var meshRenderer = new KICK.scene.MeshRenderer();
-            meshRenderer.mesh = engine.resourceManager.getMesh(meshes[i]);
+            meshRenderer.mesh = engine.project.load(meshes[i]);
             meshRenderer.material = materials[i];
             gameObject.addComponent(meshRenderer);
             gameObject.name = objectNames[i];
@@ -204,7 +204,7 @@ var SceneEditorApp = function(Y){
         createMaterial = function(){
             var engine = _view.engine,
                 material = new KICK.material.Material(engine, {
-                shader:engine.resourceManager.getShader("kickjs://shader/unlit/"),
+                shader:engine.project.load(engine.project.ENGINE_SHADER_UNLIT),
                 uniforms:{
                     mainColor:{
                         value:[1, 1, 1],
@@ -224,14 +224,13 @@ var SceneEditorApp = function(Y){
         },
         createMeshRendererComponent = function(){
             var engine = _view.engine,
-                project = engine.project,
-                resourceManager = engine.resourceManager;
-            var mesh = resourceManager.getMesh("kickjs://mesh/cube/");
+                project = engine.project;
+            var mesh = project.load(project.ENGINE_MESH_CUBE);
             var materials = project.getResourceDescriptorByType("KICK.material.Material");
             if (materials.length>0){
                 materials = [project.load(materials[0].uid)];
             } else {
-                materials = [new KICK.material.Material(engine,{shader:resourceManager.getShader("kickjs://shader/__error/")})];
+                materials = [new KICK.material.Material(engine,{shader:project.load(project.ENGINE_SHADER_ERROR) })];
             }
             addComponent(KICK.scene.MeshRenderer,{mesh:mesh,materials:materials});
         },
@@ -262,7 +261,7 @@ var SceneEditorApp = function(Y){
         },
         createMesh = function(url){
             collapseMenu("#projectAssetMenu");
-            engine.resourceManager.getMesh(url);
+            new KICK.mesh.Mesh(engine,{dataURI: url}); // will automatically be registered in project
             _projectAssets.updateProjectContent();
         },
         panel = new Y.Panel({
@@ -502,10 +501,6 @@ var SceneEditorApp = function(Y){
     Y.one("#projectAddTexture").on("click",function(){alert("not implemented");});
 //    Y.one("#projectAddMesh").on("click",function(){alert("not implemented");});
     Y.one("#projectUploadModel").on("click",function(){uploadMesh()});
-
-    Y.one("#projectAddMeshPlane").on("click",function(){createMesh("kickjs://mesh/plane/");});
-    Y.one("#projectAddMeshCube").on("click",function(){createMesh("kickjs://mesh/cube/")});
-    Y.one("#projectAddMeshSphere").on("click",function(){createMesh("kickjs://mesh/uvsphere/")});
     Y.one("#projectAddScene").on("click",addScene);
     Y.one("#projectAssetRename").on("click",function(){
         collapseMenu("#projectAssetMenu");
@@ -785,7 +780,7 @@ function ProjectAssets(Y, sceneEditorApp){
                 if (debug){
                     name += " #"+uid;
                 }
-                if (name.indexOf('__')!==0 || debug){
+                if ((name.indexOf('__')!==0 && uid > 0)|| debug){
                     var treeNode = projectTreeView.add({childType:"TreeLeaf",label:name});
                     treeNode.item(0).set("uid",uid);
                 }

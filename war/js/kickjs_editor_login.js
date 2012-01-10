@@ -57,6 +57,12 @@ YUI().use('node','panel', function(Y) {
         serverObject.project.list(onSuccess,onError);
     };
 
+
+    var disableCreateProjectButton = function(){
+        var node = panelCreateProject._buttonsArray[1].node;
+        node.addClass("buttonDisabled");
+    };
+
     /**
      * Set the
      * @method setProjectNameValid
@@ -69,7 +75,7 @@ YUI().use('node','panel', function(Y) {
             node.removeClass("buttonDisabled");
             projectNameStatus.setContent("&nbsp;");
         } else {
-            node.addClass("buttonDisabled");
+            disableCreateProjectButton();
             var name = projectNameElement.get("value");
             if (name.length>0){
                 projectNameStatus.setContent("Invalid project name");
@@ -171,6 +177,7 @@ YUI().use('node','panel', function(Y) {
                 if (!projectNameTimer && e.keyCode === 13 && validProjectName){
                     createProjectAndLoadProject();
                 }
+                disableCreateProjectButton();
                 setupValidateNameTimer();
             });
         }

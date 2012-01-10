@@ -2649,6 +2649,16 @@ KICK.namespace = function (ns_string) {
 */
 /**
 * GLSL file content
+* @property __shadowmap_fs.glsl
+* @type String
+*/
+/**
+* GLSL file content
+* @property __shadowmap_vs.glsl
+* @type String
+*/
+/**
+* GLSL file content
 * @property light.glsl
 * @type String
 */
@@ -2665,16 +2675,6 @@ KICK.namespace = function (ns_string) {
 /**
 * GLSL file content
 * @property shadowmap.glsl
-* @type String
-*/
-/**
-* GLSL file content
-* @property shadowmap_fs.glsl
-* @type String
-*/
-/**
-* GLSL file content
-* @property shadowmap_vs.glsl
 * @type String
 */
 /**
@@ -2707,7 +2707,7 @@ KICK.namespace = function (ns_string) {
 * @property unlit_vs.glsl
 * @type String
 */
-{"__error_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvoid main(void)\n{\ngl_FragColor = vec4(1.0,0.5, 0.9, 1.0);\n}","__error_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\n} ","__pick_fs.glsl":"#ifdef GL_ES\nprecision mediump float;\n#endif\nvarying vec4 gameObjectUID;\nvoid main(void)\n{\ngl_FragColor = gameObjectUID;\n}","__pick_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nuniform vec4 _gameObjectUID;\nvarying vec4 gameObjectUID;\nvoid main(void) {\n// compute position\ngl_Position = _mvProj * vec4(vertex, 1.0);\ngameObjectUID = _gameObjectUID;\n}","light.glsl":"struct DirectionalLight {\nvec3 lDir;\nvec3 colInt;\nvec3 halfV;\n};\n// assumes that normal is normalized\nvoid getDirectionalLight(vec3 normal, DirectionalLight dLight, float specularExponent, out vec3 diffuse, out float specular){\nfloat diffuseContribution = max(dot(normal, dLight.lDir), 0.0);\n\tfloat specularContribution = max(dot(normal, dLight.halfV), 0.0);\nspecular = pow(specularContribution, specularExponent);\n\tdiffuse = (dLight.colInt * diffuseContribution);\n}\nuniform DirectionalLight _dLight;\nuniform vec3 _ambient;","phong_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nvarying vec3 vNormal;\nuniform vec3 mainColor;\nuniform float specularExponent;\nuniform vec3 specularColor;\nuniform sampler2D mainTexture;\n#pragma include \"light.glsl\"\n#pragma include \"shadowmap.glsl\"\nvoid main(void)\n{\nvec3 diffuse;\nfloat specular;\ngetDirectionalLight(vNormal, _dLight, specularExponent, diffuse, specular);\nfloat visibility;\nif (SHADOWS){\ncomputeLightVisibility();\n} else {\nvisibility = 1.0;\n}\nvec3 color = max(diffuse*visibility,_ambient.xyz)*mainColor;\ngl_FragColor = texture2D(mainTexture,vUv)*vec4(color, 1.0)+vec4(specular*specularColor,0.0);\n}\n","phong_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat4 _lightMat;\nuniform mat3 _norm;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec4 vShadowMapCoord;\nvoid main(void) {\nvec4 v = vec4(vertex, 1.0);\ngl_Position = _mvProj * v;\nvUv = uv1;\nvNormal= normalize(_norm * normal);\nvShadowMapCoord = _lightMat * v;\n} ","shadowmap.glsl":"varying vec4 vShadowMapCoord;\nuniform sampler2D _shadowMapTexture;\nfloat unpackDepth( const in vec4 rgba_depth ) {\nconst vec4 bit_shift = vec4( 1.0 / ( 16777216.0 ), 1.0 / ( 65536.0 ), 1.0 / 256.0, 1.0 );\nreturn dot( rgba_depth, bit_shift );\n}\nfloat computeLightVisibility(){\nvec3 shadowCoord = vShadowMapCoord.xyz / vShadowMapCoord.w;\nvec4 packedShadowDepth = texture2D(_shadowMapTexture,shadowCoord.xy);\nfloat shadowDepth = unpackDepth(packedShadowDepth);\nif (shadowDepth < shadowCoord.z){\nreturn 1.0;\n}\nreturn 0.0;\n}","shadowmap_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvec4 packDepth( const in float depth ) {\nconst vec4 bitShift = vec4( 16777216.0, 65536.0, 256.0, 1.0 );\nconst vec4 bitMask = vec4( 0.0, 1.0 / 256.0, 1.0 / 256.0, 1.0 / 256.0 );\nvec4 res = fract( depth * bitShift );\nres -= res.xxyz * bitMask;\nreturn res;\n}\nvoid main() {\ngl_FragColor = packDepth( gl_FragCoord.z );\n}\n","shadowmap_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\n} ","transparent_phong_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nvarying vec3 vNormal;\nuniform vec4 mainColor;\nuniform float specularExponent;\nuniform vec3 specularColor;\nuniform sampler2D mainTexture;\n#pragma include \"light.glsl\"\nvoid main(void)\n{\nvec3 diffuse;\nfloat specular;\ngetDirectionalLight(vNormal, _dLight, specularExponent, diffuse, specular);\nvec4 color = vec4(max(diffuse,_ambient.xyz),1.0)*mainColor;\ngl_FragColor = texture2D(mainTexture,vUv)*color+vec4(specular*specularColor,0.0);\n}\n","transparent_phong_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat3 _norm;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvoid main(void) {\n// compute position\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n// compute light info\nvNormal= normalize(_norm * normal);\n} ","transparent_unlit_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nuniform vec4 mainColor;\nuniform sampler2D mainTexture;\nvoid main(void)\n{\ngl_FragColor = texture2D(mainTexture,vUv)*mainColor;\n}\n","transparent_unlit_vs.glsl":"attribute vec3 vertex;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nvarying vec2 vUv;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n}","unlit_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nuniform vec3 mainColor;\nuniform sampler2D mainTexture;\nvoid main(void)\n{\ngl_FragColor = texture2D(mainTexture,vUv)*vec4(mainColor,1.0);\n}\n","unlit_vs.glsl":"attribute vec3 vertex;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nvarying vec2 vUv;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n}"};
+{"__error_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvoid main(void)\n{\ngl_FragColor = vec4(1.0,0.5, 0.9, 1.0);\n}","__error_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\n} ","__pick_fs.glsl":"#ifdef GL_ES\nprecision mediump float;\n#endif\nvarying vec4 gameObjectUID;\nvoid main(void)\n{\ngl_FragColor = gameObjectUID;\n}","__pick_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nuniform vec4 _gameObjectUID;\nvarying vec4 gameObjectUID;\nvoid main(void) {\n// compute position\ngl_Position = _mvProj * vec4(vertex, 1.0);\ngameObjectUID = _gameObjectUID;\n}","__shadowmap_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvec4 packDepth( const in float depth ) {\nconst vec4 bitShift = vec4( 16777216.0, 65536.0, 256.0, 1.0 );\nconst vec4 bitMask = vec4( 0.0, 1.0 / 256.0, 1.0 / 256.0, 1.0 / 256.0 );\nvec4 res = fract( depth * bitShift );\nres -= res.xxyz * bitMask;\nreturn res;\n}\nvoid main() {\ngl_FragColor = packDepth( gl_FragCoord.z );\n}\n","__shadowmap_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\n} ","light.glsl":"struct DirectionalLight {\nvec3 lDir;\nvec3 colInt;\nvec3 halfV;\n};\n// assumes that normal is normalized\nvoid getDirectionalLight(vec3 normal, DirectionalLight dLight, float specularExponent, out vec3 diffuse, out float specular){\nfloat diffuseContribution = max(dot(normal, dLight.lDir), 0.0);\n\tfloat specularContribution = max(dot(normal, dLight.halfV), 0.0);\nspecular = pow(specularContribution, specularExponent);\n\tdiffuse = (dLight.colInt * diffuseContribution);\n}\nuniform DirectionalLight _dLight;\nuniform vec3 _ambient;","phong_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nvarying vec3 vNormal;\nuniform vec3 mainColor;\nuniform float specularExponent;\nuniform vec3 specularColor;\nuniform sampler2D mainTexture;\n#pragma include \"light.glsl\"\n#pragma include \"shadowmap.glsl\"\nvoid main(void)\n{\nvec3 diffuse;\nfloat specular;\ngetDirectionalLight(vNormal, _dLight, specularExponent, diffuse, specular);\nfloat visibility;\nif (SHADOWS){\ncomputeLightVisibility();\n} else {\nvisibility = 1.0;\n}\nvec3 color = max(diffuse*visibility,_ambient.xyz)*mainColor;\ngl_FragColor = texture2D(mainTexture,vUv)*vec4(color, 1.0)+vec4(specular*specularColor,0.0);\n}\n","phong_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat4 _lightMat;\nuniform mat3 _norm;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec4 vShadowMapCoord;\nvoid main(void) {\nvec4 v = vec4(vertex, 1.0);\ngl_Position = _mvProj * v;\nvUv = uv1;\nvNormal= normalize(_norm * normal);\nvShadowMapCoord = _lightMat * v;\n} ","shadowmap.glsl":"varying vec4 vShadowMapCoord;\nuniform sampler2D _shadowMapTexture;\nfloat unpackDepth( const in vec4 rgba_depth ) {\nconst vec4 bit_shift = vec4( 1.0 / ( 16777216.0 ), 1.0 / ( 65536.0 ), 1.0 / 256.0, 1.0 );\nreturn dot( rgba_depth, bit_shift );\n}\nfloat computeLightVisibility(){\nvec3 shadowCoord = vShadowMapCoord.xyz / vShadowMapCoord.w;\nvec4 packedShadowDepth = texture2D(_shadowMapTexture,shadowCoord.xy);\nfloat shadowDepth = unpackDepth(packedShadowDepth);\nif (shadowDepth < shadowCoord.z){\nreturn 1.0;\n}\nreturn 0.0;\n}","transparent_phong_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nvarying vec3 vNormal;\nuniform vec4 mainColor;\nuniform float specularExponent;\nuniform vec3 specularColor;\nuniform sampler2D mainTexture;\n#pragma include \"light.glsl\"\nvoid main(void)\n{\nvec3 diffuse;\nfloat specular;\ngetDirectionalLight(vNormal, _dLight, specularExponent, diffuse, specular);\nvec4 color = vec4(max(diffuse,_ambient.xyz),1.0)*mainColor;\ngl_FragColor = texture2D(mainTexture,vUv)*color+vec4(specular*specularColor,0.0);\n}\n","transparent_phong_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat3 _norm;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvoid main(void) {\n// compute position\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n// compute light info\nvNormal= normalize(_norm * normal);\n} ","transparent_unlit_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nuniform vec4 mainColor;\nuniform sampler2D mainTexture;\nvoid main(void)\n{\ngl_FragColor = texture2D(mainTexture,vUv)*mainColor;\n}\n","transparent_unlit_vs.glsl":"attribute vec3 vertex;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nvarying vec2 vUv;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n}","unlit_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nuniform vec3 mainColor;\nuniform sampler2D mainTexture;\nvoid main(void)\n{\ngl_FragColor = texture2D(mainTexture,vUv)*vec4(mainColor,1.0);\n}\n","unlit_vs.glsl":"attribute vec3 vertex;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nvarying vec2 vUv;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n}"};
 })();/*!
  * New BSD License
  *
@@ -5925,7 +5925,7 @@ KICK.namespace = function (ns_string) {
                             cancelRequestAnimFrame(animationFrameObj);
                             animationFrameObj = null;
                         } else {
-                            lastTime = new Date().getTime()-16, // ensures valid delta time in next frame
+                            lastTime = new Date().getTime()-16; // ensures valid delta time in next frame
                             animationFrameObj = requestAnimationFrame(wrapperFunctionToMethodOnObject,this.canvas);
                         }
                     }
@@ -6284,7 +6284,6 @@ KICK.namespace = function (ns_string) {
     core.Project = function(engine){
         var resourceDescriptorsByUID = {},
             resourceCache = {},
-            resourceReferenceCount = {},
             thisObj = this,
             _maxUID = 0,
             refreshResourceDescriptor = function(uid,filter){
@@ -6294,7 +6293,122 @@ KICK.namespace = function (ns_string) {
                         resourceDescriptorsByUID[uid].updateConfig(liveObject,filter);
                     }
                 }
+            },
+            getUrlAsResourceName = function(url){
+                var name = url.split('/');
+                if (name.length>2){
+                    name = name[name.length-2];
+                    name = name.substring(0,1).toUpperCase()+name.substring(1);
+                } else {
+                    name = url;
+                }
+                return name;
+            },
+            loadEngineAsset = function(uid){
+                var p = core.Project,
+                    res,
+                    url;
+                if (uid <= p.ENGINE_SHADER_DEFAULT && uid >= p.ENGINE_SHADER_ERROR){
+                    switch (uid){
+                        case p.ENGINE_SHADER_DEFAULT:
+                            url = "kickjs://shader/default/";
+                            break;
+                        case p.ENGINE_SHADER_PHONG:
+                            url = "kickjs://shader/phong/";
+                            break;
+                        case p.ENGINE_SHADER_UNLIT:
+                            url = "kickjs://shader/unlit/";
+                            break;
+                        case p.ENGINE_SHADER_TRANSPARENT_PHONG:
+                            url = "kickjs://shader/transparent_phong/";
+                            break;
+                        case p.ENGINE_SHADER_TRANSPARENT_UNLIT:
+                            url = "kickjs://shader/transparent_unlit/";
+                            break;
+                        case p.ENGINE_SHADER_SHADOWMAP:
+                            url = "kickjs://shader/__shadowmap/";
+                            break;
+                        case p.ENGINE_SHADER_PICK:
+                            url = "kickjs://shader/__pick/";
+                            break;
+                        case p.ENGINE_SHADER_ERROR :
+                            url = "kickjs://shader/__error/";
+                            break;
+                        default:
+                            if (ASSERT){
+                                core.Util.fail("uid not mapped "+uid);
+                            }
+                            return null;
+                    }
+                    res = new KICK.material.Shader(engine,{
+                        dataURI:url,
+                        name:getUrlAsResourceName(url),
+                        uid:uid
+                    })
+                } else if (uid <= p.ENGINE_TEXTURE_BLACK && uid >= p.ENGINE_TEXTURE_GRAY){
+                    switch (uid){
+                        case p.ENGINE_TEXTURE_BLACK:
+                            url = "kickjs://texture/black/";
+                            break;
+                        case p.ENGINE_TEXTURE_WHITE:
+                            url = "kickjs://texture/white/";
+                            break;
+                        case p.ENGINE_TEXTURE_GRAY:
+                            url = "kickjs://texture/gray/";
+                            break;
+                        default:
+                            if (ASSERT){
+                                core.Util.fail("uid not mapped "+uid);
+                            }
+                            return null;
+                    }
+                    res = new KICK.texture.Texture(engine,
+                        {
+                            dataURI:url,
+                            name:getUrlAsResourceName(url),
+                            minFilter: 9728,
+                            magFilter: 9728,
+                            generateMipmaps: false,
+                            uid:uid
+                        });
+                } else if (uid <= p.ENGINE_MESH_TRIANGLE && uid >= p.ENGINE_MESH_CUBE){
+                    switch (uid){
+                        case p.ENGINE_MESH_TRIANGLE:
+                            url = "kickjs://mesh/triangle/";
+                            break;
+                        case p.ENGINE_MESH_PLANE:
+                            url = "kickjs://mesh/plane/";
+                            break;
+                        case p.ENGINE_MESH_UVSPHERE:
+                            url = "kickjs://mesh/uvsphere/?slides=20&stacks=10&radius=1.0";
+                            break;
+                        case p.ENGINE_MESH_CUBE:
+                            url = "kickjs://mesh/cube/?length=1.0";
+                            break;
+                        default:
+                            if (ASSERT){
+                                core.Util.fail("uid not mapped "+uid);
+                            }
+                            return null;
+                    }
+                    res = new KICK.mesh.Mesh(engine,
+                        {
+                            dataURI:url,
+                            name:getUrlAsResourceName(url),
+                            uid:uid
+                        });
+                }
+
+                resourceCache[uid] = res;
+                return res;
             };
+
+        // copy static values to object values
+        for (var name in core.Project){
+            if (core.Project.hasOwnProperty(name)){
+                thisObj[name] = core.Project[name];
+            }
+        }
 
         Object.defineProperties(this, {
             /**
@@ -6368,7 +6482,6 @@ KICK.namespace = function (ns_string) {
             }
             resourceDescriptorsByUID = {};
             resourceCache = {};
-            resourceReferenceCount = {};
         };
 
         /**
@@ -6378,20 +6491,19 @@ KICK.namespace = function (ns_string) {
          * @param {String} uid
          * @return {KICK.core.ProjectAsset} resource or null if resource is not found
          */
-        this.load = function(resourceUID){
-            var resourceObject = resourceCache[resourceUID];
+        this.load = function(uid){
+            var resourceObject = resourceCache[uid];
             if (resourceObject){
-                resourceReferenceCount[resourceUID]++;
                 return resourceObject;
             }
-            var resourceConfig = resourceDescriptorsByUID[resourceUID];
+            var resourceConfig = resourceDescriptorsByUID[uid];
             if (resourceConfig){
                 resourceObject = resourceConfig.instantiate(engine);
-                resourceCache[resourceUID] = resourceObject;
-                resourceReferenceCount[resourceUID] = 1;
+                resourceCache[uid] = resourceObject;
                 return resourceObject;
             }
-            return null;
+
+            return loadEngineAsset(uid);
         };
 
         /**
@@ -6416,26 +6528,6 @@ KICK.namespace = function (ns_string) {
         };
 
         /**
-         * Decreases the resource reference counter. If resource is no longer
-         * used it's destroy method will be invoked (if available).
-         * @method release
-         * @param {Number} resourceUID
-         */
-        this.release = function(resourceUID){
-            var resourceObject = resourceCache[resourceUID];
-            if (resourceObject){
-                resourceReferenceCount[resourceUID]--;
-                if (resourceReferenceCount[resourceUID] <= 0){
-                    delete resourceCache[resourceUID];
-                    delete resourceReferenceCount[resourceUID];
-                    if (resourceObject.destroy){
-                        resourceObject.destroy();
-                    }
-                }
-            }
-        };
-
-        /**
          * Registers an asset in a Project.
          * @method registerObject
          * @param {Object} object
@@ -6447,7 +6539,6 @@ KICK.namespace = function (ns_string) {
                 return;
             }
             resourceCache[uid] = object;
-            resourceReferenceCount[uid] = 1;
             if (!resourceDescriptorsByUID[uid]){ // only update if new object
                 resourceDescriptorsByUID[uid] = new core.ResourceDescriptor({
                     uid:uid,
@@ -6511,18 +6602,17 @@ KICK.namespace = function (ns_string) {
         /**
          * Remove resource descriptor and destroy the resource if already allocated.
          * @method removeResourceDescriptor
-         * @param {Number} resourceUID
+         * @param {Number} uid
          */
-        this.removeResourceDescriptor = function(resourceUID){
+        this.removeResourceDescriptor = function(uid){
             // destroy the resource
-            var resource = resourceCache[resourceUID];
+            var resource = resourceCache[uid];
             if (resource && resource.detroy){
                 resource.destroy();
             }
             // remove references
-            delete resourceCache[resourceUID];
-            delete resourceReferenceCount[resourceUID];
-            delete resourceDescriptorsByUID[resourceUID];
+            delete resourceCache[uid];
+            delete resourceDescriptorsByUID[uid];
         };
 
         /**
@@ -6535,9 +6625,11 @@ KICK.namespace = function (ns_string) {
             filter = filter || function(){return true;};
             thisObj.refreshResourceDescriptors(filter);
             for (var uid in resourceDescriptorsByUID){
-                var rd = resourceDescriptorsByUID[uid];
-                if (rd instanceof core.ResourceDescriptor && filter(rd)){
-                    res.push(rd.toJSON(filter));
+                if (uid>=0){ // don't serialize engine assets (since they are static)
+                    var rd = resourceDescriptorsByUID[uid];
+                    if (rd instanceof core.ResourceDescriptor && filter(rd)){
+                        res.push(rd.toJSON(filter));
+                    }
                 }
             }
             return {
@@ -6548,6 +6640,102 @@ KICK.namespace = function (ns_string) {
             };
         };
     };
+
+    /**
+     * @property ENGINE_SHADER_DEFAULT
+     * @type Number
+     * @static
+     */
+    core.Project.ENGINE_SHADER_DEFAULT = -100;
+    /**
+     * @property ENGINE_SHADER_PHONG
+     * @type Number
+     * @static
+     */
+    core.Project.ENGINE_SHADER_PHONG = -101;
+    /**
+     * @property ENGINE_SHADER_UNLIT
+     * @type Number
+     * @static
+     */
+    core.Project.ENGINE_SHADER_UNLIT = -102;
+    /**
+     * @property ENGINE_SHADER_TRANSPARENT_PHONG
+     * @type Number
+     * @static
+     */
+    core.Project.ENGINE_SHADER_TRANSPARENT_PHONG = -103;
+    /**
+     * @property ENGINE_SHADER_TRANSPARENT_UNLIT
+     * @type Number
+     * @static
+     */
+    core.Project.ENGINE_SHADER_TRANSPARENT_UNLIT = -104;
+    /**
+     * @property ENGINE_SHADER_TRANSPARENT_UNLIT
+     * @type Number
+     * @static
+     */
+    core.Project.ENGINE_SHADER_SHADOWMAP = -105;
+    /**
+     * @property ENGINE_SHADER_PICK
+     * @type Number
+     * @static
+     */
+    core.Project.ENGINE_SHADER_PICK = -106;
+    /**
+     * @property ENGINE_SHADER_ERROR
+     * @type Number
+     * @static
+     */
+    core.Project.ENGINE_SHADER_ERROR = -107;
+
+    /**
+     * @property ENGINE_TEXTURE_BLACK
+     * @type Number
+     * @static
+     */
+    core.Project.ENGINE_TEXTURE_BLACK = -200;
+    /**
+     * @property ENGINE_TEXTURE_WHITE
+     * @type Number
+     * @static
+     */
+    core.Project.ENGINE_TEXTURE_WHITE = -201;
+    /**
+     * @property ENGINE_TEXTURE_GRAY
+     * @type Number
+     * @static
+     */
+    core.Project.ENGINE_TEXTURE_GRAY = -202;
+
+    /**
+     * @property ENGINE_MESH_TRIANGLE
+     * @type Number
+     * @static
+     */
+    core.Project.ENGINE_MESH_TRIANGLE = -300;
+
+    /**
+     * @property ENGINE_MESH_PLANE
+     * @type Number
+     * @static
+     */
+    core.Project.ENGINE_MESH_PLANE = -301;
+
+    /**
+     * @property ENGINE_MESH_UVSPHERE
+     * @type Number
+     * @static
+     */
+    core.Project.ENGINE_MESH_UVSPHERE = -302;
+
+    /**
+     * @property ENGINE_MESH_CUBE
+     * @type Number
+     * @static
+     */
+    core.Project.ENGINE_MESH_CUBE = -303;
 
     /**
      * A project is a container of all resources and assets used in a game.<br>
@@ -6793,6 +6981,21 @@ KICK.namespace = function (ns_string) {
                 errorMessage.innerHTML = "<div style='padding:12px;text-align: center;'><img src='http://www.khronos.org/assets/images/api_logos/webgl.png' style='width:74px;35px;margin-bottom: 10px;margin-left: auto;'><br clear='all'>It doesn't appear your computer can support WebGL.<br><br><a href=\"http://get.webgl.org/troubleshooting/\">Click here for more information.</a></div>";
                 domElement.parentNode.replaceChild(errorMessage, domElement);
             };
+
+        if (true){
+            for (var name in config){
+                if (! this.hasOwnProperty(name)){
+                    var supportedProperties = "Supported properties for KICK.core.Config are: ";
+                    for (var n2 in this){
+                        if (this.hasOwnProperty(n2) && typeof this[n2] !== "function"){
+                            supportedProperties += "\n - "+n2;
+                        }
+                    }
+                    core.Util.warn("KICK.core.Config does not have any property "+name+"\n"+supportedProperties);
+
+                }
+            }
+        }
     };
 
     /**
@@ -8922,9 +9125,9 @@ KICK.namespace = function (ns_string) {
                 },
                 set:function(newValue){
                     if (newValue !== _dataURI){
+                        _dataURI = newValue;
                         engine.resourceManager.getMeshData(newValue,thisObj);
                     }
-                    _dataURI = newValue;
                 }
             }
         });
@@ -10429,7 +10632,7 @@ KICK.namespace = function (ns_string) {
             height = height || 1;
             if (!pickingQueue){
                 pickingQueue = [];
-                pickingShader = engine.resourceManager.getShader("kickjs://shader/__pick/");
+                pickingShader = engine.project.load(engine.project.ENGINE_SHADER_PICK);
                 pickingRenderTarget = new KICK.texture.RenderTexture(engine,{
                     dimension: gl.viewportSize
                 });
@@ -10458,8 +10661,14 @@ KICK.namespace = function (ns_string) {
             _scene.addComponentListener(thisObj);
 
             if (engine.config.shadows){
-                _shadowmapShader = engine.resourceManager.getShader("kickjs://shader/__shadowmap/");
+                _shadowmapShader = engine.project.load(engine.project.ENGINE_SHADER_SHADOWMAP);
+            } else if (_renderShadow){
+                _renderShadow = false; // disable render shadow
+                if (ASSERT){
+                    fail("engine.config.shadows must be enabled for shadows");
+                }
             }
+
         };
 
         /**
@@ -10514,7 +10723,7 @@ KICK.namespace = function (ns_string) {
             if (!_enabled){
                 return;
             }
-            if (_shadowmapShader && _renderShadow && sceneLightObj.directionalLight && sceneLightObj.directionalLight.shadow){
+            if (_renderShadow && sceneLightObj.directionalLight && sceneLightObj.directionalLight.shadow){
                 renderShadowMap(sceneLightObj);
             }
             setupCamera();
@@ -10590,7 +10799,19 @@ KICK.namespace = function (ns_string) {
              */
             renderShadow:{
                 get:function(){return _renderShadow;},
-                set:function(newValue){_renderShadow = newValue;}
+                set:function(newValue){
+                    if (engine){ // if object is initialized
+                        if (engine.config.shadows){
+                            _renderShadow = newValue;
+                        } else if (newValue) {
+                            if (ASSERT){
+                                fail("engine.config.shadows must be enabled for shadows");
+                            }
+                        }
+                    } else {
+                        _renderShadow = newValue;
+                    }
+                }
             },
             /**
              * @property renderer
@@ -11470,7 +11691,7 @@ KICK.namespace = function (ns_string) {
      * @param {Object} config Optional
      * @extends KICK.core.ProjectAsset
      */
-    texture.RenderTexture = function (engine, config){
+    texture.RenderTexture = function(engine, config){
         var gl = engine.gl,
             _config = config || {},
             framebuffer = gl.createFramebuffer(),
@@ -11860,7 +12081,10 @@ KICK.namespace = function (ns_string) {
                     return _dataURI;
                 },
                 set:function(newValue){
-                    _dataURI = newValue;
+                    if (newValue !== _dataURI){
+                        _dataURI = newValue;
+                        engine.resourceManager.getImageData(_dataURI,thisObj);
+                    }
                 }
             },
             /**
@@ -12653,7 +12877,12 @@ KICK.namespace = function (ns_string) {
              */
             dataURI:{
                 get:function(){ return _dataURI; },
-                set:function(newValue){ _dataURI = newValue; }
+                set:function(newValue){
+                    if (_dataURI !== newValue){
+                        _dataURI = newValue;
+                        engine.resourceManager.getShaderData(_dataURI,thisObj);
+                    }
+                }
             },
             /**
              * Get the gl context of the shader
@@ -12979,10 +13208,11 @@ KICK.namespace = function (ns_string) {
         };
 
         /**
-         * @method updateShader
+         * Updates the shader (must be called after any shader state is changed to apply changes)
+         * @method apply
          * @return {Boolean} shader created successfully
          */
-        this.updateShader = function () {
+        this.apply = function () {
             var errorLog = _errorLog || console.log,
                 vertexShader = compileShader(_vertexShaderSrc, false, errorLog),
                 fragmentShader = compileShader(_fragmentShaderSrc, true, errorLog),
@@ -13143,7 +13373,7 @@ KICK.namespace = function (ns_string) {
                 engine.resourceManager.getShaderData(_dataURI,thisObj);
             } else {
                 updateBlendKey();
-                thisObj.updateShader();
+                thisObj.apply();
             }
         })();
     };
@@ -14266,7 +14496,7 @@ KICK.namespace = function (ns_string) {
                     meshRenderer.mesh = meshes[i];
                     var newMaterial = new KICK.material.Material(engine,{
                         name:"Some material",
-                        shader:engine.resourceManager.getShader("kickjs://shader/default/")
+                        shader:engine.project.load(engine.project.ENGINE_SHADER_DEFAULT)
                     });
                     meshRenderer.material = newMaterial;
                     allMaterials.push(newMaterial);
@@ -14502,7 +14732,7 @@ KICK.namespace = function (ns_string) {
                 var addDefaultMaterial = function(name){
                     var newMaterial = new KICK.material.Material(engine,{
                         name:name,
-                        shader:engine.resourceManager.getShader("kickjs://shader/default/")
+                        shader:engine.project.load(engine.project.ENGINE_SHADER_DEFAULT)
                     });
                     materials.push(newMaterial);
                     allMaterials.push(newMaterial);
@@ -14640,68 +14870,6 @@ KICK.namespace = function (ns_string) {
                 new core.URLResourceProvider(engine),
                 new core.BuiltInResourceProvider(engine)
             ],
-            buildCache = function(){
-                return {
-                    ref: {},
-                    refCount: {}
-                }
-            },
-            meshCache = buildCache(),
-            shaderCache = buildCache(),
-            textureCache = buildCache(),
-            allCaches = [meshCache,shaderCache,textureCache],
-            getFromCache = function(cache, url){
-                var res = cache.ref[url];
-                if (res){
-                    cache.refCount[url]++;
-                }
-                return res;
-            },
-            addToCache = function(cache, url, resource){
-                cache.ref[url] = resource;
-                cache.refCount[url] = 1;
-            },
-            /**
-             * @method buildGetFunc
-             * @param {Object} cache
-             * @param {String} methodName
-             * @return {Function} getter function with the signature function(url)
-             * @private
-             */
-            buildGetFunc = function(cache,methodName,type,deprecated){
-                return function(url){
-                    if (deprecated){
-                        console.log("Warn "+methodName+" is deprecated");
-                    }
-                    var i,
-                        res;
-                    if (type){
-                        var projectResources = engine.project.getResourceDescriptorByType(type);
-                        for (i=0;i<projectResources.length;i++){
-                            var projectResource = projectResources[i];
-                            if (projectResource.config.dataURI === url){
-                                return engine.project.load(projectResource.uid);
-                            }
-                        }
-                    }
-                    res = getFromCache(cache,url);
-                    if (res){
-                        return res;
-                    }
-                    for (i=resourceProviders.length-1;i>=0;i--){
-                        var resourceProvider = resourceProviders[i];
-                        var protocol = resourceProvider.protocol;
-                        if (url.indexOf(protocol) === 0){
-                            res = resourceProvider[methodName](url);
-                            break;
-                        }
-                    }
-                    if (res){
-                        addToCache(cache,url,res);
-                    }
-                    return res;
-                };
-            },
             /**
              * Create a callback function
              * @method buildCallbackFunc
@@ -14740,30 +14908,6 @@ KICK.namespace = function (ns_string) {
         this.getShaderData = buildCallbackFunc("getShaderData");
 
         /**
-         * @method getMesh
-         * @param {String} uri
-         * @return {KICK.mesh.Mesh}
-         * @deprecated
-         */
-        this.getMesh = buildGetFunc(meshCache,"getMesh",true);
-
-        /**
-         * @method getShader
-         * @param {String} uri
-         * @return {KICK.material.Shader}
-         * @deprecated
-         */
-        this.getShader = buildGetFunc(shaderCache,"getShader", "KICK.material.Shader",true);
-
-        /**
-         * @method getTexture
-         * @param {String} uri
-         * @return {KICK.texture.Texture}
-         * @deprecated
-         */
-        this.getTexture = buildGetFunc(textureCache,"getTexture","KICK.texture.Texture",true);
-
-        /**
          * @method addResourceProvider
          * @param {KICK.resource.ResourceProvider} resourceProvider
          */
@@ -14779,28 +14923,6 @@ KICK.namespace = function (ns_string) {
             for (var i=resourceProvider.length-1;i>=0;i--){
                 if (resourceProviders[i] === resourceProvider){
                     resourceProviders.splice(i,1);
-                }
-            }
-        };
-
-        /**
-         * Release a reference to the resource.
-         * If reference count is 0, then the reference is deleted and the destroy method on the
-         * resource object are invoked.
-         * @method release
-         * @param {String} url
-         */
-        this.release = function(url){
-            for (var i=allCaches.length-1;i>=0;i--){
-                if (allCaches[i].refCount[url]){
-                    allCaches[i].refCount[url]--;
-                    if (allCaches[i].refCount[url]<=0){
-                        if (allCaches[i].ref[url].destroy){
-                            allCaches[i].ref[url].destroy();
-                        }
-                        delete allCaches[i].refCount[url];
-                        delete allCaches[i].ref[url];
-                    }
                 }
             }
         };
@@ -14954,15 +15076,8 @@ KICK.namespace = function (ns_string) {
                 KICK.core.Util.fail("No meshdata found for "+url);
                 return;
             }
-            if (debug){
-                // simulate asynchronous
-                setTimeout(function(){
-                    meshDestination.meshData = meshDataObj;
-                },250);
-            }
-            else {
-                meshDestination.meshData = meshDataObj;
-            }
+
+            meshDestination.meshData = meshDataObj;
         };
 
         /**
@@ -15074,9 +15189,9 @@ KICK.namespace = function (ns_string) {
                 vertexShaderSrc: vertexShaderSrc,
                 fragmentShaderSrc: fragmentShaderSrc
             };
-            KICK.core.Util.applyConfig(shaderDestination,config);
 
-            shaderDestination.updateShader();
+            KICK.core.Util.applyConfig(shaderDestination,config);
+            shaderDestination.apply();
         };
 
         /**
@@ -15095,6 +15210,7 @@ KICK.namespace = function (ns_string) {
          * @method getShader
          * @param {String} url
          * @return {KICK.material.Shader} Shader or null if not found
+         * @deprecated
          */
         this.getShader = function(url,errorLog){
             console.log("getShader is deprecated");
@@ -15119,17 +15235,17 @@ KICK.namespace = function (ns_string) {
         this.getImageData = function(uri,textureDestination){
             var data;
 
-            if (uri.indexOf("kickjs://texture/black/")==0){
+            if (uri.indexOf("kickjs://texture/black/") == 0){
                 data = new Uint8Array([0, 0, 0, 255,
                                          0,   0,   0,255,
                                          0,   0,   0,255,
                                          0,   0,   0,255]);
-            } else if (uri.indexOf("kickjs://texture/white/")==0){
+            } else if (uri.indexOf("kickjs://texture/white/") == 0){
                 data = new Uint8Array([255, 255, 255,255,
                                          255,   255,   255,255,
                                          255,   255,   255,255,
                                          255,   255,   255,255]);
-            } else if (uri.indexOf("kickjs://texture/gray/")==0){
+            } else if (uri.indexOf("kickjs://texture/gray/") == 0){
                 data = new Uint8Array([127, 127, 127,255,
                                          127,   127,   127,255,
                                          127,   127,   127,255,
@@ -15152,6 +15268,7 @@ KICK.namespace = function (ns_string) {
          * @method getTexture
          * @param {String} url
          * @return {KICK.texture.Texture} Texture object - or null if no texture is found for the specified url
+         * @deprecated
          */
         this.getTexture = function(url){
             console.log("getTexture is deprecated!");

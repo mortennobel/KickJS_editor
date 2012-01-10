@@ -13,7 +13,7 @@ var VisualGrid = function VisualGrid(){ // use explicit function name to support
         engine = this.gameObject.engine;
         transform = this.gameObject.transform;
         gl = engine.gl;
-        gridShader = engine.resourceManager.getShader("kickjs://shader/unlit/");
+        gridShader = engine.project.load(engine.project.ENGINE_SHADER_UNLIT);
         shaderMaterial = new KICK.material.Material(engine,{
             name:"__Grid__",
             shader: gridShader,
@@ -23,7 +23,7 @@ var VisualGrid = function VisualGrid(){ // use explicit function name to support
                     type: KICK.core.Constants.GL_FLOAT_VEC3
                 },
                 mainTexture: {
-                    value: engine.resourceManager.getTexture("kickjs://texture/white/"),
+                    value: engine.project.load(engine.project.ENGINE_TEXTURE_WHITE),
                     type: KICK.core.Constants.GL_SAMPLER_2D
                 }
             }
