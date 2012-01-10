@@ -177,7 +177,6 @@ KICK.material.Material.prototype.createEditorGUI = function(propertyEditor, obje
                 uniforms[name].value = value;
             }
             projectAsset.uniforms = uniforms;
-            engine.project.release(uid);
         },
         setValueShader = function(name,value){
             var uid = object.uid;
@@ -188,7 +187,6 @@ KICK.material.Material.prototype.createEditorGUI = function(propertyEditor, obje
             } else {
                 console.log("Cannot find shader "+uid);
             }
-            engine.project.release(uid);
         };
 
     propertyEditor.setTitle("Material");
@@ -307,7 +305,6 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
                 var uid = object.uid;
                 var projectAsset = engine.project.load(uid);
                 projectAsset[name] = value;
-                engine.project.release(uid);
             } else {
                 if (typeof object[name] === "object" && !Array.isArray(value)){
                     if (value instanceof KICK.scene.GameObject){
@@ -341,21 +338,50 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
         var node = Y.one("#"+nodeId);
 
         if (node){
+            var engineAssets = engine.project.getEngineResourceDescriptorByType(type);
             var assets = engine.project.getResourceDescriptorByType(type);
             if (allowNull) {
                 selected = !uid ? "selected" : "";
                 item = Y.Node.create('<option value="" ' + selected + '></option>');
                 node.append(item);
             }
+            var parentNode = node;
+            if (engineAssets.length){
+                item = Y.Node.create('<optgroup label="Engine Assets"></optgroup>');
+                node.append(item);
+                parentNode = item;
+                for (var i=0;i<engineAssets.length;i++){
+                    var t = engineAssets[i];
+                    if ((t.name && t.name.indexOf('__') === 0)){
+                        continue;
+                    }
+                    var optionName = t.name || "No name";
+                    if (debug){
+                        optionName += " "+t.uid;
+                    }
+                    selected = t.config.uid === uid ? "selected":"";
+                    item = Y.Node.create('<option value="'+t.uid+'" '+selected+'>'+optionName+'</option>');
+                    parentNode.append(item);
+                }
+
+                item = Y.Node.create('<optgroup label="Project Assets"></optgroup>');
+                node.append(item);
+                parentNode = item;
+
+            }
+
             for (var i=0;i<assets.length;i++){
                 var t = assets[i];
-                if (t.name && t.name.indexOf('__')==0){
+                if ((t.name && t.name.indexOf('__') === 0) || t.uid < 0){
                     continue;
                 }
                 var optionName = t.name || "No name";
+                if (debug){
+                    optionName += " "+t.uid;
+                }
                 selected = t.config.uid === uid ? "selected":"";
                 item = Y.Node.create('<option value="'+t.uid+'" '+selected+'>'+optionName+'</option>');
-                node.append(item);
+                parentNode.append(item);
             }
 
             var updateModel = function(){
