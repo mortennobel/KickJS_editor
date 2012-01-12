@@ -497,11 +497,14 @@ KICKED.localStorage.resource.load = function(projectName,uid,responseFn,errorFn,
             errorFn({message:"Row not found"});
         }
         else {
-            value = value.value;
+            var res = value.value;
             if (convertToJSON){
-                value = JSON.parse(value);
+                res = JSON.parse(res);
+            } else if (value.binary){
+                var floatValue = new Float64Array(res);
+                res = floatValue.buffer;
             }
-            responseFn(value);
+            responseFn(res);
         }
     };
 };
@@ -521,6 +524,8 @@ KICKED.localStorage.resource.upload = function(projectName, uid, contentType,con
     var onload =  function (e) {
 
         var value = e.target.result;
+        var isValueBinary = value instanceof ArrayBuffer;
+        var convertedValue = isValueBinary?KICK.core.Util.typedArrayToArray(new Float64Array(value)) :value;
         var valueContainer = {
             uid: uid,
             project: projectName,
@@ -528,7 +533,8 @@ KICKED.localStorage.resource.upload = function(projectName, uid, contentType,con
             name: contentName,
             contentType: contentType,
             modified: new Date().toGMTString(),
-            value:value
+            value:convertedValue,
+            binary:isValueBinary
         };
         var db = KICKED.localStorage.db;
         var request = db.transaction(["asset"], IDBTransaction.READ_WRITE)
@@ -536,7 +542,8 @@ KICKED.localStorage.resource.upload = function(projectName, uid, contentType,con
             .put(valueContainer);
         request.onsuccess = function(){
             responseFn({response:{
-                message:"Upload ok"
+                message:"Upload ok",
+                dataURI: "localStorage://"+projectName+"/"+uid
             }});
         };
         request.onerror = errorFn;

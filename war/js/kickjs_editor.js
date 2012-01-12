@@ -300,7 +300,22 @@ var SceneEditorApp = function(Y){
                         } else if (fileExt === "obj"){
                             modelImport = KICK.importmodelImporter;
                         }
-                        var gameObjects = modelImport.import(fileAsString,_view.engine,_view.engine.activeScene,uploadModelRotate90x);
+                        var importResult = modelImport.import(fileAsString,_view.engine,_view.engine.activeScene,uploadModelRotate90x);
+                        for (var i = 0;i<importResult.mesh.length;i++){
+                            var mesh = importResult.mesh[i];
+                            (function(mesh){
+                                var meshData = mesh.meshData;
+                                var meshDataSerialized = meshData.serialize();
+                                var onSuccess = function(resp){
+                                    mesh.setDataURI(resp.dataURI);
+                                    console.log("Data data URI to "+resp.dataURI);
+                                };
+                                var onError = function(resp){
+                                    console.log("onError",resp);
+                                };
+                                serverObject.resource.upload(projectName,mesh.uid,"mesh/kickjs",mesh.name,meshDataSerialized,true,onSuccess,onError);
+                            })(mesh);
+                        }
                         _sceneGameObjects.updateSceneContent();
                         _projectAssets.updateProjectContent();
                         panel.hide();

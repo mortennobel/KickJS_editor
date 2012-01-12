@@ -4,6 +4,7 @@
 <head>
     <title></title>
     <script type="text/javascript" src="../js/kickjs_editor_server.js"></script>
+    <script type="text/javascript" src="../js/kick-debug-0.3.0.js"></script>
 
     <link rel="stylesheet" href="http://yui.yahooapis.com/combo?3.4.1/build/cssreset/reset-min.css&amp;3.4.1/build/cssfonts/fonts-min.css&amp;3.4.1/build/cssgrids/grids-min.css&amp;3.4.1/build/cssbase/base-min.css">
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.4.1/build/cssgrids/grids-min.css">
@@ -234,7 +235,11 @@ Note this test must be run from a webserver.<br>
 
                 var success = false;
                 var error;
-                var floatArray = new Float32Array([0,1,2,3,3.14157]);
+                var largeArray = [];
+                for (var i=0;i<1000;i++){
+                    largeArray[i] = Math.random();
+                }
+                var floatArray = new Float32Array(largeArray);
 
                 KICKED.localStorage.resource.upload("tmp_unit_test_name",2,"text/plain","name", floatArray.buffer,true,function(resp){
                     console.log(resp);
@@ -252,6 +257,7 @@ Note this test must be run from a webserver.<br>
                     KICKED.localStorage.resource.load("tmp_unit_test_name",2,function(resp){
                         console.log(resp);
                         success = resp instanceof ArrayBuffer;
+                        console.log("Expected arraybuffer: ",resp);
                         Assert.isTrue(success, "Resp is Array buffer");
                         var floatResBuffer = new Float32Array(resp);
                         for (var i=0;i<floatResBuffer.length;i++){

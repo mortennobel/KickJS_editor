@@ -8048,11 +8048,16 @@ KICK.namespace = function (ns_string) {
                 return null;
             };
         /**
-         * Size of chunkdata in bytes
+         * Size of chunkdata in bytes. Note that the data is added padding so it always fit into a double array.
          * @method getSize
          */
         this.getSize = function(){
-            return getHeaderSize()+getChunksSize()
+            var size = getHeaderSize()+getChunksSize();
+            var remainder = size%8;
+            if (remainder !== 0){
+                size += 8- remainder;
+            }
+            return size;
         };
 
         /**
@@ -8461,7 +8466,7 @@ KICK.namespace = function (ns_string) {
             var chunkData = new KICK.core.ChunkData();
             chunkData.setArrayBuffer(1,thisObj.interleavedArray);
             chunkData.setString(2,JSON.stringify(thisObj.interleavedArrayFormat));
-            chunkData.setString(3,thisObj.name);
+            chunkData.setString(3,thisObj.name || "MeshData");
             var subMeshes = thisObj.subMeshes;
             var numberOfSubMeshes = subMeshes.length;
             chunkData.setNumber(4,numberOfSubMeshes);
@@ -9192,16 +9197,28 @@ KICK.namespace = function (ns_string) {
                     return _dataURI;
                 },
                 set:function(newValue){
-                    if (newValue !== _dataURI){
-                        _dataURI = newValue;
-                        engine.resourceManager.getMeshData(newValue,thisObj);
-                    }
+                    thisObj.setDataURI(newValue,true);
                 }
             }
         });
 
+        /**
+         * @method setDataURI
+         * @param {String} newValue
+         * @param {Boolean} automaticGetMeshData optional. if true the mesh data is attempted to be loaded by resourceManager.getMeshData
+         */
+        this.setDataURI = function(newValue, automaticGetMeshData){
+            if (newValue !== _dataURI){
+                _dataURI = newValue;
+                if (automaticGetMeshData){
+                    engine.resourceManager.getMeshData(newValue,thisObj);
+                }
+            }
+        };
+
         KICK.core.Util.applyConfig(this,config);
         engine.project.registerObject(this, "KICK.mesh.Mesh");
+
 
         /**
          * This function verifies that the mesh has the vertex attributes (normals, uvs, tangents) that the shader uses.
@@ -14239,7 +14256,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.core.Engine} engine
      * @param {KICK.scene.Scene} scene Optional. If not specified the active scene (from the engine) is used
      * @param {boolean} rotate90x rotate -90 degrees around x axis
-     * @return {Array[KICK.scene.GameObject]}
+     * @return {Object} returns container object with the properties(mesh:[], gameObjects:[], materials:[])
      * @static
      */
     importer.ColladaImporter.import = function (colladaDOM, engine, scene, rotate90x){
@@ -14692,7 +14709,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.core.Engine} engine
      * @param {KICK.scene.Scene} scene Optional. If not specified the active scene (from the engine) is used
      * @param {boolean} rotate90x rotate -90 degrees around x axis
-     * @return {Object} returns container object of the type {mesh:[], gameObjects:[], materials:[]}
+     * @return {Object} returns container object with the properties (mesh:[], gameObjects:[], materials:[])
      * @static
      */
     importer.ObjImporter.import = function (objFileContent, engine, scene, rotate90x){
