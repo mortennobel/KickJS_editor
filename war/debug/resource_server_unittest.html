@@ -252,6 +252,14 @@ Note this test must be run from a webserver.<br>
                     KICKED.localStorage.resource.load("tmp_unit_test_name",2,function(resp){
                         console.log(resp);
                         success = resp instanceof ArrayBuffer;
+                        Assert.isTrue(success, "Resp is Array buffer");
+                        var floatResBuffer = new Float32Array(resp);
+                        for (var i=0;i<floatResBuffer.length;i++){
+                            if (floatResBuffer[i] != floatArray[i]){
+                                success = false;
+                                Assert.isEqual(floatArray[i], floatResBuffer[i], "ArrayBuffer content does not equal");
+                            }
+                        }
                     }, function(e){
                         error = e;
                         console.log(e,"Load");
