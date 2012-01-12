@@ -6585,9 +6585,9 @@ KICK.namespace = function (ns_string) {
                         res.push(new core.ResourceDescriptor({
                             type: type,
                             config:{
-                                name: name
-                            },
-                            uid: uid}));
+                                name: name,
+                                uid: uid
+                            }}));
                     }
                 }
             }
@@ -6712,7 +6712,7 @@ KICK.namespace = function (ns_string) {
      */
     core.Project.ENGINE_SHADER___SHADOWMAP = -105;
     /**
-     * @property ENGINE_SHADER_PICK
+     * @property ENGINE_SHADER___PICK
      * @type Number
      * @static
      */
@@ -12800,6 +12800,7 @@ KICK.namespace = function (ns_string) {
         applyConfig = core.Util.applyConfig,
         c = KICK.core.Constants,
         ASSERT = true,
+        fail = core.Util.fail,
         uint32ToVec4 = KICK.core.Util.uint32ToVec4,
         tempMat4 = mat4.create(),
         tempMat3 = mat3.create(),
@@ -13687,7 +13688,7 @@ KICK.namespace = function (ns_string) {
                  set:function(newValue){_name = newValue;}
              },
             /**
-             * Also allows string - this will be used to lookup the shader in engine.project 
+
              * @property shader
              * @type KICK.material.Shader
              */
@@ -13696,6 +13697,9 @@ KICK.namespace = function (ns_string) {
                     return _shader;
                 },
                 set:function(newValue){
+                    if (!newValue instanceof KICK.material.Shader){
+                        fail("KICK.material.Shader expected");
+                    }
                     _shader = newValue;
                     thisObj.init();
                 }
@@ -13745,9 +13749,6 @@ KICK.namespace = function (ns_string) {
          * @method init
          */
         this.init = function(){
-            if (typeof _shader === 'string'){
-                _shader = engine.project.load(_shader);
-            }
             if (!_shader){
                 KICK.core.Util.fail("Cannot initiate shader in material "+_name);
                 _shader = engine.project.load("kickjs://shader/__error/");

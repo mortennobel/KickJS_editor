@@ -183,7 +183,7 @@ KICK.material.Material.prototype.createEditorGUI = function(propertyEditor, obje
             var projectAsset = engine.project.load(uid);
             var shader = engine.project.load(value);
             if (shader){
-                projectAsset[name].value = shader;
+                projectAsset[name] = shader;
             } else {
                 console.log("Cannot find shader "+uid);
             }
@@ -357,10 +357,10 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
                     }
                     var optionName = t.name || "No name";
                     if (debug){
-                        optionName += " "+t.uid;
+                        optionName += " "+t.config.uid;
                     }
                     selected = t.config.uid === uid ? "selected":"";
-                    item = Y.Node.create('<option value="'+t.uid+'" '+selected+'>'+optionName+'</option>');
+                    item = Y.Node.create('<option value="'+t.config.uid+'" '+selected+'>'+optionName+'</option>');
                     parentNode.append(item);
                 }
 
