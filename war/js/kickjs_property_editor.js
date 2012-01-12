@@ -192,6 +192,9 @@ KICK.material.Material.prototype.createEditorGUI = function(propertyEditor, obje
     propertyEditor.setTitle("Material");
     propertyEditor.addAssetPointer("shader", "Shader","", object.config.shader.ref ,"KICK.material.Shader",setValueShader);
     for (var name in uniforms){
+        if (!uniforms.hasOwnProperty(name)){
+            continue;
+        }
         value = uniforms[name];
         switch (value.type){
             case c.GL_INT_VEC2:
@@ -328,10 +331,13 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
     this.addAssetPointer = function(name, displayname, tooltip, uid, type, setValueFn,allowNull){
         displayname = displayname || name;
         thisObj.addFieldTitle(displayname, tooltip);
-        var nodeId = thisObj.getNodeName("string",name,0);
-        var content = '<div class="yui3-u-1"><div class="content"><select class="propSelect" id="'+nodeId+'"/></div></div>';
-        var selected;
-        var item;
+        var nodeId = thisObj.getNodeName("string",name,0),
+            content = '<div class="yui3-u-1"><div class="content"><select class="propSelect" id="'+nodeId+'"/></div></div>',
+            selected,
+            item,
+            i,
+            asset,
+            assetName;
 
         componentPanel.setStdModContent("body",content,Y.WidgetStdMod.AFTER);
         componentPanel.render();
@@ -350,17 +356,17 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
                 item = Y.Node.create('<optgroup label="Engine Assets"></optgroup>');
                 node.append(item);
                 parentNode = item;
-                for (var i=0;i<engineAssets.length;i++){
-                    var t = engineAssets[i];
-                    if ((t.name && t.name.indexOf('__') === 0)){
+                for (i=0;i<engineAssets.length;i++){
+                    asset = engineAssets[i];
+                    if ((asset.name && asset.name.indexOf('__') === 0)){
                         continue;
                     }
-                    var optionName = t.name || "No name";
+                    assetName = asset.name || "No name";
                     if (debug){
-                        optionName += " "+t.config.uid;
+                        assetName += " "+asset.config.uid;
                     }
-                    selected = t.config.uid === uid ? "selected":"";
-                    item = Y.Node.create('<option value="'+t.config.uid+'" '+selected+'>'+optionName+'</option>');
+                    selected = asset.config.uid === uid ? "selected":"";
+                    item = Y.Node.create('<option value="'+asset.config.uid+'" '+selected+'>'+assetName+'</option>');
                     parentNode.append(item);
                 }
 
@@ -370,17 +376,17 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
 
             }
 
-            for (var i=0;i<assets.length;i++){
-                var t = assets[i];
-                if ((t.name && t.name.indexOf('__') === 0) || t.uid < 0){
+            for (i=0;i<assets.length;i++){
+                asset = assets[i];
+                if ((asset.name && asset.name.indexOf('__') === 0) || asset.uid < 0){
                     continue;
                 }
-                var optionName = t.name || "No name";
+                assetName = asset.name || "No name";
                 if (debug){
-                    optionName += " "+t.uid;
+                    assetName += " "+asset.uid;
                 }
-                selected = t.config.uid === uid ? "selected":"";
-                item = Y.Node.create('<option value="'+t.uid+'" '+selected+'>'+optionName+'</option>');
+                selected = asset.config.uid === uid ? "selected":"";
+                item = Y.Node.create('<option value="'+asset.uid+'" '+selected+'>'+assetName+'</option>');
                 parentNode.append(item);
             }
 
@@ -606,7 +612,7 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
             conf = object.toJSON().config;
         }
         for (var name in conf){
-            if (name === "uid"){
+            if (!conf.hasOwnProperty(name) || name === "uid"){
                 continue;
             }
             if (isResourceDescriptor && name === "name"){
