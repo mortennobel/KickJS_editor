@@ -307,8 +307,8 @@ var SceneEditorApp = function(Y){
                                 var meshData = mesh.meshData;
                                 var meshDataSerialized = meshData.serialize();
                                 var onSuccess = function(resp){
-                                    mesh.setDataURI(resp.dataURI);
-                                    console.log("Data data URI to "+resp.dataURI);
+                                    mesh.setDataURI(resp.response.dataURI);
+                                    console.log("Data data URI to "+resp.response.dataURI);
                                 };
                                 var onError = function(resp){
                                     console.log("onError",resp);
