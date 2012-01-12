@@ -154,7 +154,6 @@ KICK.material.Shader.prototype.createEditorGUI = function(propertyEditor, object
 
 KICK.mesh.Mesh.prototype.createEditorGUI = function(propertyEditor, object){
     propertyEditor.setTitle("Mesh");
-    propertyEditor.addInfo("MeshData",object.config.meshData);
     propertyEditor.addInfo("Name",object.config.name);
     propertyEditor.addInfo("dataURI",object.config.dataURI);
 };
