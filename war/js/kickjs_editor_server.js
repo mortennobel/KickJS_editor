@@ -1,6 +1,6 @@
 "use strict";
 
-var KICKED = {};
+var KICKED = KICKED || {};
 
 KICKED.server = {};
 

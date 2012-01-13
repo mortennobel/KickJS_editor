@@ -20,8 +20,12 @@ var projectName = getParameter("project");
 var debug = getParameter("debug");
 
 YUI({
-    //Last Gallery Build of this module
-    gallery: 'gallery-2011.01.03-18-30'
+    modules:  {
+        'gallery-yui3treeview': {
+                   fullpath: 'http://localhost:8080/js/gallery-yui3treeview/gallery-yui3treeview.js',
+                   requires: ['substitute', 'widget', 'widget-parent', 'widget-child', 'node-focusmanager']
+               }
+           }
 })
     .use('tabview', 'escape', 'plugin', 'gallery-yui3treeview',"widget", "widget-position", "widget-stdmod", 'panel', 'node-menunav', function(Y) {
         var sceneEditorApp = new SceneEditorApp(Y);
@@ -98,6 +102,8 @@ var SceneEditorView = function(Y,sceneEditorApp){
             canvas.set("height",canvas.get("clientHeight"));
             engine.canvasResized();
         });
+
+    engine.resourceManager.addResourceProvider(new KICKED.LocalStorageResourceProvider(engine));
 
     this.createDefaultScene = function (scene) {
         // create material
