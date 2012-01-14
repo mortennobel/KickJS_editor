@@ -199,8 +199,8 @@
 </div>
 <div id="popupDialogProgress">
 </div>
-<script id="fileUploadForm" type="no/such-thing">
-    File (Collada (.dae) or Wavefront (.obj)): <br>
+<script id="modelUploadForm" type="not/js">
+    Model-file (Collada (.dae) or Wavefront (.obj)): <br>
     <input type="file" id="uploadModelFile" class="uploadFile"><br>
     <div id="uploadModelErrorMsg" class="errorMsg">&nbsp;</div>
     <h2>Include</h2>
@@ -215,6 +215,12 @@
     &nbsp;&nbsp; <input type="checkbox" checked id="uploadModelCreateMaterials"> Create materials<br>
     <input type="checkbox" checked id="uploadModelRotate90x"> Rotate 90 degree around X-axis<br>
 </script>
+<script id="imageUploadForm" type="not/js">
+    Image-file (png or jpeg): <br>
+    <input type="file" id="uploadImageFile" class="uploadFile"><br>
+    <div id="uploadImageErrorMsg" class="errorMsg">&nbsp;</div>
+</script>
+
 <!-- include script last to render page first -->
 <script src="/js/kick-debug-0.3.0.js"></script>
 <script src="/js/webgl-debug.js"></script>

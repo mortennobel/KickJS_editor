@@ -18,6 +18,7 @@ var getParameter = function(name){
 var serverObject = getParameter("useServer")? KICKED.server:KICKED.localStorage;
 var projectName = getParameter("project");
 var debug = getParameter("debug");
+var BlobBuilder = window.WebKitBlobBuilder; // todo add more BlobBuilderConstructors
 
 YUI({
     modules:  {
@@ -26,8 +27,7 @@ YUI({
                    requires: ['substitute', 'widget', 'widget-parent', 'widget-child', 'node-focusmanager']
                }
            }
-})
-    .use('tabview', 'escape', 'plugin', 'gallery-yui3treeview',"widget", "widget-position", "widget-stdmod", 'panel', 'node-menunav', function(Y) {
+}).use('tabview', 'escape', 'plugin', 'gallery-yui3treeview',"widget", "widget-position", "widget-stdmod", 'panel', 'node-menunav', function(Y) {
         var sceneEditorApp = new SceneEditorApp(Y);
 
 
@@ -280,7 +280,7 @@ var SceneEditorApp = function(Y){
             visible      : false,
             render       : true
         }),
-        uploadMesh = function(){
+        uploadModel = function(){
             var selectedFile = null,
                 uploadButton,
                 fileExt,
@@ -335,7 +335,7 @@ var SceneEditorApp = function(Y){
                 };
             collapseMenu("#projectAssetMenu");
             panel.set("headerContent", "Model upload");
-            panel.setStdModContent(Y.WidgetStdMod.BODY, Y.one("#fileUploadForm").getDOMNode().innerHTML);
+            panel.setStdModContent(Y.WidgetStdMod.BODY, Y.one("#modelUploadForm").getDOMNode().innerHTML);
             panel.set("buttons", []);
             panel.addButton({
                 value  : 'Cancel',
@@ -367,6 +367,93 @@ var SceneEditorApp = function(Y){
                         uploadButton.addClass('disabledButton');
                         selectedFile = null;
                         Y.one("#uploadModelErrorMsg").setContent("Only Collada (.dae) and Wavefront (.obj) files supported");
+                    }
+                } else {
+                    uploadButton.addClass('disabledButton');
+                }
+            });
+
+            panel.show();
+        },
+        uploadImage = function(){
+            var selectedFile = null,
+                uploadButton,
+                fileName,
+                fileExt,
+                doUploadImage = function(e){
+                    if (!selectedFile){
+                        return;
+                    }
+
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        var fileAsArrayBuffer = e.target.result;
+                        var texture = new KICK.texture.Texture(engine,{name:fileName});
+                        var onSuccess = function(resp){
+                            var imageUrl = resp.response.dataURI;
+                            reader.onload = function(e){
+                                var img = new Image();
+                                img.onload = function(){
+                                    texture.setImage(img, imageUrl);
+                                    console.log("Set image to "+imageUrl);
+                                };
+                                img.src = e.target.result;
+
+                            };
+                            reader.readAsDataURL(selectedFile);
+
+                        };
+                        var onError = function(resp){
+                            console.log("onError",resp);
+                        };
+                        serverObject.resource.upload(projectName,texture.uid,"image/kickjs",texture.name,fileAsArrayBuffer,true,onSuccess,onError);
+                        _sceneGameObjects.updateSceneContent();
+                        _projectAssets.updateProjectContent();
+                        panel.hide();
+                    };
+                    reader.onerror = function(e){
+                        alert("Error loading file");
+                        panel.hide();
+                    };
+                    reader.readAsArrayBuffer(selectedFile);
+
+                };
+            collapseMenu("#projectAssetMenu");
+            panel.set("headerContent", "Image upload");
+            panel.setStdModContent(Y.WidgetStdMod.BODY, Y.one("#imageUploadForm").getDOMNode().innerHTML);
+            panel.set("buttons", []);
+            panel.addButton({
+                value  : 'Cancel',
+                section: Y.WidgetStdMod.FOOTER,
+                action : function (e) {
+                    panel.hide();
+                }
+            });
+            panel.addButton({
+                value  : 'Upload',
+                classNames: ['disabledButton'],
+                section: Y.WidgetStdMod.FOOTER,
+                action : doUploadImage
+            });
+            panel.render();
+
+            uploadButton = panel._buttonsArray[1].node;
+            Y.one("#uploadImageFile").on("change",function(e){
+                selectedFile = null;
+                if (e._event.target.files.length){
+                    selectedFile = e._event.target.files[0];
+                    var selectedFilename = selectedFile.name;
+                    fileExt = selectedFilename.toLowerCase().split(".");
+                    fileName = selectedFilename.substr(0,selectedFilename.length-fileExt.length-2);
+                    fileExt = fileExt[fileExt.length-1];
+                    if (fileExt === "jpeg" || fileExt === "png" || fileExt === "jpg"){
+                        uploadButton.removeClass('disabledButton');
+                        Y.one("#uploadImageErrorMsg").setContent("&nbsp;");
+
+                    } else {
+                        uploadButton.addClass('disabledButton');
+                        selectedFile = null;
+                        Y.one("#uploadImageErrorMsg").setContent("Only png and jpeg file formats are supported");
                     }
                 } else {
                     uploadButton.addClass('disabledButton');
@@ -519,9 +606,8 @@ var SceneEditorApp = function(Y){
 
     Y.one("#projectAddMaterial").on("click",createMaterial);
     Y.one("#projectAddShader").on("click",function(){alert("not implemented");});
-    Y.one("#projectAddTexture").on("click",function(){alert("not implemented");});
-//    Y.one("#projectAddMesh").on("click",function(){alert("not implemented");});
-    Y.one("#projectUploadModel").on("click",function(){uploadMesh()});
+    Y.one("#projectAddTexture").on("click",uploadImage);
+    Y.one("#projectUploadModel").on("click",uploadModel);
     Y.one("#projectAddScene").on("click",addScene);
     Y.one("#projectAssetRename").on("click",function(){
         collapseMenu("#projectAssetMenu");

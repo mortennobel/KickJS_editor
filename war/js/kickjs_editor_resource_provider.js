@@ -43,7 +43,19 @@ KICKED.LocalStorageResourceProvider = function(engine){
 
     };
 
-    this.getImageData = function(uri,textureDestination){
+    this.getImageData = function(url,textureDestination){
+        var urlContent = url.substring(thisObj.protocol.length).split("/"),
+            projectName = urlContent[0],
+            uid = parseInt(urlContent[1]);
+        var onSuccess = function(res){
+            console.log("Cannot deserialize mesh data "+url);
+            console.log(res);
+        };
+        var onError = function(){
+            console.log("Error",res);
+        };
+        KICKED.localStorage.resource.load(projectName,uid,onSuccess,onError);
+        /*
         var img = new Image();
         img.onload = function(){
             try{
@@ -58,6 +70,7 @@ KICKED.LocalStorageResourceProvider = function(engine){
         };
         img.crossOrigin = "anonymous"; // Ask for a CORS image
         img.src = uri;
+        */
     };
 
 
