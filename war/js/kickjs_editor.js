@@ -18,7 +18,7 @@ var getParameter = function(name){
 var serverObject = getParameter("useServer")? KICKED.server:KICKED.localStorage;
 var projectName = getParameter("project");
 var debug = getParameter("debug");
-var BlobBuilder = window.WebKitBlobBuilder; // todo add more BlobBuilderConstructors
+var BlobBuilder = window.MozBlobBuilder || window.WebKitBlobBuilder || window.BlobBuilder;
 
 YUI({
     modules:  {
