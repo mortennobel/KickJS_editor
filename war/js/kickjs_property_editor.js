@@ -292,6 +292,7 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
         thisObj = this,
         isResourceDescriptor = object instanceof KICK.core.ResourceDescriptor,
         value,
+        createEditorGUI,
         componentPanel = new ComponentPanelModule(
             {
                 contentBox: "#"+id
@@ -317,16 +318,91 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
                 }
                 object[name] = value;
             }
+        },
+        /**
+         * Creates a gui based on the JSON value of the object. This method is only used if the object does not have a
+         * createEditorGUI method itself.
+         * @method createGUIBasedOnJSON
+         * @private
+         */
+        createGUIBasedOnJSON = function(){
+            var conf = object;
+            if (object.toJSON){
+                conf = object.toJSON().config;
+            }
+            for (var name in conf){
+                if (!conf.hasOwnProperty(name) || name === "uid"){
+                    continue;
+                }
+                if (isResourceDescriptor && name === "name"){
+                    continue; // rename is done same way as GameObject rename
+                }
+
+                value = object[name];
+                var typeofValue = typeof value;
+                if (typeofValue === "string"){
+                    thisObj.addString(name,name);
+                } else if (typeofValue === "number"){
+                    // addNumber(name,name);
+                    thisObj.addFieldTitle(name);
+                } else if (typeofValue === "boolean"){
+                    thisObj.addBoolean(name,name);
+                } else if (typeofValue === "undefined"){
+                    // ignore
+                    thisObj.addFieldTitle(name);
+                } else if (value instanceof KICK.scene.GameObject){
+                    thisObj.addFieldTitle(name);
+                    console.debug("GameObject selection not implemented");
+                } else if (Array.isArray(value)){
+                    thisObj.addVector(name,null,null,value);
+                } else { // assume asset
+                    var uid = value.uid;
+                    var resourceDescriptor = engine.project.getResourceDescriptor(uid);
+                    thisObj.addAssetPointer(name, name,null,uid,resourceDescriptor.type);
+                }
+            }
         };
-    this.getNodeName = function(type,name,i){
-        return type+"_"+id+'_'+name+"_"+i;
+
+    /**
+     * Default set value function
+     * @method setValue
+     * @param {String} name
+     * @param {Object} value
+     */
+    this.setValue = setValue;
+
+    /**
+     * Returns a node name based on type, name and index
+     * @param {String} type
+     * @param {Number} name
+     * @param {Number} index
+     * @return {String} node name
+     */
+    this.getNodeName = function(type,name,index){
+        return type+"_"+id+'_'+name+"_"+index;
     };
+
+    /**
+     * @method addFieldTitle
+     * @param {String} name
+     * @param {String} tooltip optional
+     */
     this.addFieldTitle = function(name, tooltip){
         tooltip = tooltip ? tooltip.replace('"','&quot;') : "";
         var content = '<div class="yui3-u-1"><div class="content" title="'+tooltip+'">'+name+'</div></div>';
         componentPanel.render();
         componentPanel.setStdModContent("body",content,Y.WidgetStdMod.AFTER);
     };
+    /**
+     * @method addAssetPointer
+     * @param {String} name
+     * @param {String} displayname
+     * @param {String} tooltip
+     * @param {Number} uid
+     * @param {String} type
+     * @param {Function} setValueFn optional
+     * @param {boolean} allowNull optional
+     */
     this.addAssetPointer = function(name, displayname, tooltip, uid, type, setValueFn,allowNull){
         displayname = displayname || name;
         thisObj.addFieldTitle(displayname, tooltip);
@@ -400,12 +476,12 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
         }
     };
     /**
-     *
-     * @param name
-     * @param displayname
-     * @param tooltip
-     * @param Array[Object] enumValues Example [{value:0,name:"False"},{value:1,name:"True"}]
-     * @param setValueFn
+     * @method addEnum
+     * @param {String} name
+     * @param {String} displayname
+     * @param {String} tooltip
+     * @param {Array[Object]} enumValues Example [{value:0,name:"False"},{value:1,name:"True"}]
+     * @param {Function} setValueFn
      */
     this.addEnum = function(name, displayname, tooltip, enumValues, setValueFn){
         displayname = displayname || name;
@@ -435,6 +511,14 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
             node.after("keyup",updateModel);
         }
     };
+
+    /**
+     * @method addString
+     * @param {String} name
+     * @param {String} displayname
+     * @param {String} tooltip
+     * @param {Function} setValueFn
+     */
     this.addString = function(name, displayname, tooltip, setValueFn){
         displayname = displayname || name;
         thisObj.addFieldTitle(displayname, tooltip);
@@ -456,6 +540,16 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
             node.after("keyup",updateModel);
         }
     };
+    /**
+     * @method addNumber
+     * @param {String} name
+     * @param {String} displayname
+     * @param {String} tooltip
+     * @param {Function} setValueFn
+     * @param {Number} min
+     * @param {Number} max
+     * @param {Number} step
+     */
     this.addNumber= function(name, displayname, tooltip, setValueFn, min, max, step){
         if (typeof min !== "number"){
             min = Number.MIN_VALUE;
@@ -487,6 +581,14 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
             node.after("keyup",updateModel);
         }
     };
+
+    /**
+     * @method addBoolean
+     * @param {String} name
+     * @param {String} displayname
+     * @param {String} tooltip
+     * @param {Function} setValueFn
+     */
     this.addBoolean = function(name, displayname, tooltip, setValueFn){
         displayname = displayname ||Êname;
         thisObj.addFieldTitle(displayname, tooltip);
@@ -509,10 +611,29 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
             node.after("keyup",updateModel);
         }
     };
+    /**
+     * @method addColor
+     * @param {String} name
+     * @param {String} displayname
+     * @param {String} tooltip
+     * @param {Array[Number]} value
+     * @param {Function} setValueFn
+     */
     this.addColor = function(name, displayname, tooltip,value, setValueFn){
         // todo - make color picker
         return thisObj.addVector(name, displayname, tooltip,value, setValueFn, 0,1,0.05);
     };
+    /**
+     * @method addVector
+     * @param {String} name
+     * @param {String} displayname
+     * @param {String} tooltip
+     * @param {Array[Number]} value
+     * @param {Function} setValueFn optional
+     * @param {Number} min optional, default Number.MIN_VALUE
+     * @param {Number} max optional, default Number.MAX_VALUE
+     * @param {Number} step optional, default 1
+     */
     this.addVector = function(name, displayname, tooltip,value, setValueFn, min, max, step){
         var i,nodeId;
         if (typeof min !== "number"){
@@ -553,16 +674,28 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
             }
         }
     };
+    /**
+     * @method addInfo
+     * @param {String} name
+     * @param {String} info
+     */
     this.addInfo = function(name,info){
         thisObj.addFieldTitle(name);
         thisObj.addFieldTitle(info);
     };
+    /**
+     * @method addSeparator
+     */
     this.addSeparator = function(){
         componentPanel.setStdModContent("body","<hr/>",Y.WidgetStdMod.AFTER);
     };
 
     componentPanel.hide();
 
+    /**
+     * @method setTitle
+     * @param {String} title
+     */
     this.setTitle = function(title){
         var toogleButton = '<div title="Show/Hide" class="component-toggle"></div>';
         var deleteButton = '<a title="Delete component" class="component-delete">[X]</a>';
@@ -605,47 +738,7 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
         });
     };
 
-    var createGUIBasedOnJSON = function(){
-        var conf = object;
-        if (object.toJSON){
-            conf = object.toJSON().config;
-        }
-        for (var name in conf){
-            if (!conf.hasOwnProperty(name) || name === "uid"){
-                continue;
-            }
-            if (isResourceDescriptor && name === "name"){
-                continue; // rename is done same way as GameObject rename
-            }
 
-            value = object[name];
-            var valueJson;
-            var typeofValue = typeof value;
-            if (typeofValue === "string"){
-                thisObj.addString(name,name);
-            } else if (typeofValue === "number"){
-                // addNumber(name,name);
-                thisObj.addFieldTitle(name);
-            } else if (typeofValue === "boolean"){
-                thisObj.addBoolean(name,name);
-            } else if (typeofValue === "undefined"){
-                // ignore
-                thisObj.addFieldTitle(name);
-            } else if (value instanceof KICK.scene.GameObject){
-                thisObj.addFieldTitle(name);
-                console.debug("GameObject selection not implemented");
-            } else if (Array.isArray(value)){
-                thisObj.addFieldTitle(name);
-                console.debug("Array selection not implemented");
-            } else { // assume asset
-                var uid = value.uid;
-                var resourceDescriptor = engine.project.getResourceDescriptor(uid);
-                thisObj.addAssetPointer(name, name,null,uid,resourceDescriptor.type);
-            }
-        }
-    };
-
-    var createEditorGUI;
     if (object instanceof KICK.core.ResourceDescriptor){
         createEditorGUI = KICK.namespace(object.type).prototype.createEditorGUI;
     } else {
