@@ -69,6 +69,11 @@ KICK.scene.Light.prototype.createEditorGUI = function(propertyEditor, object){
 
 KICK.texture.Texture.prototype.createEditorGUI = function(propertyEditor, object){
     var c = KICK.core.Constants;
+    var setValueAndApply = function(name,value){
+        propertyEditor.setValue(name,value);
+        var runtimeObject = engine.project.load(object.uid);
+        runtimeObject.apply();
+    };
     propertyEditor.setTitle("Texture");
     propertyEditor.addBoolean("flipY", "Flip Y","When importing image flip the Y direction of the image");
     propertyEditor.addBoolean("generateMipmaps", "Generate mipmaps","Autogenerate mipmap levels");
@@ -82,7 +87,7 @@ KICK.texture.Texture.prototype.createEditorGUI = function(propertyEditor, object
     propertyEditor.addEnum("magFilter", "Magnification filter",null, [
         {value:c.GL_NEAREST,name:"Nearest"},
         {value:c.GL_LINEAR,name:"Linear"}
-        ]);
+        ],setValueAndApply);
     propertyEditor.addEnum("minFilter", "Minification filter",null, [
         {value:c.GL_NEAREST,name:"GL_NEAREST"},
         {value:c.GL_LINEAR,name:"GL_LINEAR"},
@@ -90,15 +95,15 @@ KICK.texture.Texture.prototype.createEditorGUI = function(propertyEditor, object
         {value:c.GL_LINEAR_MIPMAP_NEAREST,name:"GL_LINEAR_MIPMAP_NEAREST"},
         {value:c.GL_NEAREST_MIPMAP_LINEAR,name:"GL_NEAREST_MIPMAP_LINEAR"},
         {value:c.GL_LINEAR_MIPMAP_LINEAR,name:"GL_LINEAR_MIPMAP_LINEAR"}
-        ]);
+        ],setValueAndApply);
     propertyEditor.addEnum("wrapS", "Wrap S",null, [
         {value:c.GL_CLAMP_TO_EDGE,name:"Clamp to edge"},
         {value:c.GL_REPEAT,name:"Repeat"}
-    ]);
+    ],setValueAndApply);
     propertyEditor.addEnum("wrapT", "Wrap T",null, [
         {value:c.GL_CLAMP_TO_EDGE,name:"Clamp to edge"},
         {value:c.GL_REPEAT,name:"Repeat"}
-    ]);
+    ],setValueAndApply);
     if (debug){
         propertyEditor.addInfo("dataURI",object.config.dataURI);
     }
