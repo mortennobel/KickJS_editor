@@ -647,8 +647,6 @@ var SceneEditorApp = function(Y){
     for (var i=0;i<mainViewMenu.length;i++){
         Y.one("#"+mainViewMenu[i]).on("click",function(e){alert("Not implemented");});
     }
-    // test
-    Y.one("#cameraGrid").addClass("yui3-menu-label-selected");
 };
 
 function SceneGameObjects(Y,sceneEditorApp){
