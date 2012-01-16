@@ -529,60 +529,44 @@ KICKED.localStorage.resource.load = function(projectName,uid,responseFn,errorFn,
  * @param {Function} errorFn
  */
 KICKED.localStorage.resource.upload = function(projectName, uid, contentType,contentName, content, newResource ,responseFn,errorFn){
-    var onload =  function (e) {
-        var value = e.target.result;
-        var isValueBinary = value instanceof ArrayBuffer;
-        var binarySize = -1;
-        if (isValueBinary){
-            binarySize = value.byteLength;
-            // if size of bytearray does not fit a int32 array then add padding to make it fit
-            var byteRemainder = binarySize%4;
-            if (byteRemainder !==0){
-                var newArray = new ArrayBuffer(binarySize + 4 - byteRemainder); // must align with 4 bytes
-                var source = new Uint8Array(value);
-                var dest = new Uint8Array(newArray);
-                dest.set(source);
-                value = newArray;
-            }
-            console.log("byteLength: "+value.byteLength+ " binary size is "+binarySize);
+    var isValueBinary = content instanceof ArrayBuffer;
+    var binarySize = -1;
+    if (isValueBinary){
+        binarySize = content.byteLength;
+        // if size of bytearray does not fit a int32 array then add padding to make it fit
+        var byteRemainder = binarySize%4;
+        if (byteRemainder !==0){
+            var newArray = new ArrayBuffer(binarySize + 4 - byteRemainder); // must align with 4 bytes
+            var source = new Uint8Array(content);
+            var dest = new Uint8Array(newArray);
+            dest.set(source);
+            content = newArray;
         }
-        var convertedValue = isValueBinary?KICK.core.Util.typedArrayToArray(new Int32Array(value)) :value;
-        var valueContainer = {
-            uid: uid,
-            project: projectName,
-            userPrincipal: "localuser",
-            name: contentName,
-            contentType: contentType,
-            modified: new Date().toGMTString(),
-            value:convertedValue,
-            binary:isValueBinary,
-            binarySize: binarySize
-        };
-        var db = KICKED.localStorage.db;
-        var request = db.transaction(["asset"], IDBTransaction.READ_WRITE)
-            .objectStore("asset")
-            .put(valueContainer);
-        request.onsuccess = function(){
-            responseFn({response:{
-                message:"Upload ok",
-                dataURI: "localStorage://"+projectName+"/"+uid
-            }});
-        };
-        request.onerror = errorFn;
-    };
-
-    // todo inline onload since it is no longer used
-    if (content instanceof File){
-        throw {
-            message:"File not supported"
-        };
-//        var reader = new FileReader();
-//        reader.onload = onload;
-//        reader.onerror = errorFn;
-//        reader.readAsText(content);
-    } else {
-        onload({target:{result:content}});
+        console.log("byteLength: "+content.byteLength+ " binary size is "+binarySize);
     }
+    var convertedValue = isValueBinary?KICK.core.Util.typedArrayToArray(new Int32Array(content)) :content;
+    var valueContainer = {
+        uid: uid,
+        project: projectName,
+        userPrincipal: "localuser",
+        name: contentName,
+        contentType: contentType,
+        modified: new Date().toGMTString(),
+        value:convertedValue,
+        binary:isValueBinary,
+        binarySize: binarySize
+    };
+    var db = KICKED.localStorage.db;
+    var request = db.transaction(["asset"], IDBTransaction.READ_WRITE)
+        .objectStore("asset")
+        .put(valueContainer);
+    request.onsuccess = function(){
+        responseFn({response:{
+            message:"Upload ok",
+            dataURI: "localStorage://"+projectName+"/"+uid
+        }});
+    };
+    request.onerror = errorFn;
 };
 
 /**
