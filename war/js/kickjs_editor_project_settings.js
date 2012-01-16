@@ -128,7 +128,7 @@ ProjectSettings.prototype.createEditorGUI = function(propertyEditor, object){
     propertyEditor.addBoolean("antialias", "Antialias", "If the value is true and the implementation supports antialiasing the drawing buffer will perform antialiasing using its choice of technique (multisample/supersample) and quality. If the value is false or the implementation does not support antialiasing, no antialiasing is performed.");
     propertyEditor.addBoolean("premultipliedAlpha", "PremultipliedAlpha", " If the value is true the page compositor will assume the drawing buffer contains colors with premultiplied alpha. If the value is false the page compositor will assume that colors in the drawing buffer are not premultiplied. This flag is ignored if the alpha flag is false. See Premultiplied Alpha for more information on the effects of the premultipliedAlpha flag.");
     propertyEditor.addNumber("checkCanvasResizeInterval", "Check Canvas Resize Interval", "Polling of canvas resize. Default is 0 (meaning not polling)",null,0.0,Number.MAX_VALUE,100);
-    propertyEditor.addBoolean("shadows", "shadows", "Use shadow maps to generate realtime shadows.");
+    propertyEditor.addBoolean("shadows", "Shadows", "Use shadow maps to generate realtime shadows.");
     propertyEditor.addNumber("maxNumerOfLights", "Point lights", "Max number of point lights.",null,0,8,1);
     propertyEditor.addSeparator();
     propertyEditor.addButton("Delete project", "Delete the project permanently", propertyEditor.sceneEditorApp.deleteProject);
