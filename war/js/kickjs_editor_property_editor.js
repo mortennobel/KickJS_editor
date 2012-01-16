@@ -405,7 +405,7 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
      * @param {String} tooltip
      * @param {Number} uid
      * @param {String} type
-     * @param {Function} setValueFn optional
+     * @param {Function} setValueFn Optional default ComponentEditor.setValue
      * @param {boolean} allowNull optional
      */
     this.addAssetPointer = function(name, displayname, tooltip, uid, type, setValueFn,allowNull){
@@ -486,7 +486,7 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
      * @param {String} displayname
      * @param {String} tooltip
      * @param {Array[Object]} enumValues Example [{value:0,name:"False"},{value:1,name:"True"}]
-     * @param {Function} setValueFn
+     * @param {Function} setValueFn Optional default ComponentEditor.setValue
      */
     this.addEnum = function(name, displayname, tooltip, enumValues, setValueFn){
         displayname = displayname || name;
@@ -522,7 +522,7 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
      * @param {String} name
      * @param {String} displayname
      * @param {String} tooltip
-     * @param {Function} setValueFn
+     * @param {Function} setValueFn Optional default ComponentEditor.setValue
      */
     this.addString = function(name, displayname, tooltip, setValueFn){
         displayname = displayname || name;
@@ -550,7 +550,7 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
      * @param {String} name
      * @param {String} displayname
      * @param {String} tooltip
-     * @param {Function} setValueFn
+     * @param {Function} setValueFn Optional default ComponentEditor.setValue
      * @param {Number} min
      * @param {Number} max
      * @param {Number} step
@@ -590,9 +590,9 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
     /**
      * @method addBoolean
      * @param {String} name
-     * @param {String} displayname
-     * @param {String} tooltip
-     * @param {Function} setValueFn
+     * @param {String} displayname Optional default name value
+     * @param {String} tooltip Optional default none
+     * @param {Function} setValueFn Optional default ComponentEditor.setValue
      */
     this.addBoolean = function(name, displayname, tooltip, setValueFn){
         displayname = displayname ||Êname;
@@ -622,7 +622,7 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
      * @param {String} displayname
      * @param {String} tooltip
      * @param {Array[Number]} value
-     * @param {Function} setValueFn
+     * @param {Function} setValueFn Optional default ComponentEditor.setValue
      */
     this.addColor = function(name, displayname, tooltip,value, setValueFn){
         // todo - make color picker
@@ -634,7 +634,7 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
      * @param {String} displayname
      * @param {String} tooltip
      * @param {Array[Number]} value
-     * @param {Function} setValueFn optional
+     * @param {Function} setValueFn Optional default ComponentEditor.setValue
      * @param {Number} min optional, default Number.MIN_VALUE
      * @param {Number} max optional, default Number.MAX_VALUE
      * @param {Number} step optional, default 1
@@ -695,6 +695,20 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
         componentPanel.setStdModContent("body","<hr/>",Y.WidgetStdMod.AFTER);
     };
 
+    /**
+     * @method addButton
+     * @param title
+     * @param tooltip
+     * @param onClickFn
+     */
+    this.addButton = function(title, tooltip, onClickFn){
+        var id = "button"+new Date().getTime();
+        var content = '<div class="yui3-u-1"><div class="content" title="'+tooltip+'"><button id="'+id+'">'+title+'</button></div></div>';
+        componentPanel.setStdModContent("body",content,Y.WidgetStdMod.AFTER);
+        componentPanel.render();
+        Y.one("#"+id).on('click',onClickFn);
+    }
+
     componentPanel.hide();
 
     /**
@@ -742,6 +756,18 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
             });
         });
     };
+
+    Object.defineProperties(this,{
+        /**
+         * @property sceneEditorApp
+         * @type SceneEditorApp
+         */
+        sceneEditorApp:{
+            get:function(){
+                return sceneEditorApp;
+            }
+        }
+    });
 
 
     if (object instanceof KICK.core.ResourceDescriptor){

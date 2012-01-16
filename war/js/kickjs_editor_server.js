@@ -356,6 +356,7 @@ KICKED.localStorage.project.delete = function(name,responseFn, errorFn){
     var listStr = list.join("?");
     try{
         localStorage.setItem("projectList",listStr);
+        console.log("Todo: delete resources as well "); // todo implement delete project resources as well
         responseFn({response:{}})
     }catch (e){
         console.log(e);
@@ -529,7 +530,6 @@ KICKED.localStorage.resource.load = function(projectName,uid,responseFn,errorFn,
  */
 KICKED.localStorage.resource.upload = function(projectName, uid, contentType,contentName, content, newResource ,responseFn,errorFn){
     var onload =  function (e) {
-
         var value = e.target.result;
         var isValueBinary = value instanceof ArrayBuffer;
         var binarySize = -1;

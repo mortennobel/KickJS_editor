@@ -86,7 +86,6 @@ YUI({
         Y.one("#projectTitel").setContent(projectName);
 });
 
-
 var SceneEditorView = function(Y,sceneEditorApp){
     var canvas = Y.one("#sceneView"),
         engine = new KICK.core.Engine('sceneView',
@@ -176,6 +175,12 @@ var SceneEditorView = function(Y,sceneEditorApp){
             editorSceneGridObject = scene.createGameObject();
             editorSceneGridObject.name = gridName;
             editorSceneGridObject.addComponent(new VisualGrid());
+        }
+        var projectSettingsName = "Project settings";
+        var projectSettingsType = "ProjectSettings";
+        var projectSettings = engine.project.loadByName(projectSettingsName, projectSettingsType);
+        if (!projectSettings){
+            new ProjectSettings(engine,{name:projectSettingsName});
         }
     };
     Object.defineProperties(this,{
@@ -459,9 +464,44 @@ var SceneEditorApp = function(Y){
                     uploadButton.addClass('disabledButton');
                 }
             });
-
             panel.show();
         };
+
+    this.deleteProject = function(){
+        panel.set("headerContent", "Delete project");
+        panel.setStdModContent(Y.WidgetStdMod.BODY, "Delete project permanently?");
+        panel.set("buttons", []);
+        panel.addButton({
+            value  : 'Cancel',
+            section: Y.WidgetStdMod.FOOTER,
+            action : function (e) {
+                panel.hide();
+            }
+        });
+        panel.addButton({
+            value  : 'Delete',
+            section: Y.WidgetStdMod.FOOTER,
+            classNames: ['deleteButton'],
+            action : function(){
+                var onSuccess = function(){
+                    location = location.origin;
+                };
+                var onError = function(err){
+                    console.log(err);
+                    Y.one("#loadingPanel").addClass("hiddenContent");
+                    Y.one("#layout").removeClass("hiddenContent");
+                    alert("Error deleting project: "+err);
+                };
+                Y.one("#loadingPanel").removeClass("hiddenContent");
+                Y.one("#layout").addClass("hiddenContent");
+                serverObject.project.delete(projectName,onSuccess,onError);
+                panel.hide();
+
+            }
+        });
+        panel.render();
+        panel.show();
+    };
 
     Object.defineProperties(this,{
         tabView:{
