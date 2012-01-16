@@ -6,17 +6,28 @@
     <script type="text/javascript" src="../js/kickjs_editor_server.js"></script>
     <script type="text/javascript" src="../js/kick-debug-0.3.0.js"></script>
 
-    <link rel="stylesheet" href="http://yui.yahooapis.com/combo?3.4.1/build/cssreset/reset-min.css&amp;3.4.1/build/cssfonts/fonts-min.css&amp;3.4.1/build/cssgrids/grids-min.css&amp;3.4.1/build/cssbase/base-min.css">
-    <link rel="stylesheet" href="http://yui.yahooapis.com/3.4.1/build/cssgrids/grids-min.css">
-    <script src="http://yui.yahooapis.com/3.4.1/build/yui/yui-min.js"></script>
+    <link rel="stylesheet" href="../js/yui/cssbase/base-min.css">
+
+    <link rel="stylesheet" href="../js/yui/cssreset/reset-min.css">
+    <link rel="stylesheet" href="../js/yui/cssfonts/fonts-min.css">
+    <link rel="stylesheet" href="../js/yui/cssgrids/grids-min.css">
+    <script src="../js/yui/yui/yui.js"></script>
 </head>
 <body class="yui3-skin-sam">
 <h1>Resource server unit test</h1>
 Note this test must be run from a webserver.<br>
+<input type="file" id="fileselector">
 <div id="testLogger"></div>
+<script src="seedrandom.js"></script>
 <script>
+    Math.seedrandom('kickjsseed999');
     YUI().use('node', 'console', 'test', function (Y) {
-
+        var selectedFile;
+        Y.one("#fileselector").on("change",function(e){
+            if (e._event.target.files.length){
+                selectedFile = e._event.target.files[0];
+            }
+        });
         Y.namespace("example.test");
 
 
@@ -49,7 +60,7 @@ Note this test must be run from a webserver.<br>
                 var success = false;
                 var error;
 
-                KICKED.localStorage.project.create("tmp_unit_test_name",function(){success = true;}, function(e){error = e;});
+                KICKED.localStorage.project.create("tmp_proj_unit_test_name",function(){success = true;}, function(e){error = e;});
                 this.wait(function(){
                     Assert.isTrue(success);
                 }, 200);
@@ -61,7 +72,7 @@ Note this test must be run from a webserver.<br>
                 var success = false;
                 var error;
 
-                KICKED.localStorage.project.load("tmp_unit_test_name",function(){success = true;}, function(e){error = e;});
+                KICKED.localStorage.project.load("tmp_proj_unit_test_name",function(){success = true;}, function(e){error = e;});
                 this.wait(function(){
                     Assert.isTrue(success);
                 }, 200);
@@ -71,7 +82,7 @@ Note this test must be run from a webserver.<br>
 
                 var success = false;
                 var error;
-                KICKED.localStorage.resource.list("tmp_unit_test_name",function(resp){
+                KICKED.localStorage.resource.list("tmp_proj_unit_test_name",function(resp){
                     console.log(resp);
                     success = resp.response.resources.length===0;
                 }, function(e){
@@ -88,7 +99,7 @@ Note this test must be run from a webserver.<br>
 
                 var success = false;
                 var error;
-                KICKED.localStorage.resource.upload("tmp_unit_test_name",1,"text/plain","name", "Hello world",true,function(resp){
+                KICKED.localStorage.resource.upload("tmp_proj_unit_test_name",1,"text/plain","name", "Hello world",true,function(resp){
                     console.log(resp);
                     success = true;
                 }, function(e){
@@ -105,7 +116,7 @@ Note this test must be run from a webserver.<br>
 
                 var success = false;
                 var error;
-                KICKED.localStorage.resource.load("tmp_unit_test_name",1,function(resp){
+                KICKED.localStorage.resource.load("tmp_proj_unit_test_name",1,function(resp){
                     console.log(resp);
                     success = resp === "Hello world";
                 }, function(e){
@@ -122,7 +133,7 @@ Note this test must be run from a webserver.<br>
 
                 var success = false;
                 var error;
-                KICKED.localStorage.resource.upload("tmp_unit_test_name",1,"text/plain","name", "Hello world2",true,function(resp){
+                KICKED.localStorage.resource.upload("tmp_proj_unit_test_name",1,"text/plain","name", "Hello world2",true,function(resp){
                     console.log(resp);
                     success = true;
                 }, function(e){
@@ -139,7 +150,7 @@ Note this test must be run from a webserver.<br>
 
                 var success = false;
                 var error;
-                KICKED.localStorage.resource.load("tmp_unit_test_name",1,function(resp){
+                KICKED.localStorage.resource.load("tmp_proj_unit_test_name",1,function(resp){
                     console.log(resp);
                     success = resp === "Hello world2";
                 }, function(e){
@@ -156,7 +167,7 @@ Note this test must be run from a webserver.<br>
 
                 var success = false;
                 var error;
-                KICKED.localStorage.resource.list("tmp_unit_test_name",function(resp){
+                KICKED.localStorage.resource.list("tmp_proj_unit_test_name",function(resp){
                     console.log(resp);
                     success = resp.response.resources.length===1;
                 }, function(e){
@@ -173,7 +184,7 @@ Note this test must be run from a webserver.<br>
 
                 var success = false;
                 var error;
-                KICKED.localStorage.resource.delete("tmp_unit_test_name",1,function(resp){
+                KICKED.localStorage.resource.delete("tmp_proj_unit_test_name",1,function(resp){
                     console.log(resp);
                     success = true;
                 }, function(e){
@@ -191,7 +202,7 @@ Note this test must be run from a webserver.<br>
                 var success = false;
                 var error;
 
-                KICKED.localStorage.resource.upload("tmp_unit_test_name",2,"text/plain","name", {o:"Hello world"},true,function(resp){
+                KICKED.localStorage.resource.upload("tmp_proj_unit_test_name",2,"text/plain","name", {o:"Hello world"},true,function(resp){
                     console.log(resp);
                     success = true;
                 }, function(e){
@@ -204,7 +215,7 @@ Note this test must be run from a webserver.<br>
                     Assert.isTrue(success,"Upload");
                     success = false;
 
-                    KICKED.localStorage.resource.load("tmp_unit_test_name",2,function(resp){
+                    KICKED.localStorage.resource.load("tmp_proj_unit_test_name",2,function(resp){
                         console.log(resp);
                         success = resp.o === "Hello world";
                     }, function(e){
@@ -215,7 +226,7 @@ Note this test must be run from a webserver.<br>
                     this.wait(function(){
                         Assert.isTrue(success);
                         success = false;
-                        KICKED.localStorage.resource.delete("tmp_unit_test_name",2,function(resp){
+                        KICKED.localStorage.resource.delete("tmp_proj_unit_test_name",2,function(resp){
                             console.log(resp,"Delete");
                             success = true;
                         }, function(e){
@@ -236,12 +247,12 @@ Note this test must be run from a webserver.<br>
                 var success = false;
                 var error;
                 var largeArray = [];
-                for (var i=0;i<1000;i++){
+                for (var i=0;i<1001;i++){
                     largeArray[i] = Math.random();
                 }
                 var floatArray = new Float32Array(largeArray);
 
-                KICKED.localStorage.resource.upload("tmp_unit_test_name",2,"text/plain","name", floatArray.buffer,true,function(resp){
+                KICKED.localStorage.resource.upload("tmp_proj_unit_test_name",2,"text/plain","name", floatArray.buffer,true,function(resp){
                     console.log(resp);
                     success = true;
                 }, function(e){
@@ -253,18 +264,15 @@ Note this test must be run from a webserver.<br>
                 this.wait(function(){
                     Assert.isTrue(success,"Upload");
                     success = false;
-
-                    KICKED.localStorage.resource.load("tmp_unit_test_name",2,function(resp){
+                    KICKED.localStorage.resource.load("tmp_proj_unit_test_name",2,function(resp){
                         console.log(resp);
                         success = resp instanceof ArrayBuffer;
-                        console.log("Expected arraybuffer: ",resp);
+                        console.log("Expected arraybuffer: ",resp, resp.byteLength);
                         Assert.isTrue(success, "Resp is Array buffer");
+                        Assert.areEqual(floatArray.buffer.byteLength,resp.byteLength, "Arrays are equal should be "+floatArray.buffer.byteLength+" was "+resp.byteLength);
                         var floatResBuffer = new Float32Array(resp);
                         for (var i=0;i<floatResBuffer.length;i++){
-                            if (floatResBuffer[i] != floatArray[i]){
-                                success = false;
-                                Assert.isEqual(floatArray[i], floatResBuffer[i], "ArrayBuffer content does not equal");
-                            }
+                            Assert.areEqual(floatArray[i], floatResBuffer[i], "ArrayBuffer content does not equal "+i);
                         }
                     }, function(e){
                         error = e;
@@ -274,7 +282,7 @@ Note this test must be run from a webserver.<br>
                     this.wait(function(){
                         Assert.isTrue(success);
                         success = false;
-                        KICKED.localStorage.resource.delete("tmp_unit_test_name",2,function(resp){
+                        KICKED.localStorage.resource.delete("tmp_proj_unit_test_name",2,function(resp){
                             console.log(resp,"Delete");
                             success = true;
                         }, function(e){
@@ -289,14 +297,76 @@ Note this test must be run from a webserver.<br>
                 }, 200);
 
             },
+            testArrayBufferUint8Resources: function () {
+                var Assert = Y.Assert;
 
+                var success = false;
+                var error;
+                var largeArray = [];
+                for (var i=0;i<30001;i++){
+                    largeArray[i] = Math.random()*256;
+                }
+                var uint8Array = new Uint8Array(largeArray);
+
+                KICKED.localStorage.resource.upload("tmp_proj_unit_test_name",2,"text/plain","name", uint8Array.buffer,true,function(resp){
+                    console.log(resp);
+                    success = true;
+                }, function(e){
+                    error = e;
+                    console.log("Problem uploading");
+                    console.log(e);
+                    debugger;
+                });
+                this.wait(function(){
+                    Assert.isTrue(success,"Upload");
+                    success = false;
+                    KICKED.localStorage.resource.load("tmp_proj_unit_test_name",2,function(resp){
+                        console.log(resp);
+                        success = resp instanceof ArrayBuffer;
+                        console.log("Expected arraybuffer: ",resp, resp.byteLength);
+                        Assert.isTrue(success, "Resp is Array buffer");
+                        Assert.areEqual(uint8Array.buffer.byteLength,resp.byteLength, "Arrays are equal should be "+uint8Array.buffer.byteLength+" was "+resp.byteLength);
+                        var uint8ArrayNew = new Uint8Array(resp);
+                        for (var i=0;i<uint8ArrayNew.length;i++){
+                            if (uint8Array[i] != uint8ArrayNew[i]){
+                                var offset = i%8;
+                                for (var j=0;j<16;j++){
+                                    console.log(uint8Array[i-8-offset+j],uint8ArrayNew[i-8-offset+j]);
+                                }
+                            }
+                            Assert.areEqual(uint8Array[i], uint8ArrayNew[i], "ArrayBuffer content does not equal "+i);
+
+                        }
+                    }, function(e){
+                        error = e;
+                        console.log(e,"Load");
+                        debugger;
+                    });
+                    this.wait(function(){
+                        Assert.isTrue(success);
+                        success = false;
+                        KICKED.localStorage.resource.delete("tmp_proj_unit_test_name",2,function(resp){
+                            console.log(resp,"Delete");
+                            success = true;
+                        }, function(e){
+                            error = e;
+                            console.log(e);
+                            debugger;
+                        });
+                        this.wait(function(){
+                            Assert.isTrue(success);
+                        }, 200);
+                    }, 200);
+                }, 200);
+
+            },
             testDeleteProject : function () {
                 var Assert = Y.Assert;
 
                 var success = false;
                 var error;
 
-                KICKED.localStorage.project.delete("tmp_unit_test_name",function(){success = true;}, function(e){error = e;});
+                KICKED.localStorage.project.delete("tmp_proj_unit_test_name",function(){success = true;}, function(e){error = e;});
                 this.wait(function(){
                     Assert.isTrue(success);
                 }, 200);

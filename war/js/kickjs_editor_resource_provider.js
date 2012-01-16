@@ -57,7 +57,7 @@ KICKED.LocalStorageResourceProvider = function(engine){
             uInt8[5] === 10 &&
             uInt8[6] === 26 &&
             uInt8[7] === 10;
-    }
+    };
 
     this.getImageData = function(url,textureDestination){
         var urlContent = url.substring(thisObj.protocol.length).split("/"),
@@ -66,35 +66,25 @@ KICKED.LocalStorageResourceProvider = function(engine){
         var onSuccess = function(res){
             var bb = new BlobBuilder();
             bb.append(res);
+
             var type = isPNG(res)?"image/png":"image/jpeg";
+            console.log("Loading "+type+" image of size "+res.byteLength);
             var blob = bb.getBlob(type);
             var img = document.createElement('img');
             img.onload = function(e) {
                 textureDestination.setImage(img,url);
                 URL.revokeObjectURL(img.src); // Clean up
             };
+            img.onerror = function(e){
+                console.log("error get image data");
+                console.log(e);
+            }
             img.src = URL.createObjectURL(blob);
         };
         var onError = function(){
             console.log("Error",res);
         };
         KICKED.localStorage.resource.load(projectName,uid,onSuccess,onError);
-        /*
-        var img = new Image();
-        img.onload = function(){
-            try{
-                textureDestination.setImage(img,uri);
-            } catch (e){
-                fail("Exception when loading image "+uri);
-            }
-        };
-        img.onerror = function(e){
-            fail(e);
-            fail("Exception when loading image "+uri);
-        };
-        img.crossOrigin = "anonymous"; // Ask for a CORS image
-        img.src = uri;
-        */
     };
 
 
