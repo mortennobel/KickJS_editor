@@ -222,7 +222,7 @@ var SceneEditorApp = function(Y){
                         type:KICK.core.Constants.GL_FLOAT_VEC3
                     },
                     mainTexture:{
-                        value:engine.resourceManager.getTexture("kickjs://texture/white/"),
+                        value:engine.project.load(engine.project.ENGINE_TEXTURE_WHITE),
                         type:KICK.core.Constants.GL_SAMPLER_2D
                     }
                 }
