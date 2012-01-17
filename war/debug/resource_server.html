@@ -148,7 +148,7 @@ Response content:<br>
                 console.log(content);
                 document.getElementById('ResourceContent').innerHTML = content;
             };
-            server.resource.upload(projectName, uid,contentType ,contentName,fileObject,isNew,response,errorFn);
+            server.resource.upload(projectName, uid,contentType ,contentName,fileObject,response,errorFn);
         } else {
             alert("Nothing to upload");
         }

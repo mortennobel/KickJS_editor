@@ -324,7 +324,7 @@ var SceneEditorApp = function(Y){
                                 var onError = function(resp){
                                     console.log("onError",resp);
                                 };
-                                serverObject.resource.upload(projectName,mesh.uid,"mesh/kickjs",mesh.name,meshDataSerialized,true,onSuccess,onError);
+                                serverObject.resource.upload(projectName,mesh.uid,"mesh/kickjs",mesh.name,meshDataSerialized,onSuccess,onError);
                             })(mesh);
                         }
                         _sceneGameObjects.updateSceneContent();
@@ -411,7 +411,7 @@ var SceneEditorApp = function(Y){
                         var onError = function(resp){
                             console.log("onError",resp);
                         };
-                        serverObject.resource.upload(projectName,texture.uid,"image/kickjs",texture.name,fileAsArrayBuffer,true,onSuccess,onError);
+                        serverObject.resource.upload(projectName,texture.uid,"image/kickjs",texture.name,fileAsArrayBuffer,onSuccess,onError);
                         _sceneGameObjects.updateSceneContent();
                         _projectAssets.updateProjectContent();
                         panel.hide();
@@ -571,7 +571,7 @@ var SceneEditorApp = function(Y){
         _projectAssets.deselect();
     };
 
-    this.projectSave = function(responseFn, errorFn,isNew){
+    this.projectSave = function(responseFn, errorFn){
         var projectSave = Y.one("#projectSave");
         projectSave.setContent("Saving ...");
         var filter = function(object){
@@ -602,7 +602,7 @@ var SceneEditorApp = function(Y){
             setTimeout(resetSaveButton,2000);
         };
         console.log("saving : "+projectStr );
-        serverObject.resource.upload(projectName, 0, "application/json","project.json",projectStr,isNew,respWrap,errorWrap);
+        serverObject.resource.upload(projectName, 0, "application/json","project.json",projectStr,respWrap,errorWrap);
     };
 
     this.projectLoad = function(project){

@@ -124,21 +124,6 @@ KICKED.server.project.load = function(name,responseFn, errorFn){
  */
 KICKED.server.resource = {};
 
-/**
- * Init a resource (meaning setting the meta data and get a upload url if successful)
- * @method init
- */
-KICKED.server.resource.init = function(projectName, uid, contentType,contentName,responseFn,errorFn){
-    var requestData = {
-        ts:new Date().getTime(),
-        action:"init",
-        projectName:projectName,
-        uid:uid,
-        contentType:contentType,
-        contentName:contentName
-    };
-    KICKED.server.jsonGetRequest("/ResourceRequest",requestData,responseFn,errorFn);
-};
 
 /**
  * Update a resource
@@ -164,12 +149,10 @@ KICKED.server.resource.update = function(projectName, uid, contentType,contentNa
  * @param contentType
  * @param contentName
  * @param {Object} content
- * @param newResource
  * @param responseFn
  * @param errorFn
  */
-KICKED.server.resource.upload = function(projectName, uid, contentType,contentName, content, newResource ,responseFn,errorFn){
-    var initOrUpload = newResource ? KICKED.server.resource.init : KICKED.server.resource.update;
+KICKED.server.resource.upload = function(projectName, uid, contentType,contentName, content, responseFn,errorFn){
     var response = function(resp){
         console.log(resp.response?resp.response.uploadUrl:resp); // todo remove
         var uploadUrl = resp.response.uploadUrl;
@@ -201,7 +184,7 @@ KICKED.server.resource.upload = function(projectName, uid, contentType,contentNa
         xhr.onreadystatechange = handler;
         xhr.send(formdata);
     };
-    initOrUpload(projectName,uid,contentType,contentName,response,errorFn);
+    KICKED.server.resource.update(projectName,uid,contentType,contentName,response,errorFn);
 };
 
 /**
@@ -524,11 +507,10 @@ KICKED.localStorage.resource.load = function(projectName,uid,responseFn,errorFn,
  * @param {String} contentType
  * @param {String} contentName
  * @param {String | ArrayBuffer |ÊObject} content
- * @param {boolean} newResource
  * @param {Function} responseFn
  * @param {Function} errorFn
  */
-KICKED.localStorage.resource.upload = function(projectName, uid, contentType,contentName, content, newResource ,responseFn,errorFn){
+KICKED.localStorage.resource.upload = function(projectName, uid, contentType,contentName, content, responseFn,errorFn){
     var isValueBinary = content instanceof ArrayBuffer;
     var binarySize = -1;
     if (isValueBinary){

@@ -40,17 +40,17 @@ public class ResourceRequest extends JSONRequest {
                 if ("list".equals(action)){
                     JSONObject resp = list(projectName, user, req);
                     response.put("response",resp);
-                } else if ("init".equals(action)){
-                    long uid = jsonRequest.getLong("uid");
-                    String contentType = jsonRequest.getString("contentType");
-                    String contentName = jsonRequest.getString("contentName");
-                    JSONObject resp = init(projectName, uid, contentType, contentName, user, req, true);
-                    response.put("response",resp);
+                //} else if ("init".equals(action)){
+                //    long uid = jsonRequest.getLong("uid");
+                //    String contentType = jsonRequest.getString("contentType");
+                //    String contentName = jsonRequest.getString("contentName");
+                //    JSONObject resp = init(projectName, uid, contentType, contentName, user, req, true);
+                //    response.put("response",resp);
                 } else if ("update".equals(action)){
                     long uid = jsonRequest.getLong("uid");
                     String contentType = jsonRequest.getString("contentType");
                     String contentName = jsonRequest.getString("contentName");
-                    JSONObject resp = init(projectName, uid, contentType, contentName, user, req, false);
+                    JSONObject resp = init(projectName, uid, contentType, contentName, user, req);
                     response.put("response",resp);
                 } else if ("delete".equals(action)){
                     long uid = jsonRequest.getLong("uid");
@@ -83,7 +83,8 @@ public class ResourceRequest extends JSONRequest {
         return list;
     }
 
-    private JSONObject init(String projectName, long uid, String contentType, String contentName, User user, HttpServletRequest req, boolean isNewObject) throws Exception{
+    private JSONObject init(String projectName, long uid, String contentType, String contentName, User user, HttpServletRequest req) throws Exception{
+        boolean isNewObject = true; // todo handle both new and existing object uniformly
         Project project = Project.loadProject(projectName,user,req);
         if (project == null){ 
             throw new Exception("Not access to project (not exist or user not in ACL)"); 
