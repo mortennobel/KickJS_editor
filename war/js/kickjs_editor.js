@@ -884,7 +884,6 @@ function ProjectAssets(Y, sceneEditorApp){
                     }
                     sceneEditorApp.tabView.updateSceneName(newName,uid);
                 }
-                engine.project.release(uid);
                 selectedTreeLeaf.get("contentBox").setContent(getAssetName(uid));
             }
         }
