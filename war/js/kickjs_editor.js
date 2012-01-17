@@ -212,7 +212,7 @@ var SceneEditorApp = function(Y){
             gameObject.destroy();
             _sceneGameObjects.removeSelected();
         },
-        createMaterial = function(){
+        createMaterial = function(e){
             var engine = _view.engine,
                 material = new KICK.material.Material(engine, {
                 shader:engine.project.load(engine.project.ENGINE_SHADER_UNLIT),
@@ -232,6 +232,7 @@ var SceneEditorApp = function(Y){
             console.log("selecting "+material.uid);
             _projectAssets.selectProjectAssetById(material.uid);
             _projectAssets.renameSelected();
+            e.preventDefault();
         },
         createMeshRendererComponent = function(){
             var engine = _view.engine,
@@ -245,7 +246,7 @@ var SceneEditorApp = function(Y){
             }
             addComponent(KICK.scene.MeshRenderer,{mesh:mesh,materials:materials});
         },
-        addScene = function(){
+        addScene = function(e){
             var engine = _view.engine,
                 newScene = KICK.scene.Scene.createDefault(engine);
             engine.activeScene = newScene ;
@@ -258,6 +259,7 @@ var SceneEditorApp = function(Y){
                 thisObj.tabView.updateSceneName(newScene.name,newScene.uid);
             };
             _projectAssets.renameSelected(afterRename );
+            e.preventDefault();
         },
         loadScene = function(uid){
             var engine = _view.engine,
@@ -270,11 +272,6 @@ var SceneEditorApp = function(Y){
             _sceneGameObjects.updateSceneContent();
             thisObj.tabView.updateSceneName(newScene.name,newScene.uid);
         },
-        createMesh = function(url){
-            collapseMenu("#projectAssetMenu");
-            new KICK.mesh.Mesh(engine,{dataURI: url}); // will automatically be registered in project
-            _projectAssets.updateProjectContent();
-        },
         panel = new Y.Panel({
             srcNode      : '#popupDialog',
             headerContent: 'Open/Create project',
@@ -285,7 +282,7 @@ var SceneEditorApp = function(Y){
             visible      : false,
             render       : true
         }),
-        uploadModel = function(){
+        uploadModel = function(e){
             var selectedFile = null,
                 uploadButton,
                 fileExt,
@@ -380,8 +377,9 @@ var SceneEditorApp = function(Y){
             });
 
             panel.show();
+            e.preventDefault();
         },
-        uploadImage = function(){
+        uploadImage = function(e){
             var selectedFile = null,
                 uploadButton,
                 fileName,
@@ -466,6 +464,7 @@ var SceneEditorApp = function(Y){
                 }
             });
             panel.show();
+            e.preventDefault();
         };
 
     this.deleteProject = function(){
