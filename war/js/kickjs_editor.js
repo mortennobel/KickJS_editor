@@ -336,7 +336,7 @@ var SceneEditorApp = function(Y){
                         panel.hide();
                     };
                     reader.readAsText(selectedFile);
-
+                    e.preventDefault();
                 };
             collapseMenu("#projectAssetMenu");
             panel.set("headerContent", "Model upload");
@@ -347,6 +347,7 @@ var SceneEditorApp = function(Y){
                 section: Y.WidgetStdMod.FOOTER,
                 action : function (e) {
                     panel.hide();
+                    e.preventDefault ();
                 }
             });
             panel.addButton({
@@ -476,6 +477,7 @@ var SceneEditorApp = function(Y){
             section: Y.WidgetStdMod.FOOTER,
             action : function (e) {
                 panel.hide();
+                e.preventDefault ();
             }
         });
         panel.addButton({
@@ -496,7 +498,7 @@ var SceneEditorApp = function(Y){
                 Y.one("#layout").addClass("hiddenContent");
                 serverObject.project.delete(projectName,onSuccess,onError);
                 panel.hide();
-
+                e.preventDefault ();
             }
         });
         panel.render();
