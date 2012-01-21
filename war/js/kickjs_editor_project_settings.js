@@ -82,24 +82,7 @@ function ProjectSettings(engine, config){
         }
     });
 
-    /*
-    alpha - Boolean
-    WebGL spec: Default: true. If the value is true, the drawing buffer has an alpha channel for the purposes of performing OpenGL destination alpha operations and compositing with the page. If the value is false, no alpha buffer is available.
-     - Boolean
-    WebGL spec: Default: true. If the value is true and the implementation supports antialiasing the drawing buffer will perform antialiasing using its choice of technique (multisample/supersample) and quality. If the value is false or the implementation does not support antialiasing, no antialiasing is performed.
-    checkCanvasResizeInterval - Number
-    Polling of canvas resize. Default is 0 (meaning not polling)
-    enableDebugContext - Boolean
-    Checks for WebGL errors after each webgl function is called. Should only be used for debugging. Default value is false.
-    maxNumerOfLights - Number
-    Maximum number of lights in scene. Default value is 1
-    premultipliedAlpha - Boolean
-    WebGL spec: Default: true. If the value is true the page compositor will assume the drawing buffer contains colors with premultiplied alpha. If the value is false the page compositor will assume that colors in the drawing buffer are not premultiplied. This flag is ignored if the alpha flag is false. See Premultiplied Alpha for more information on the effects of the premultipliedAlpha flag.
-    shadows - Boolean
-    Use shadow maps to generate realtime shadows.
-    Default value is false.
-    stencil - Boolean
-*/
+
     KICK.core.Util.applyConfig(thisObj,config);
     engine.project.registerObject(thisObj, "ProjectSettings");
 

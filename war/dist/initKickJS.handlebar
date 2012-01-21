@@ -1,0 +1,28 @@
+(function(){
+    var canvasElementId = 'kickJSScene';
+
+    function error(message){
+        var canvasTag = document.getElementById(canvasElementId);
+        var div = document.createElement("div");
+        div.innerHTML = "<span style='color:red;'>Error: "+message+"</span>";
+        canvasTag.parentNode.insertBefore(div,canvasTag);
+        throw message;
+    }
+
+    function checkRunOnServer(){
+        if (location.protocol.indexOf("http") !== 0){
+            error('Must run on a web server');
+        }
+    }
+    
+    checkRunOnServer();
+    var engine = new KICK.core.Engine(canvasElementId,{
+        alpha: {{alpha}},
+        antialias: {{antialias}},
+        checkCanvasResizeInterval: {{checkCanvasResizeInterval}},
+        maxNumerOfLights: {{maxNumerOfLights}},
+        premultipliedAlpha: {{premultipliedAlpha}},
+        shadows: {{shadows}}
+    });
+    engine.project.loadProjectByURL('project.json');
+})();

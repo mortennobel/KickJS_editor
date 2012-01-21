@@ -1,0 +1,49 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title></title>
+<script type="text/javascript" src="../js/downloadtify/swfobject.js"></script>
+<script type="text/javascript" src="../js/downloadtify/downloadify.min.js"></script>
+</head>
+<body onload="load();">
+		<h1>Downloadify Example</h1>
+		<p>More info available at the <a href="http://github.com/dcneiner/Downloadify">Github Project Page</a></p>
+		<form>
+			<p>
+				<label for="filename">Filename</label><br />
+				<input type="text" name="filename" value="testfile.txt" id="filename" />
+			</p>
+			<p>
+				<label for="data">File Contents</label><br />
+<textarea cols="60" rows="10" name="data" id="data">
+Whatever you put in this text box will be downloaded and saved in the file. If you leave it blank, no file will be downloaded</textarea>
+			</p>
+			<p id="downloadify">
+				You must have Flash 10 installed to download this file.
+			</p>
+		</form>
+
+		<script type="text/javascript">
+			function load(){
+				Downloadify.create('downloadify',{
+					filename: function(){
+						return document.getElementById('filename').value;
+					},
+					data: function(){
+						return document.getElementById('data').value;
+					},
+					onComplete: function(){ alert('Your File Has Been Saved!'); },
+					onCancel: function(){ alert('You have cancelled the saving of this file.'); },
+					onError: function(){ alert('You must put something in the File Contents or there will be nothing to save!'); },
+					swf: '../js/downloadtify/downloadify.swf',
+					downloadImage: 'https://github.com/dcneiner/Downloadify/raw/master/images/download.png',
+					width: 100,
+					height: 30,
+					transparent: true,
+					append: false
+				});
+			}
+		</script>
+</body>
+</html>

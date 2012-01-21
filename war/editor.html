@@ -220,10 +220,19 @@
     <input type="file" id="uploadImageFile" class="uploadFile"><br>
     <div id="uploadImageErrorMsg" class="errorMsg">&nbsp;</div>
 </script>
+<script id="exportProjectForm" type="not/js">
+    Build and export
+    <div id="projectBuildProgressBar"><img src="/images/loading.gif" alt="Loading">&nbsp;Building project</div>
+    <div id="projectBuildButton">You must have Flash 10 installed to download this file.</div>
+</script>
 
 <!-- include script last to render page first -->
 <script src="/js/kick-debug-0.3.0.js"></script>
 <script src="/js/webgl-debug.js"></script>
+<script type="text/javascript" src="/js/jszip/jszip.js"></script>
+<script type="text/javascript" src="/js/jszip_binary.js"></script>
+<script type="text/javascript" src="/js/downloadtify/swfobject.js"></script>
+<script type="text/javascript" src="/js/downloadtify/downloadify.min.js"></script>
 <!--<script src="http://yui.yahooapis.com/3.4.1/build/yui/yui-min.js"></script>-->
 <script src="/js/yui/yui/yui.js"></script><!-- todo - user min version -->
 <script src="/js/kickjs_editor_server.js"></script>

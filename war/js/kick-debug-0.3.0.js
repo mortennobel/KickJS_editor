@@ -6450,6 +6450,41 @@ KICK.namespace = function (ns_string) {
         };
 
         /**
+         * Loads a project by URL. This call is asynchronous, and onSuccess or onFail will be called when the loading is
+         * complete.
+         * @method loadProjectByURL
+         * @param {String} url
+         * @param {Function} onSuccess
+         * @param {Function} onFail
+         */
+        this.loadProjectByURL = function(url, onSuccess, onError){
+            var getAbsoluteURL = function(url){
+                if (url.indexOf('/')===0){
+                    url = location.href.substring(0,location.href.lastIndexOf('/')+1) + url;
+                }
+                return url;
+            };
+            url = getAbsoluteURL(url);
+            var oXHR = new XMLHttpRequest();
+            oXHR.open("GET", url, true);
+            oXHR.onreadystatechange = function (oEvent) {
+                if (oXHR.readyState === 4) {
+                    if (oXHR.status === 200) {
+                        var value = JSON.parse(oXHR.responseText);
+                        try{
+                            thisObj.loadProject(value);
+                            onSuccess();
+                        }catch(e){
+                            onError(e);
+                        }
+                    } else {
+                        onError();
+                    }
+                }
+            };
+            oXHR.send(null);
+        };
+        /**
          * Load a project of the form {maxUID:number,resourceDescriptors:[KICK.core.ResourceDescriptor],activeScene:number}
          * @method loadProject
          * @param {object} config
@@ -9297,7 +9332,8 @@ KICK.namespace = function (ns_string) {
         };
 
         /**
-         * Renders the current mesh
+         * Renders the current mesh.
+         * Assumes that the Mesh.bind(shader) has been called prior to this, to setup the mesh with the shader.
          * @method render
          * @param {Number} submeshIndex
          */
@@ -9672,11 +9708,13 @@ KICK.namespace = function (ns_string) {
      */
 
     /**
+     * Default value is 1000<br>
+     * &lt; 2000 default geometry<br>
+     * 2000 - 2999 transparent geometry (sorted back-to-front when rendered)<br>
+     * &gt; 3000 overlay geometry rendered on top
      * @property renderOrder
      * @type Number
      */
-
-
 
     /**
      * Abstract method called every update. May be undefined.
@@ -11257,10 +11295,7 @@ KICK.namespace = function (ns_string) {
         };
 
         Object.defineProperties(this,{
-            /**
-             * @property renderOrder
-             * @type Number
-             */
+            // inherit documentation from component
             renderOrder:{
                 get:function(){
                     return _renderOrder;

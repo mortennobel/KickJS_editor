@@ -1,0 +1,51 @@
+<html>
+<head>
+    <title></title>
+
+    <script type="text/javascript" src="../js/jszip/jszip.js"></script>
+    <script type="text/javascript" src="../js/downloadtify/swfobject.js"></script>
+    <script type="text/javascript" src="../js/downloadtify/downloadify.min.js"></script>
+</head>
+<body onload="createDownloadZipButton()">
+<p id="downloadify">
+    You must have Flash 10 installed to download this file.
+</p>
+<script>
+    function generateZipContent(){
+        console.log("generateZipContent");
+        var zip = new JSZip();
+        zip.add("Hello.txt", "Hello World\n");
+        zip.add("Hello2.txt", "Hello World2\n");
+        return zip.generate();
+    }
+
+    function createDownloadZipButton(){
+      Downloadify.create('downloadify',{
+        filename: function(){
+          return "Project.zip";
+        },
+        data: function(){
+          return generateZipContent();
+        },
+        onComplete: function(){
+          alert('Your File Has Been Saved!');
+        },
+        onCancel: function(){
+          alert('You have cancelled the saving of this file.');
+        },
+        onError: function(){
+          alert('You must put something in the File Contents or there will be nothing to save!');
+        },
+        transparent: false,
+        swf: '../js/downloadtify/downloadify.swf',
+        downloadImage: 'https://github.com/dcneiner/Downloadify/raw/master/images/download.png',
+        width: 100,
+        height: 30,
+        transparent: true,
+        append: false,
+        dataType: 'base64'
+      });
+    }
+</script>
+</body>
+</html>
