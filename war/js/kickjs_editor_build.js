@@ -8,69 +8,91 @@ function ProjectBuild(Y,engine,panel){
             return true;
         },
         generateZipContent = function(onComplete, onError){
-                var zip = new JSZip();
-                var project = engine.project,
-                    H = Y.Handlebars,
-                    projectJson = project.toJSON(buildProjectFilter),
-                    projectSettings = project.getResourceDescriptorByType('ProjectSettings')[0].config,
-                    isZipComplete = false,
-                    activeRequests = 0,
-                    getAbsoluteURL = function(url){
-                        if (url.indexOf('/')===0){
-                            var oldUrl = url;
-                            url = location.origin + url;
-                        }
-                        return url;
-                    },
-                    checkZipComplete = function(){
-                        if (isZipComplete && activeRequests === 0){
-                            var content = zip.generate();
-                            onComplete(content);
-                        }
-                    },
-                    addBinaryResource = function(url,name){
-
-                    },
-                    addTextResource = function(url,name,handlebarConfig){
-                        activeRequests++;
-                        url = getAbsoluteURL(url);
-                        var oXHR = new XMLHttpRequest();
-                        oXHR.open("GET", url, true);
-                        oXHR.onreadystatechange = function (oEvent) {
-                            if (oXHR.readyState === 4) {
-                                if (oXHR.status === 200) {
-                                    activeRequests--;
-                                    var value = oXHR.responseText;
-                                    if (handlebarConfig){
-                                        var copy = {};
-                                        for (var n in handlebarConfig){
-                                            copy[n] = String(handlebarConfig[n]);
-                                        }
-                                        var template = H.compile(value);
-                                        value = template(copy);
-                                    }
-                                    zip.add(name, value);
-                                } else {
-                                    console.log("Error", oXHR.statusText);
-                                    onError();
-                                }
-                                checkZipComplete();
-                            }
-                        };
-                        oXHR.send(null);
+            var zip = new JSZip();
+            var project = engine.project,
+                H = Y.Handlebars,
+                projectJson = project.toJSON(buildProjectFilter),
+                projectSettings = project.getResourceDescriptorByType('ProjectSettings')[0].config,
+                isZipComplete = false,
+                activeRequests = 0,
+                getAbsoluteURL = function(url){
+                    if (url.indexOf('/')===0){
+                        var oldUrl = url;
+                        url = location.origin + url;
+                    }
+                    return url;
+                },
+                checkZipComplete = function(){
+                    if (isZipComplete && activeRequests === 0){
+                        var content = zip.generate();
+                        onComplete(content);
+                    }
+                },
+                addBinaryResource = function(uid,name){
+                    activeRequests++;
+                    var onResourceLoadSuccess = function(value){
+                        zip.addBinary(name, value);
+                        activeRequests--;
+                        checkZipComplete();
                     };
+                    serverObject.resource.load(projectName, uid, onResourceLoadSuccess, onError);
+                },
+                addTextResource = function(url,name,handlebarConfig){
+                    activeRequests++;
+                    url = getAbsoluteURL(url);
+                    var oXHR = new XMLHttpRequest();
+                    oXHR.open("GET", url, true);
+                    oXHR.onreadystatechange = function (oEvent) {
+                        if (oXHR.readyState === 4) {
+                            if (oXHR.status === 200) {
+                                activeRequests--;
+                                var value = oXHR.responseText;
+                                if (handlebarConfig){
+                                    var copy = {};
+                                    for (var n in handlebarConfig){
+                                        copy[n] = String(handlebarConfig[n]);
+                                    }
+                                    var template = H.compile(value);
+                                    value = template(copy);
+                                }
+                                zip.add(name, value);
+                            } else {
+                                console.log("Error", oXHR.statusText);
+                                onError();
+                            }
+                            checkZipComplete();
+                        }
+                    };
+                    oXHR.send(null);
+                };
 
-                zip.add("project.json", JSON.stringify(projectJson,null,debug?3:0));
-                addTextResource("/dist/export-template.html","index.html",
-                    {
-                        canvasWidth: projectSettings.canvasWidth,
-                        canvasHeight:projectSettings.canvasHeight,
-                        projectName: projectName
-                    });
-                addTextResource("/js/kick-min-0.3.0.js","kick-min-0.3.0.js");
-                addTextResource("/dist/initKickJS.handlebar","initKickJS.js",projectSettings);
-                isZipComplete = true;
-            };
+            // copy textures & mesh
+            for (var i=0;i<projectJson.resourceDescriptors.length;i++){
+                var resourceDescriptor = projectJson.resourceDescriptors[i];
+                var url = null;
+                if (resourceDescriptor.type === "KICK.mesh.Mesh"){
+                    url = resourceDescriptor.uid+".mesh";
+                }
+                else if (resourceDescriptor.type === "KICK.texture.Texture"){
+                    url = resourceDescriptor.uid+".png";
+                }
+                if (url){
+                    addBinaryResource(resourceDescriptor.uid,url);
+                    resourceDescriptor.config.dataURI = url;
+                }
+            }
+            zip.add("project.json", JSON.stringify(projectJson,null,debug?3:0));
+            // copy existing resouces
+            addTextResource("/dist/export-template.html","index.html",
+                {
+                    canvasWidth: projectSettings.canvasWidth,
+                    canvasHeight:projectSettings.canvasHeight,
+                    projectName: projectName
+                });
+            addTextResource("/js/kick-min-0.3.0.js","kick-min-0.3.0.js");
+            addTextResource("/dist/initKickJS.handlebar","initKickJS.js",projectSettings);
+            isZipComplete = true;
+        };
     this.projectBuild = function(){
         var removeFlashButton = function(){
             var buildButton = Y.one("#projectBuildButton");

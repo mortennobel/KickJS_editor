@@ -68,7 +68,8 @@ JSZip.prototype.addBinary = function(name, data, o){
         return base64;
     }
     // ____________________________ end ____________________________
-
     data = base64ArrayBuffer(data);
+    o = o || {};
+    o.base64 = true;
     this.add(name,data,o);
 };
