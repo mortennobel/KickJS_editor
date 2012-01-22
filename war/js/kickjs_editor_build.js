@@ -3,7 +3,7 @@ function ProjectBuild(Y,engine,panel){
         buildProjectFilter = function(object){
             if (object instanceof KICK.scene.GameObject || object instanceof KICK.core.ResourceDescriptor){
                 var name = object.name || "";
-                return name.indexOf("__")!==0;
+                return name.indexOf("__")!==0 && object.type !== "ProjectSettings";
             }
             return true;
         },
