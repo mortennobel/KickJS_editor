@@ -14,20 +14,23 @@ var VisualGrid = function VisualGrid(){ // use explicit function name to support
         transform = this.gameObject.transform;
         gl = engine.gl;
         gridShader = engine.project.load(engine.project.ENGINE_SHADER_UNLIT);
-        shaderMaterial = new KICK.material.Material(engine,{
-            name:"__Grid__",
-            shader: gridShader,
-            uniforms:{
-                mainColor: {
-                    value: [.2,.2,.2],
-                    type: KICK.core.Constants.GL_FLOAT_VEC3
-                },
-                mainTexture: {
-                    value: engine.project.load(engine.project.ENGINE_TEXTURE_WHITE),
-                    type: KICK.core.Constants.GL_SAMPLER_2D
+        shaderMaterial = engine.project.loadByName("__Grid__");
+        if (!shaderMaterial){
+            shaderMaterial = new KICK.material.Material(engine,{
+                name:"__Grid__",
+                shader: gridShader,
+                uniforms:{
+                    mainColor: {
+                        value: [.2,.2,.2],
+                        type: KICK.core.Constants.GL_FLOAT_VEC3
+                    },
+                    mainTexture: {
+                        value: engine.project.load(engine.project.ENGINE_TEXTURE_WHITE),
+                        type: KICK.core.Constants.GL_SAMPLER_2D
+                    }
                 }
-            }
-        });
+            });
+        }
         var gridMeshData = new KICK.mesh.MeshData();
         var lines = [];
         var index = [];
@@ -64,13 +67,17 @@ var VisualGrid = function VisualGrid(){ // use explicit function name to support
         gridMeshData.indices = index;
         gridMeshData.uv1 = uvs;
 
-
-        gridMesh = new KICK.mesh.Mesh(engine,{
-            name:"__GridLines",
-            meshData:gridMeshData
-        });
-
+        gridMesh = engine.project.loadByName("__GridLines");
+        if (!gridMesh){
+            gridMesh = new KICK.mesh.Mesh(engine,{
+                name:"__GridLines",
+                meshData:gridMeshData
+            });
+        } else {
+            gridMesh.meshData = gridMeshData;
+        }
         var errors = gridMesh.verify(gridShader);
+        console.log(errors);
     };
     this.render = function(engineUniforms,overwriteShader){
         if (thisObj.enabled){
