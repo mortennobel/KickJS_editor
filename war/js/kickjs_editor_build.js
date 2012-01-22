@@ -15,13 +15,6 @@ function ProjectBuild(Y,engine,panel){
                 projectSettings = project.getResourceDescriptorByType('ProjectSettings')[0].config,
                 isZipComplete = false,
                 activeRequests = 0,
-                getAbsoluteURL = function(url){
-                    if (url.indexOf('/')===0){
-                        var oldUrl = url;
-                        url = location.origin + url;
-                    }
-                    return url;
-                },
                 checkZipComplete = function(){
                     if (isZipComplete && activeRequests === 0){
                         var content = zip.generate();
@@ -39,7 +32,6 @@ function ProjectBuild(Y,engine,panel){
                 },
                 addTextResource = function(url,name,handlebarConfig){
                     activeRequests++;
-                    url = getAbsoluteURL(url);
                     var oXHR = new XMLHttpRequest();
                     oXHR.open("GET", url, true);
                     oXHR.onreadystatechange = function (oEvent) {
