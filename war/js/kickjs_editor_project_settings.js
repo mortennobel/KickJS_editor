@@ -136,6 +136,6 @@ ProjectSettings.prototype.createEditorGUI = function(propertyEditor, object){
     propertyEditor.addNumber("canvasWidth", "Canvas width", null,null,1,8096,1);
     propertyEditor.addNumber("canvasHeight", "Canvas height", null,null,1,8096,1);
     propertyEditor.addSeparator();
-    propertyEditor.addButton("Delete project", "Delete the project permanently", propertyEditor.sceneEditorApp.deleteProject);
+    propertyEditor.addButton("Delete project", "Delete the project permanently", sceneEditorApp.deleteProject);
 
 };

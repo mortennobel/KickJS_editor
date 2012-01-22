@@ -89,7 +89,7 @@ var VisualGrid = function VisualGrid(){ // use explicit function name to support
     };
 };
 
-var CameraNavigator = function CameraNavigator(sceneEditorApp){ // use explicit function name to support auto serialization
+var CameraNavigator = function CameraNavigator(){ // use explicit function name to support auto serialization
     var transform,
         mouseInput,
         euler = KICK.math.vec3.create(),

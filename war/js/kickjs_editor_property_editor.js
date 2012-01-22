@@ -224,7 +224,7 @@ KICK.material.Material.prototype.createEditorGUI = function(propertyEditor, obje
     }
 };
 
-var PropertyEditor = function(Y,sceneEditorApp){
+var PropertyEditor = function(Y){
     var engine = sceneEditorApp.engine,
         propertyPanelMenu = Y.one("#propertyPanelMenu"),
         propertyPanelHeader = Y.one("#propertyPanelHeader"),
@@ -269,7 +269,7 @@ var PropertyEditor = function(Y,sceneEditorApp){
             for (var i=0;i<object.numberOfComponents;i++){
                 var component = object.getComponent(i);
                 propertyPanel.setStdModContent("body", '<div id="componentContainer_'+i+'"></div>',Y.WidgetStdMod.AFTER);
-                var compEditor = new ComponentEditor(Y, sceneEditorApp, component,"componentContainer_"+i);
+                var compEditor = new ComponentEditor(Y, component,"componentContainer_"+i);
                 components.push(compEditor);
             }
         } else if (object instanceof KICK.core.ResourceDescriptor){
@@ -277,7 +277,7 @@ var PropertyEditor = function(Y,sceneEditorApp){
             propertyPanelHeader.show();
             propertyPanelHeader.setContent("Project Asset");
             propertyPanel.setStdModContent("body", '<div id="componentContainer"></div>',Y.WidgetStdMod.AFTER);
-            var resourceEditor = new ComponentEditor(Y, sceneEditorApp, object,"componentContainer");
+            var resourceEditor = new ComponentEditor(Y, object,"componentContainer");
             components.push(resourceEditor);
         }
     };
@@ -291,7 +291,7 @@ var PropertyEditor = function(Y,sceneEditorApp){
  * @param {KICK.scene.Component | KICK.core.ResourceDescriptor} object
  * @param {String} id
  */
-var ComponentEditor = function(Y, sceneEditorApp, object, id){
+var ComponentEditor = function(Y, object, id){
     var c = KICK.core.Constants,
         engine = sceneEditorApp.engine,
         thisObj = this,
@@ -756,19 +756,6 @@ var ComponentEditor = function(Y, sceneEditorApp, object, id){
             });
         });
     };
-
-    Object.defineProperties(this,{
-        /**
-         * @property sceneEditorApp
-         * @type SceneEditorApp
-         */
-        sceneEditorApp:{
-            get:function(){
-                return sceneEditorApp;
-            }
-        }
-    });
-
 
     if (object instanceof KICK.core.ResourceDescriptor){
         createEditorGUI = KICK.namespace(object.type).prototype.createEditorGUI;

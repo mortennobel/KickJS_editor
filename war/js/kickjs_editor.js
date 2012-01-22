@@ -20,20 +20,22 @@ var projectName = getParameter("project");
 var debug = getParameter("debug");
 var BlobBuilder = window.MozBlobBuilder || window.WebKitBlobBuilder || window.BlobBuilder;
 
+var sceneEditorApp;
+
 YUI({
     gallery: 'gallery-2011.01.03-18-30'
 }).use('tabview', 'escape', 'plugin', 'gallery-yui3treeview',"widget", "widget-position", "widget-stdmod", 'panel', 'node-menunav', 'handlebars', function(Y) {
-        var sceneEditorApp = new SceneEditorApp(Y);
+        sceneEditorApp = new SceneEditorApp(Y);
 
         sceneEditorApp.initEngine();
 
-        sceneEditorApp.tabView = new TabView(Y,sceneEditorApp);
+        sceneEditorApp.tabView = new TabView(Y);
 
-        sceneEditorApp.sceneGameObjects = new SceneGameObjects(Y, sceneEditorApp);
+        sceneEditorApp.sceneGameObjects = new SceneGameObjects(Y);
 
-        sceneEditorApp.projectAssets = new ProjectAssets(Y,sceneEditorApp);
+        sceneEditorApp.projectAssets = new ProjectAssets(Y);
 
-        sceneEditorApp.propertyEditor = new PropertyEditor(Y,sceneEditorApp);
+        sceneEditorApp.propertyEditor = new PropertyEditor(Y);
 
         // make engien public available (for debugging purpose)
         window.engine = sceneEditorApp.engine;
@@ -80,7 +82,7 @@ YUI({
         Y.one("#projectTitel").setContent(projectName);
 });
 
-var SceneEditorView = function(Y,sceneEditorApp){
+var SceneEditorView = function(Y){
     var canvas = Y.one("#sceneView"),
         engine = new KICK.core.Engine('sceneView',
         {
@@ -161,7 +163,7 @@ var SceneEditorView = function(Y,sceneEditorApp){
                 cameraIndex: Number.MAX_VALUE
             });
             editorSceneCameraObject.addComponent(editorSceneCameraComponent);
-            editorSceneCameraObject.addComponent(new CameraNavigator(sceneEditorApp));
+            editorSceneCameraObject.addComponent(new CameraNavigator());
         }
         var gridName = "__editorSceneGridObject__";
         editorSceneGridObject = scene.getGameObjectByName(gridName);
@@ -713,7 +715,7 @@ var SceneEditorApp = function(Y){
     }
 };
 
-function SceneGameObjects(Y,sceneEditorApp){
+function SceneGameObjects(Y){
     var engine = sceneEditorApp.engine,
         sceneContentList = document.getElementById('sceneContentList'),
         thisObj = this,
@@ -854,7 +856,7 @@ function SceneGameObjects(Y,sceneEditorApp){
     this.updateSceneContent();
 }
 
-function ProjectAssets(Y, sceneEditorApp){
+function ProjectAssets(Y){
     var engine = sceneEditorApp.engine,
         selectedTreeLeaf = null,
         thisObj = this,
@@ -987,7 +989,7 @@ function ProjectAssets(Y, sceneEditorApp){
     });
 }
 
-function TabView(Y,sceneEditorApp){
+function TabView(Y){
     var thisObj = this,
         Removeable = function(config) {
         Removeable.superclass.constructor.apply(this, arguments);
