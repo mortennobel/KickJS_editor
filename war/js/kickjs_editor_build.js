@@ -21,7 +21,7 @@ function ProjectBuild(Y,engine,panel){
                         onComplete(content);
                     }
                 },
-                addBinaryResource = function(uid,name){
+                addBinaryResourceByUID = function(uid,name){
                     activeRequests++;
                     var onResourceLoadSuccess = function(value){
                         zip.addBinary(name, value);
@@ -30,7 +30,27 @@ function ProjectBuild(Y,engine,panel){
                     };
                     serverObject.resource.load(projectName, uid, onResourceLoadSuccess, onError);
                 },
-                addTextResource = function(url,name,handlebarConfig){
+                addBinaryResourceByURL = function(url,name){
+                    activeRequests++;
+                    var oXHR = new XMLHttpRequest();
+                    oXHR.open("GET", url, true);
+                    oXHR.responseType = "arraybuffer";
+                    oXHR.onreadystatechange = function (oEvent) {
+                        if (oXHR.readyState === 4) {
+                            if (oXHR.status === 200) {
+                                activeRequests--;
+                                var value = oXHR.response;
+                                zip.addBinary(name, value);
+                            } else {
+                                console.log("Error", oXHR.statusText);
+                                onError();
+                            }
+                            checkZipComplete();
+                        }
+                    };
+                    oXHR.send(null);
+                },
+                addTextResourceByURL = function(url,name,handlebarConfig){
                     activeRequests++;
                     var oXHR = new XMLHttpRequest();
                     oXHR.open("GET", url, true);
@@ -69,20 +89,21 @@ function ProjectBuild(Y,engine,panel){
                     url = resourceDescriptor.uid+".png";
                 }
                 if (url){
-                    addBinaryResource(resourceDescriptor.uid,url);
+                    addBinaryResourceByUID(resourceDescriptor.uid,url);
                     resourceDescriptor.config.dataURI = url;
                 }
             }
             zip.add("project.json", JSON.stringify(projectJson,null,debug?3:0));
             // copy existing resouces
-            addTextResource("/dist/export-template.html","index.html",
+            addTextResourceByURL("/dist/export-template.html","index.html",
                 {
                     canvasWidth: projectSettings.canvasWidth,
                     canvasHeight:projectSettings.canvasHeight,
                     projectName: projectName
                 });
-            addTextResource("/js/kick-min-0.3.0.js","kick-min-0.3.0.js");
-            addTextResource("/dist/initKickJS.handlebar","initKickJS.js",projectSettings);
+            addTextResourceByURL("/js/kick-min-0.3.0.js","kick-min-0.3.0.js");
+            addTextResourceByURL("/dist/initKickJS.handlebar","initKickJS.js",projectSettings);
+            addBinaryResourceByURL("/dist/SimpleWebServer.jar","SimpleWebServer.jar");
             isZipComplete = true;
         };
     this.projectBuild = function(){
