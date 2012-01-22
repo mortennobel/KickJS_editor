@@ -193,7 +193,7 @@ var SceneEditorApp = function(Y){
         _tabView,
         _propertyEditor,
         thisObj = this,
-        deleteSelectedGameObject = function(){
+        deleteSelectedGameObject = function(e){
             collapseMenu("#sceneGameObjectMenu");
             var uid = _sceneGameObjects.getSelectedGameObjectUid();
             if (!uid){
@@ -205,6 +205,7 @@ var SceneEditorApp = function(Y){
             }
             gameObject.destroy();
             _sceneGameObjects.removeSelected();
+            e.preventDefault ();
         },
         createMaterial = function(e){
             var engine = _view.engine,
@@ -228,7 +229,7 @@ var SceneEditorApp = function(Y){
             _projectAssets.renameSelected();
             e.preventDefault();
         },
-        createMeshRendererComponent = function(){
+        createMeshRendererComponent = function(e){
             var engine = _view.engine,
                 project = engine.project;
             var mesh = project.load(project.ENGINE_MESH_CUBE);
@@ -239,6 +240,7 @@ var SceneEditorApp = function(Y){
                 materials = [new KICK.material.Material(engine,{shader:project.load(project.ENGINE_SHADER_ERROR) })];
             }
             addComponent(KICK.scene.MeshRenderer,{mesh:mesh,materials:materials});
+            e.preventDefault ();
         },
         addScene = function(e){
             var engine = _view.engine,
@@ -623,55 +625,91 @@ var SceneEditorApp = function(Y){
         menu.menuNav._hideAllSubmenus(menu);
     };
 
-    Y.one("#projectSave").on("click",function(){thisObj.projectSave()});
-    Y.one("#projectRun").on("click",function(){thisObj.projectRun()});
-    Y.one("#projectBuild").on("click",function(){
+    Y.one("#projectSave").on("click",function(e){
+        thisObj.projectSave();
+        e.preventDefault ();
+    });
+    Y.one("#projectRun").on("click",function(e){
+        thisObj.projectRun();
+        e.preventDefault ();
+    });
+    Y.one("#projectBuild").on("click",function(e){
         var projectBuild = new ProjectBuild(Y,_view.engine,panel);
         projectBuild.projectBuild();
+        e.preventDefault ();
     });
 
     Y.one("#projectAddMaterial").on("click",createMaterial);
-    Y.one("#projectAddShader").on("click",function(){alert("not implemented");});
+    Y.one("#projectAddShader").on("click",function(e){
+        alert("not implemented");
+        e.preventDefault ();
+    });
     Y.one("#projectAddTexture").on("click",uploadImage);
     Y.one("#projectUploadModel").on("click",uploadModel);
     Y.one("#projectAddScene").on("click",addScene);
-    Y.one("#projectAssetRename").on("click",function(){
-        collapseMenu("#projectAssetMenu");
-        _projectAssets.renameSelected();}
+    Y.one("#projectAssetRename").on("click",function(e){
+            collapseMenu("#projectAssetMenu");
+            _projectAssets.renameSelected();
+            e.preventDefault ();
+        }
     );
-    Y.one("#projectAssetDelete").on("click",function(){
+    Y.one("#projectAssetDelete").on("click",function(e){
         collapseMenu("#projectAssetMenu");
         alert("not implemented");
+        e.preventDefault ();
     });
     if (debug){
-        Y.one("#projectAssetRefresh").on("click",function(){_projectAssets.updateProjectContent();});
+        Y.one("#projectAssetRefresh").on("click",function(e){
+            _projectAssets.updateProjectContent();
+            e.preventDefault ();
+        });
     } else {
         Y.one("#projectAssetRefresh").remove(true);
     }
 
-    Y.one("#gameObjectCreate").on("click",function(){_sceneGameObjects.createGameObject();});
-    Y.one("#gameObjectRename").on("click",function(){
+    Y.one("#gameObjectCreate").on("click",function(e){
+        _sceneGameObjects.createGameObject();
+        e.preventDefault ();
+    });
+    Y.one("#gameObjectRename").on("click",function(e){
         collapseMenu("#sceneGameObjectMenu");
         _sceneGameObjects.renameSelected();
+        e.preventDefault ();
     });
     Y.one("#gameObjectDelete").on("click",deleteSelectedGameObject);
     if (debug){
-        Y.one("#gameObjectRefresh").on("click",function(){_sceneGameObjects.updateSceneContent();});
+        Y.one("#gameObjectRefresh").on("click",function(e){
+            _sceneGameObjects.updateSceneContent();
+            e.preventDefault();
+        });
     } else {
         Y.one("#gameObjectRefresh").remove(true);
     }
     Y.one("#componentAddMeshRenderer").on("click",createMeshRendererComponent);
 
-    Y.one("#componentAddLightPoint").on("click",function(){addComponent(KICK.scene.Light,{type:KICK.core.Constants._LIGHT_TYPE_POINT});});
-    Y.one("#componentAddLightDirectional").on("click",function(){addComponent(KICK.scene.Light,{type:KICK.core.Constants._LIGHT_TYPE_DIRECTIONAL});});
-    Y.one("#componentAddLightAmbient").on("click",function(){addComponent(KICK.scene.Light,{type:KICK.core.Constants._LIGHT_TYPE_AMBIENT});});
+    Y.one("#componentAddLightPoint").on("click",function(e){
+        addComponent(KICK.scene.Light,{type:KICK.core.Constants._LIGHT_TYPE_POINT});
+        e.preventDefault ();
+    });
+    Y.one("#componentAddLightDirectional").on("click",function(e){
+        addComponent(KICK.scene.Light,{type:KICK.core.Constants._LIGHT_TYPE_DIRECTIONAL});
+        e.preventDefault ();
+    });
+    Y.one("#componentAddLightAmbient").on("click",function(e){
+        addComponent(KICK.scene.Light,{type:KICK.core.Constants._LIGHT_TYPE_AMBIENT});
+        e.preventDefault ();
+    });
     Y.one("#componentAddCamera").on("click",function(e){
         addComponent(KICK.scene.Camera);
+        e.preventDefault ();
     });
 
     var mainViewMenu = ["cameraWireframe","cameraShaded","cameraPerspective","cameraOrthographic","cameraSettings","cameraAlignSelected","cameraAlignCamera","cameraFrameSelected","cameraGrid","cameraGizmos"];
     for (var i=0;i<mainViewMenu.length;i++){
-        Y.one("#"+mainViewMenu[i]).on("click",function(e){alert("Not implemented");});
+        Y.one("#"+mainViewMenu[i]).on("click",function(e){
+            alert("Not implemented");
+            e.preventDefault ();
+        });
     }
 };
 
@@ -854,8 +892,6 @@ function ProjectAssets(Y, sceneEditorApp){
         }
     };
 
-
-
     this.renameSelected = function(afterRenameFn){
         if (selectedTreeLeaf){
             var uid = selectedTreeLeaf.get("uid");
@@ -868,7 +904,9 @@ function ProjectAssets(Y, sceneEditorApp){
                     if (afterRenameFn){
                         afterRenameFn();
                     }
-                    sceneEditorApp.tabView.updateSceneName(newName,uid);
+                    if (asset instanceof KICK.scene.Scene){
+                        sceneEditorApp.tabView.updateSceneName(newName,uid);
+                    }
                 }
                 selectedTreeLeaf.get("contentBox").setContent(getAssetName(uid));
             }
