@@ -84,7 +84,7 @@ var SceneEditorView = function(Y,sceneEditorApp){
     var canvas = Y.one("#sceneView"),
         engine = new KICK.core.Engine('sceneView',
         {
-            enableDebugContext: true
+            enableDebugContext: debug
         }),
         editorSceneCameraObject,
         editorSceneCameraComponent,
