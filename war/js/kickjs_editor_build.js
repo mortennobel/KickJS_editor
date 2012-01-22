@@ -103,6 +103,7 @@ function ProjectBuild(Y,engine,panel){
                 });
             addTextResourceByURL("/js/kick-min-0.3.0.js","kick-min-0.3.0.js");
             addTextResourceByURL("/dist/initKickJS.handlebar","initKickJS.js",projectSettings);
+            addTextResourceByURL("/dist/readme.html","readme.html");
             addBinaryResourceByURL("/dist/SimpleWebServer.jar","SimpleWebServer.jar");
             isZipComplete = true;
         };
