@@ -21,12 +21,7 @@ var debug = getParameter("debug");
 var BlobBuilder = window.MozBlobBuilder || window.WebKitBlobBuilder || window.BlobBuilder;
 
 YUI({
-    modules:  {
-        'gallery-yui3treeview': {
-                   fullpath: 'http://localhost:8080/js/gallery-yui3treeview/gallery-yui3treeview.js',
-                   requires: ['substitute', 'widget', 'widget-parent', 'widget-child', 'node-focusmanager']
-               }
-           }
+    gallery: 'gallery-2011.01.03-18-30'
 }).use('tabview', 'escape', 'plugin', 'gallery-yui3treeview',"widget", "widget-position", "widget-stdmod", 'panel', 'node-menunav', 'handlebars', function(Y) {
         var sceneEditorApp = new SceneEditorApp(Y);
 
