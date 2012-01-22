@@ -13,9 +13,27 @@ function ProjectSettings(engine, config){
         premultipliedAlpha = true,
         checkCanvasResizeInterval = 0,
         shadows = false,
-        maxNumerOfLights = 1;
+        maxNumerOfLights = 1,
+        canvasHeight = 300,
+        canvasWidth = 300;
 
     Object.defineProperties(this,{
+        canvasHeight:{
+            get:function(){
+                return canvasHeight;
+            },
+            set:function(newValue){
+                canvasHeight = newValue;
+            }
+        },
+        canvasWidth:{
+            get:function(){
+                return canvasWidth;
+            },
+            set:function(newValue){
+                canvasWidth = newValue;
+            }
+        },
         uid:{
             get:function(){
                 return uid;
@@ -99,13 +117,14 @@ function ProjectSettings(engine, config){
             premultipliedAlpha:premultipliedAlpha,
             checkCanvasResizeInterval:checkCanvasResizeInterval,
             shadows:shadows,
-            maxNumerOfLights:maxNumerOfLights
+            maxNumerOfLights:maxNumerOfLights,
+            canvasHeight: canvasHeight,
+            canvasWidth: canvasWidth
         };
     };
 };
 
 ProjectSettings.prototype.createEditorGUI = function(propertyEditor, object){
-    var c = KICK.core.Constants;
     propertyEditor.setTitle("Project settings");
     propertyEditor.addBoolean("alpha", "Alpha", "If the value is true, the drawing buffer has an alpha channel for the purposes of performing OpenGL destination alpha operations and compositing with the page. If the value is false, no alpha buffer is available.");
     propertyEditor.addBoolean("antialias", "Antialias", "If the value is true and the implementation supports antialiasing the drawing buffer will perform antialiasing using its choice of technique (multisample/supersample) and quality. If the value is false or the implementation does not support antialiasing, no antialiasing is performed.");
@@ -114,5 +133,9 @@ ProjectSettings.prototype.createEditorGUI = function(propertyEditor, object){
     propertyEditor.addBoolean("shadows", "Shadows", "Use shadow maps to generate realtime shadows.");
     propertyEditor.addNumber("maxNumerOfLights", "Point lights", "Max number of point lights.",null,0,8,1);
     propertyEditor.addSeparator();
+    propertyEditor.addNumber("canvasWidth", "Canvas width", null,null,1,8096,1);
+    propertyEditor.addNumber("canvasHeight", "Canvas height", null,null,1,8096,1);
+    propertyEditor.addSeparator();
     propertyEditor.addButton("Delete project", "Delete the project permanently", propertyEditor.sceneEditorApp.deleteProject);
+
 };

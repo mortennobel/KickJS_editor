@@ -12,6 +12,7 @@ function ProjectBuild(Y,engine,panel){
                 var project = engine.project,
                     H = Y.Handlebars,
                     projectJson = project.toJSON(buildProjectFilter),
+                    projectSettings = project.getResourceDescriptorByType('ProjectSettings')[0].config,
                     isZipComplete = false,
                     activeRequests = 0,
                     getAbsoluteURL = function(url){
@@ -57,18 +58,17 @@ function ProjectBuild(Y,engine,panel){
                             }
                         };
                         oXHR.send(null);
-
                     };
+
                 zip.add("project.json", JSON.stringify(projectJson,null,debug?3:0));
                 addTextResource("/dist/export-template.html","index.html",
                     {
-                        canvasWidth: 300,
-                        canvasHeight:350,
+                        canvasWidth: projectSettings.canvasWidth,
+                        canvasHeight:projectSettings.canvasHeight,
                         projectName: projectName
                     });
                 addTextResource("/js/kick-min-0.3.0.js","kick-min-0.3.0.js");
-                addTextResource("/dist/initKickJS.handlebar","initKickJS.js",
-                                project.getResourceDescriptorByType('ProjectSettings')[0].config);
+                addTextResource("/dist/initKickJS.handlebar","initKickJS.js",projectSettings);
                 isZipComplete = true;
             };
     this.projectBuild = function(){
