@@ -1,12 +1,6 @@
 function ProjectBuild(Y,engine,panel){
     var
-        buildProjectFilter = function(object){
-            if (object instanceof KICK.scene.GameObject || object instanceof KICK.core.ResourceDescriptor){
-                var name = object.name || "";
-                return name.indexOf("__")!==0 && object.type !== "ProjectSettings";
-            }
-            return true;
-        },
+        buildProjectFilter = ProjectBuild.buildProjectFilter,
         generateZipContent = function(onComplete, onError){
             var zip = new JSZip();
             var project = engine.project,
@@ -167,3 +161,11 @@ function ProjectBuild(Y,engine,panel){
         generateZipContent(showDownloadButton);
     };
 }
+
+ProjectBuild.buildProjectFilter = function(object){
+    if (object instanceof KICK.scene.GameObject || object instanceof KICK.core.ResourceDescriptor){
+        var name = object.name || "";
+        return name.indexOf("__")!==0 && object.type !== "ProjectSettings";
+    }
+    return true;
+};

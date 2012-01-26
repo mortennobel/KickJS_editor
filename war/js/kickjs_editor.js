@@ -194,6 +194,7 @@ var SceneEditorApp = function(Y){
         _projectAssets,
         _tabView,
         _propertyEditor,
+        runWindow,
         thisObj = this,
         deleteSelectedGameObject = function(e){
             collapseMenu("#sceneGameObjectMenu");
@@ -605,8 +606,26 @@ var SceneEditorApp = function(Y){
     };
 
     this.projectRun = function(){
-        console.log("Run");
-        alert("Not implemented");
+        var project = engine.project,
+                    projectSettings = project.getResourceDescriptorByType('ProjectSettings')[0].config;
+        var postMessage = {
+            action: "loadProject",
+            useServer: getParameter("useServer"),
+            projectSettings: projectSettings,
+            projectName: projectName,
+            projectConfig: _view.engine.project.toJSON(ProjectBuild.buildProjectFilter)
+        };
+        postMessage = JSON.stringify(postMessage);
+        if (runWindow && !runWindow.closed){
+            runWindow.focus();
+            runWindow.postMessage(postMessage,"*");
+        } else {
+            var windowUrl = debug?"/run-debug.html":"/run.html";
+            var windowName = "KickJS Run Project";
+            var windowFeatures = "width="+(projectSettings.canvasWidth)+",height="+(projectSettings.canvasHeight)+",scrollbars=no,location=no,personalbar=no";
+            runWindow = window.open(windowUrl,windowName,windowFeatures);
+            runWindow.msg = postMessage;
+        }
     };
 
     this.initEngine = function(){
@@ -1081,3 +1100,8 @@ function TabView(Y){
         }
     });
 }
+
+window.addEventListener('message',function(event) {
+    if(event.origin !== location.origin) return;
+    KICK.onMessage(event.data);
+},false);
