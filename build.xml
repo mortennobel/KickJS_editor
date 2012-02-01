@@ -1,5 +1,5 @@
 <project name="Guestbook" default="datanucleusenhance">
-  <property name="appengine.sdk" location="/project/javalibs/appengine-java-sdk-1.6.1" />
+  <property name="appengine.sdk" location="/project/javalibs/appengine-java-sdk" />
 
   <import file="${appengine.sdk}/config/user/ant-macros.xml" />
 
