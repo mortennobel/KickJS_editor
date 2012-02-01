@@ -21,7 +21,7 @@ var VisualGrid = function VisualGrid(){ // use explicit function name to support
                 shader: gridShader,
                 uniforms:{
                     mainColor: {
-                        value: [.2,.2,.2],
+                        value: [.2,.2,.2,1.0],
                         type: KICK.core.Constants.GL_FLOAT_VEC3
                     },
                     mainTexture: {

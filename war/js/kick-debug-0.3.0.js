@@ -181,14 +181,14 @@ KICK.namespace = KICK.namespace || function (ns_string) {
         _LIGHT_TYPE_AMBIENT :{value: 1,enumerable:true},
         /**
          * Used to define directional light in the scene (such as sunlight)
-         * @property LIGHT_TYPE_DIRECTIONAL
+         * @property _LIGHT_TYPE_DIRECTIONAL
          * @type Number
          * @final
          */
         _LIGHT_TYPE_DIRECTIONAL:{value: 2,enumerable:true},
         /**
          * Used to define point light in the scene
-         * @property TYPE_POINT
+         * @property _LIGHT_TYPE_POINT
          * @type Number
          * @final
          */
@@ -2707,7 +2707,7 @@ KICK.namespace = function (ns_string) {
 * @property unlit_vs.glsl
 * @type String
 */
-{"__error_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvoid main(void)\n{\ngl_FragColor = vec4(1.0,0.5, 0.9, 1.0);\n}","__error_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\n} ","__pick_fs.glsl":"#ifdef GL_ES\nprecision mediump float;\n#endif\nvarying vec4 gameObjectUID;\nvoid main(void)\n{\ngl_FragColor = gameObjectUID;\n}","__pick_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nuniform vec4 _gameObjectUID;\nvarying vec4 gameObjectUID;\nvoid main(void) {\n// compute position\ngl_Position = _mvProj * vec4(vertex, 1.0);\ngameObjectUID = _gameObjectUID;\n}","__shadowmap_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvec4 packDepth( const in float depth ) {\nconst vec4 bitShift = vec4( 16777216.0, 65536.0, 256.0, 1.0 );\nconst vec4 bitMask = vec4( 0.0, 1.0 / 256.0, 1.0 / 256.0, 1.0 / 256.0 );\nvec4 res = fract( depth * bitShift );\nres -= res.xxyz * bitMask;\nreturn res;\n}\nvoid main() {\ngl_FragColor = packDepth( gl_FragCoord.z );\n}\n","__shadowmap_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\n} ","light.glsl":"struct DirectionalLight {\nvec3 lDir;\nvec3 colInt;\nvec3 halfV;\n};\n// assumes that normal is normalized\nvoid getDirectionalLight(vec3 normal, DirectionalLight dLight, float specularExponent, out vec3 diffuse, out float specular){\nfloat diffuseContribution = max(dot(normal, dLight.lDir), 0.0);\n\tfloat specularContribution = max(dot(normal, dLight.halfV), 0.0);\nspecular = pow(specularContribution, specularExponent);\n\tdiffuse = (dLight.colInt * diffuseContribution);\n}\nuniform DirectionalLight _dLight;\nuniform vec3 _ambient;","phong_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nvarying vec3 vNormal;\nuniform vec3 mainColor;\nuniform float specularExponent;\nuniform vec3 specularColor;\nuniform sampler2D mainTexture;\n#pragma include \"light.glsl\"\n#pragma include \"shadowmap.glsl\"\nvoid main(void)\n{\nvec3 diffuse;\nfloat specular;\ngetDirectionalLight(vNormal, _dLight, specularExponent, diffuse, specular);\nfloat visibility;\nif (SHADOWS){\ncomputeLightVisibility();\n} else {\nvisibility = 1.0;\n}\nvec3 color = max(diffuse*visibility,_ambient.xyz)*mainColor;\ngl_FragColor = texture2D(mainTexture,vUv)*vec4(color, 1.0)+vec4(specular*specularColor,0.0);\n}\n","phong_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat4 _lightMat;\nuniform mat3 _norm;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec4 vShadowMapCoord;\nvoid main(void) {\nvec4 v = vec4(vertex, 1.0);\ngl_Position = _mvProj * v;\nvUv = uv1;\nvNormal= normalize(_norm * normal);\nvShadowMapCoord = _lightMat * v;\n} ","shadowmap.glsl":"varying vec4 vShadowMapCoord;\nuniform sampler2D _shadowMapTexture;\nfloat unpackDepth( const in vec4 rgba_depth ) {\nconst vec4 bit_shift = vec4( 1.0 / ( 16777216.0 ), 1.0 / ( 65536.0 ), 1.0 / 256.0, 1.0 );\nreturn dot( rgba_depth, bit_shift );\n}\nfloat computeLightVisibility(){\nvec3 shadowCoord = vShadowMapCoord.xyz / vShadowMapCoord.w;\nvec4 packedShadowDepth = texture2D(_shadowMapTexture,shadowCoord.xy);\nfloat shadowDepth = unpackDepth(packedShadowDepth);\nif (shadowDepth < shadowCoord.z){\nreturn 1.0;\n}\nreturn 0.0;\n}","transparent_phong_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nvarying vec3 vNormal;\nuniform vec4 mainColor;\nuniform float specularExponent;\nuniform vec3 specularColor;\nuniform sampler2D mainTexture;\n#pragma include \"light.glsl\"\nvoid main(void)\n{\nvec3 diffuse;\nfloat specular;\ngetDirectionalLight(vNormal, _dLight, specularExponent, diffuse, specular);\nvec4 color = vec4(max(diffuse,_ambient.xyz),1.0)*mainColor;\ngl_FragColor = texture2D(mainTexture,vUv)*color+vec4(specular*specularColor,0.0);\n}\n","transparent_phong_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat3 _norm;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvoid main(void) {\n// compute position\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n// compute light info\nvNormal= normalize(_norm * normal);\n} ","transparent_unlit_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nuniform vec4 mainColor;\nuniform sampler2D mainTexture;\nvoid main(void)\n{\ngl_FragColor = texture2D(mainTexture,vUv)*mainColor;\n}\n","transparent_unlit_vs.glsl":"attribute vec3 vertex;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nvarying vec2 vUv;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n}","unlit_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nuniform vec3 mainColor;\nuniform sampler2D mainTexture;\nvoid main(void)\n{\ngl_FragColor = texture2D(mainTexture,vUv)*vec4(mainColor,1.0);\n}\n","unlit_vs.glsl":"attribute vec3 vertex;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nvarying vec2 vUv;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n}"};
+{"__error_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvoid main(void)\n{\ngl_FragColor = vec4(1.0,0.5, 0.9, 1.0);\n}","__error_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\n} ","__pick_fs.glsl":"#ifdef GL_ES\nprecision mediump float;\n#endif\nvarying vec4 gameObjectUID;\nvoid main(void)\n{\ngl_FragColor = gameObjectUID;\n}","__pick_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nuniform vec4 _gameObjectUID;\nvarying vec4 gameObjectUID;\nvoid main(void) {\n// compute position\ngl_Position = _mvProj * vec4(vertex, 1.0);\ngameObjectUID = _gameObjectUID;\n}","__shadowmap_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvec4 packDepth( const in float depth ) {\nconst vec4 bitShift = vec4( 16777216.0, 65536.0, 256.0, 1.0 );\nconst vec4 bitMask = vec4( 0.0, 1.0 / 256.0, 1.0 / 256.0, 1.0 / 256.0 );\nvec4 res = fract( depth * bitShift );\nres -= res.xxyz * bitMask;\nreturn res;\n}\nvoid main() {\ngl_FragColor = packDepth( gl_FragCoord.z );\n}\n","__shadowmap_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\n} ","light.glsl":"struct DirectionalLight {\nvec3 lDir;\nvec3 colInt;\nvec3 halfV;\n};\n// assumes that normal is normalized\nvoid getDirectionalLight(vec3 normal, DirectionalLight dLight, float specularExponent, out vec3 diffuse, out float specular){\nfloat diffuseContribution = max(dot(normal, dLight.lDir), 0.0);\n\tfloat specularContribution = max(dot(normal, dLight.halfV), 0.0);\nspecular = pow(specularContribution, specularExponent);\n\tdiffuse = (dLight.colInt * diffuseContribution);\n}\nuniform DirectionalLight _dLight;\nuniform vec3 _ambient;","phong_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nvarying vec3 vNormal;\nuniform vec4 mainColor;\nuniform float specularExponent;\nuniform vec3 specularColor;\nuniform sampler2D mainTexture;\n#pragma include \"light.glsl\"\n#pragma include \"shadowmap.glsl\"\nvoid main(void)\n{\nvec3 diffuse;\nfloat specular;\ngetDirectionalLight(vNormal, _dLight, specularExponent, diffuse, specular);\nfloat visibility;\nif (SHADOWS){\ncomputeLightVisibility();\n} else {\nvisibility = 1.0;\n}\nvec3 color = max(diffuse*visibility,_ambient.xyz)*mainColor.xyz;\ngl_FragColor = vec4(texture2D(mainTexture,vUv).xyz*color.xyz, 1.0)+vec4(specular*specularColor,0.0);\n}\n","phong_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat4 _lightMat;\nuniform mat3 _norm;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec4 vShadowMapCoord;\nvoid main(void) {\nvec4 v = vec4(vertex, 1.0);\ngl_Position = _mvProj * v;\nvUv = uv1;\nvNormal= normalize(_norm * normal);\nvShadowMapCoord = _lightMat * v;\n} ","shadowmap.glsl":"varying vec4 vShadowMapCoord;\nuniform sampler2D _shadowMapTexture;\nfloat unpackDepth( const in vec4 rgba_depth ) {\nconst vec4 bit_shift = vec4( 1.0 / ( 16777216.0 ), 1.0 / ( 65536.0 ), 1.0 / 256.0, 1.0 );\nreturn dot( rgba_depth, bit_shift );\n}\nfloat computeLightVisibility(){\nvec3 shadowCoord = vShadowMapCoord.xyz / vShadowMapCoord.w;\nvec4 packedShadowDepth = texture2D(_shadowMapTexture,shadowCoord.xy);\nfloat shadowDepth = unpackDepth(packedShadowDepth);\nif (shadowDepth < shadowCoord.z){\nreturn 1.0;\n}\nreturn 0.0;\n}","transparent_phong_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nvarying vec3 vNormal;\nuniform vec4 mainColor;\nuniform float specularExponent;\nuniform vec3 specularColor;\nuniform sampler2D mainTexture;\n#pragma include \"light.glsl\"\nvoid main(void)\n{\nvec3 diffuse;\nfloat specular;\ngetDirectionalLight(vNormal, _dLight, specularExponent, diffuse, specular);\nvec4 color = vec4(max(diffuse,_ambient.xyz),1.0)*mainColor;\ngl_FragColor = texture2D(mainTexture,vUv)*color+vec4(specular*specularColor,0.0);\n}\n","transparent_phong_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat3 _norm;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvoid main(void) {\n// compute position\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n// compute light info\nvNormal= normalize(_norm * normal);\n} ","transparent_unlit_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nuniform vec4 mainColor;\nuniform sampler2D mainTexture;\nvoid main(void)\n{\ngl_FragColor = texture2D(mainTexture,vUv)*mainColor;\n}\n","transparent_unlit_vs.glsl":"attribute vec3 vertex;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nvarying vec2 vUv;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n}","unlit_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nuniform vec4 mainColor;\nuniform sampler2D mainTexture;\nvoid main(void)\n{\ngl_FragColor = vec4(texture2D(mainTexture,vUv).xyz*mainColor.xyz,1.0);\n}\n","unlit_vs.glsl":"attribute vec3 vertex;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nvarying vec2 vUv;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n}"};
 })();/*!
  * New BSD License
  *
@@ -5339,36 +5339,34 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec3} target
      * @param {KICK.math.vec3} up
      * @param {KICK.math.quat4} dest optional
-     * @param {KICK.math.mat4} destMatrix optional - rotation matrix used to calculate the quaternion. Using this also avoids memory allocation
      * @return {KICK.math.quat4} dest if specified, a new quat4 otherwise
      */
-    quat4.lookAt = function(position,target,up,dest,destMatrix){
-        // idea create mat3 rotation and transform into quaternion
+    quat4.lookAt = (function(){
         var upVector = vec3.create(),
             rightVector = vec3.create(),
-            forwardVector = vec3.create();
-        vec3.subtract(position,target, forwardVector);
-        vec3.normalize(forwardVector);
-        vec3.cross(up,forwardVector,rightVector);
-        vec3.normalize(rightVector); // needed?
-        vec3.cross(forwardVector,rightVector,upVector);
-        vec3.normalize(upVector); // needed?
-        if (!destMatrix){
+            forwardVector = vec3.create(),
             destMatrix = mat3.create();
-        }
-        destMatrix[0] = rightVector[0];
-        destMatrix[1] = rightVector[1];
-        destMatrix[2] = rightVector[2];
-        destMatrix[3] = upVector[0];
-        destMatrix[4] = upVector[1];
-        destMatrix[5] = upVector[2];
-        destMatrix[6] = forwardVector[0];
-        destMatrix[7] = forwardVector[1];
-        destMatrix[8] = forwardVector[2];
+        return function(position,target,up,dest){
+            // idea create mat3 rotation and transform into quaternion
+            vec3.subtract(position,target, forwardVector);
+            vec3.normalize(forwardVector);
+            vec3.cross(up,forwardVector,rightVector);
+            vec3.normalize(rightVector); // needed?
+            vec3.cross(forwardVector,rightVector,upVector);
+            vec3.normalize(upVector); // needed?
+            destMatrix[0] = rightVector[0];
+            destMatrix[1] = rightVector[1];
+            destMatrix[2] = rightVector[2];
+            destMatrix[3] = upVector[0];
+            destMatrix[4] = upVector[1];
+            destMatrix[5] = upVector[2];
+            destMatrix[6] = forwardVector[0];
+            destMatrix[7] = forwardVector[1];
+            destMatrix[8] = forwardVector[2];
         
-        return mat3.toQuat(destMatrix,dest);
-    };
-
+            return mat3.toQuat(destMatrix,dest);
+        };
+    })();
     /**
      * Set the rotation based on eulers angles.
      * Pitch->X axis, Yaw->Y axis, Roll->Z axis
@@ -6345,7 +6343,7 @@ KICK.namespace = function (ns_string) {
                         name:getUrlAsResourceName(url),
                         uid:uid
                     })
-                } else if (uid <= p.ENGINE_TEXTURE_BLACK && uid >= p.ENGINE_TEXTURE_GRAY){
+                } else if (uid <= p.ENGINE_TEXTURE_BLACK && uid >= p.ENGINE_TEXTURE_LOGO){
                     switch (uid){
                         case p.ENGINE_TEXTURE_BLACK:
                             url = "kickjs://texture/black/";
@@ -6355,6 +6353,9 @@ KICK.namespace = function (ns_string) {
                             break;
                         case p.ENGINE_TEXTURE_GRAY:
                             url = "kickjs://texture/gray/";
+                            break;
+                        case p.ENGINE_TEXTURE_LOGO:
+                            url = "kickjs://texture/logo/";
                             break;
                         default:
                             if (ASSERT){
@@ -6380,10 +6381,10 @@ KICK.namespace = function (ns_string) {
                             url = "kickjs://mesh/plane/";
                             break;
                         case p.ENGINE_MESH_UVSPHERE:
-                            url = "kickjs://mesh/uvsphere/?slides=20&stacks=10&radius=1.0";
+                            url = "kickjs://mesh/uvsphere/";
                             break;
                         case p.ENGINE_MESH_CUBE:
-                            url = "kickjs://mesh/cube/?length=1.0";
+                            url = "kickjs://mesh/cube/";
                             break;
                         default:
                             if (ASSERT){
@@ -6403,12 +6404,8 @@ KICK.namespace = function (ns_string) {
                 return res;
             };
 
-        // copy static values to object values
-        for (var name in core.Project){
-            if (core.Project.hasOwnProperty(name)){
-                thisObj[name] = core.Project[name];
-            }
-        }
+        core.Util.copyStaticPropertiesToObject(thisObj,core.Project);
+
 
         Object.defineProperties(this, {
             /**
@@ -6791,6 +6788,13 @@ KICK.namespace = function (ns_string) {
      * @static
      */
     core.Project.ENGINE_TEXTURE_GRAY = -202;
+
+    /**
+     * @property ENGINE_TEXTURE_LOGO
+     * @type Number
+     * @static
+     */
+    core.Project.ENGINE_TEXTURE_LOGO = -203;
 
     /**
      * @property ENGINE_MESH_TRIANGLE
@@ -7461,6 +7465,19 @@ KICK.namespace = function (ns_string) {
      * @namespace KICK.core
      */
     core.Util = {
+        /**
+         * @method copyStaticPropertiesToObject
+         * @param {Object} object
+         * @param {Function} type constructor function
+         * @static
+         */
+        copyStaticPropertiesToObject : function(object, type){
+            for (var name in type){
+                if (type.hasOwnProperty(name)){
+                    object[name] = type[name];
+                }
+            }
+        },
         /**
          * @method hasProperty
          * @param {Object} obj
@@ -8428,9 +8445,14 @@ KICK.namespace = function (ns_string) {
                         },
                         set:function(newValue){
                             if (newValue){
-                                newValue = new typedArrayType(newValue);
+                                if (data[name] && data[name].length == newValue.length){
+                                    data[name].set(newValue);
+                                } else {
+                                    data[name] = new typedArrayType(newValue);
+                                }
+                            } else {
+                                data[name] = null;
                             }
-                            data[name] = newValue;
                             clearInterleavedData();
                         }
                     };
@@ -9185,6 +9207,11 @@ KICK.namespace = function (ns_string) {
                 }
             };
 
+        if (DEBUG){
+            if (!(engine instanceof KICK.core.Engine)){
+                fail("Engine param not valid");
+            }
+        }
         engine.addContextListener(contextListener);
 
         Object.defineProperties(this,{
@@ -10210,12 +10237,12 @@ KICK.namespace = function (ns_string) {
                 }
             },
             updateComponents = function(){
+                cleanupGameObjects();
                 addNewGameObjects();
                 var i;
                 for (i=updateableComponents.length-1; i >= 0; i--) {
                     updateableComponents[i].update();
                 }
-                cleanupGameObjects();
             },
             renderComponents = function(){
                 var i;
@@ -10692,9 +10719,31 @@ KICK.namespace = function (ns_string) {
 
                 mat4.multiply(projectionMatrix,viewMatrix,viewProjectionMatrix);
             },
+            /**
+             * Compare two objects based on renderOrder value and then material.shader.uid (if exist)
+             * @method compareRenderOrder
+             * @param {Component}
+             * @param {Component}
+             * @return Number
+             * @private
+             */
             compareRenderOrder = function(a,b){
                 var aRenderOrder = a.renderOrder || 1000,
                     bRenderOrder = b.renderOrder || 1000;
+                var getMeshShaderUid = function(o, defaultValue){
+                    var names = ["material","shader","uid"];
+                    for (var i=0;i<names.length;i++){
+                        o = o[names[i]];
+                        if (!o){
+                            return defaultValue;
+                        }
+                    }
+                    return o;
+                }
+                if (aRenderOrder == bRenderOrder && a.material && b.material){
+                    aRenderOrder = getMeshShaderUid(a,aRenderOrder);
+                    bRenderOrder = getMeshShaderUid(a,aRenderOrder);
+                }
                 return aRenderOrder-bRenderOrder;
             },
             sortTransparentBackToFront = function(){
@@ -11434,7 +11483,7 @@ KICK.namespace = function (ns_string) {
             _shadowTextureDebug = null,
             _shadowRenderTextureDebug = null,
             intensity = 1,
-            colorIntensity = vec3.create(),
+            colorIntensity = vec3.create([1.0,1.0,1.0]),
             updateIntensity = function(){
                 vec3.set([color[0]*intensity,color[1]*intensity,color[2]*intensity],colorIntensity);
             },
@@ -11550,7 +11599,7 @@ KICK.namespace = function (ns_string) {
                 }
             },
             /**
-             * Color intensity of the light (RGBA)
+             * Color intensity of the light (RGB). Default [1,1,1]
              * @property color
              * @type KICK.math.vec3
              */
@@ -11559,17 +11608,23 @@ KICK.namespace = function (ns_string) {
                     return vec3.create(color);
                 },
                 set: function(value){
+                    if (ASSERT){
+                        if (value.length !== 3){
+                            KICK.core.Util.fail("Light color must be vec3");
+                        }
+                    }
                     vec3.set(value,color);
                     updateIntensity();
                 }
             },
             /**
              * Color type. Must be either:<br>
-             * 1,
-             * 2,
-             * 2 <br>
+             * Light.TYPE_AMBIENT,
+             * Light.TYPE_DIRECTIONAL,
+             * Light.TYPE_POINT <br>
              * Note that this value is readonly after initialization. To change it create a new Light component and replace the current light
-             * component of its gameObject
+             * component of its gameObject.
+             * Default type is TYPE_POINT
              * @property type
              * @type Enum
              * @final
@@ -11652,7 +11707,28 @@ KICK.namespace = function (ns_string) {
         };
 
         applyConfig(this,config);
+        KICK.core.Util.copyStaticPropertiesToObject(this,scene.Light);
     };
+
+    /**
+     * @property TYPE_AMBIENT
+     * @type Number
+     * @static
+     */
+    scene.Light.TYPE_AMBIENT = 1;
+    /**
+     * @property TYPE_DIRECTIONAL
+     * @type Number
+     * @static
+     */
+    scene.Light.TYPE_DIRECTIONAL = 2;
+    /**
+     * @property TYPE_POINT
+     * @type Number
+     * @static
+     */
+    scene.Light.TYPE_POINT = 3;
+
     Object.freeze(scene.Light);
 
      /**
@@ -12900,10 +12976,36 @@ KICK.namespace = function (ns_string) {
             0  ,0.5,0  ,0.5,
             0  ,0  ,0.5,0.5,
             0  ,0  ,0  ,1
-        ]);
+        ]),
+        vec3Zero = math.vec3.create();
 
     /**
-     * GLSL Shader object
+     * GLSL Shader object<br>
+     * The shader basically encapsulates a GLSL shader programs, but makes sure that the correct
+     * WebGL settings are set when the shader is bound (such as if blending is enabled or not).<br>
+     * The Shader extend the default WebGL GLSL in the following way:
+     * <ul>
+     *     <li>
+     *         <code>#pragma include &lt;filename&gt;</code> includes of the following KickJS file as a string:
+     *         <ul>
+     *             <li>light.glsl</li>
+     *             <li>shadowmap.glsl</li>
+     *         </ul>
+     *     </li>
+     *     <li>Auto binds the following uniform variables:
+     *      <ul>
+     *          <li><code>_mvProj</code> (mat4) Model view projection matrix</li>
+     *          <li><code>_mv</code> (mat4) Model view matrix</li>
+     *          <li><code>_norm</code> (mat3) Normal matrix (the inverse transpose of the upper 3x3 model view matrix - needed when scaling is scaling is non-uniform)</li>
+     *          <li><code>_time</code> (float) Run time of engine</li>
+     *          <li><code>_ambient</code> (vec3) Ambient light</li>
+     *          <li><code>_dLight.lDir</code> (vec3) Directional light direction</li>
+     *          <li><code>_dLight.colInt</code> (vec3) Directional light color intensity</li>
+     *          <li><code>_dLight.halfV</code> (vec3) Directional light half vector</li>
+     *      </ul>
+     *     </li>
+     *     <li>Defines <code>SHADOW</code> (Boolean) and <code>LIGHTS</code> (Integer) based on the current configuration of the engine (cannot be modified runtime). </li>
+     * </ul>
      * @class Shader
      * @namespace KICK.material
      * @constructor
@@ -13571,8 +13673,21 @@ KICK.namespace = function (ns_string) {
                 sourcecode = sourcecode.replace("#pragma include \'"+name+"\'",source);
             }
         }
-
-        sourcecode = "#define SHADOWS "+(engine.config.shadows===true)+"\n#line 1\n"+sourcecode;
+        var version = "#version 100";
+        var lineOffset = 1;
+        // if shader already contain version tag, then reuse this version information
+        if (sourcecode.indexOf("#version ")===0){
+            var indexOfNewline = sourcecode.indexOf('\n');
+            version = sourcecode.substring(0,indexOfNewline); // save version info
+            sourcecode = sourcecode.substring(indexOfNewline+1); // strip version info
+            lineOffset = 2;
+        }
+        sourcecode =
+            version + "\n"+
+                "#define SHADOWS "+(engine.config.shadows===true)+"\n"+
+                "#define LIGHTS "+(engine.config.maxNumerOfLights)+"\n"+
+                "#line "+lineOffset+"\n"+
+                sourcecode;
         return sourcecode;
     };
 
@@ -13596,16 +13711,17 @@ KICK.namespace = function (ns_string) {
             uniform,
             value,
             location,
-            mv = this.lookupUniform["_mv"],
-            proj = this.lookupUniform["_proj"],
-            mvProj = this.lookupUniform["_mvProj"],
-            norm = this.lookupUniform["_norm"],
-            lightUniform,
-            gameObjectUID = this.lookupUniform["_gameObjectUID"],
-            time = this.lookupUniform["_time"],
-            viewport = this.lookupUniform["_viewport"],
-            shadowMapTexture = this.lookupUniform["_shadowMapTexture"],
-            _lightMat = this.lookupUniform["_lightMat"],
+            mv = this.lookupUniform._mv,
+            proj = this.lookupUniform._proj,
+            mvProj = this.lookupUniform._mvProj,
+            norm = this.lookupUniform._norm,
+            lightUniform = this.lookupUniform["_dLight.colInt"],
+            gameObjectUID = this.lookupUniform._gameObjectUID,
+            time = this.lookupUniform._time,
+            viewport = this.lookupUniform._viewport,
+            shadowMapTexture = this.lookupUniform._shadowMapTexture,
+            _lightMat = this.lookupUniform._lightMat,
+            lightUniformAmbient =  this.lookupUniform._ambient,
             sceneLights = engineUniforms.sceneLights,
             ambientLight = sceneLights.ambientLight,
             directionalLight = sceneLights.directionalLight,
@@ -13694,21 +13810,30 @@ KICK.namespace = function (ns_string) {
             globalTransform = globalTransform || transform.getGlobalMatrix();
             gl.uniformMatrix4fv(mvProj.location,false,mat4.multiply(engineUniforms.viewProjectionMatrix,globalTransform,tempMat4));
         }
-        if (ambientLight !== null){
-            lightUniform =  this.lookupUniform["_ambient"];
-            if (lightUniform){
-                gl.uniform3fv(lightUniform.location, ambientLight.colorIntensity);
-            }
+
+        if (lightUniformAmbient){
+            var ambientLlightValue = ambientLight !== null ? ambientLight.colorIntensity : vec3Zero;
+            gl.uniform3fv(lightUniformAmbient.location, ambientLlightValue);
         }
-        if (directionalLight !== null){
-            lightUniform =  this.lookupUniform["_dLight.colInt"];
-            if (lightUniform){
-                gl.uniform3fv(lightUniform.location, directionalLight.colorIntensity);
-                lightUniform =  this.lookupUniform["_dLight.lDir"];
-                gl.uniform3fv(lightUniform.location, sceneLights.directionalLightDirection);
-                lightUniform =  this.lookupUniform["_dLight.halfV"];
-                gl.uniform3fv(lightUniform.location, sceneLights.directionalHalfVector);
+
+        if (lightUniform){
+            var colorIntensity,
+                directionalLightDirection,
+                directionalHalfVector;
+            if (directionalLight !== null){
+                colorIntensity = directionalLight.colorIntensity;
+                directionalLightDirection = sceneLights.directionalLightDirection;
+                directionalHalfVector = sceneLights.directionalHalfVector;
+            } else {
+                colorIntensity = vec3Zero;
+                directionalLightDirection = vec3Zero;
+                directionalHalfVector = vec3Zero;
             }
+            gl.uniform3fv(lightUniform.location, colorIntensity);
+            lightUniform =  this.lookupUniform["_dLight.lDir"];
+            gl.uniform3fv(lightUniform.location, directionalLightDirection);
+            lightUniform =  this.lookupUniform["_dLight.halfV"];
+            gl.uniform3fv(lightUniform.location, directionalHalfVector);
         }
         for (i=otherLights.length-1;i >= 0;i--){
             // todo
@@ -14046,17 +14171,17 @@ KICK.namespace = function (ns_string) {
          * Create a UV sphere
          * @method createUVSphereData
          * @static
-         * @param {Number} slices
-         * @param {Number} stacks
+         * @param {Number} slices Optional default value is 64
+         * @param {Number} stacks Optional default value is 32
          * @param {Number} radius
          * @return {KICK.mesh.MeshData} uv-sphere mesh
          */
         createUVSphereData : function(slices, stacks, radius){
             if (!slices || slices < 3){
-                slices = 20;
+                slices = 64;
             }
             if (!stacks || stacks < 2){
-                stacks = 10;
+                stacks = 32;
             }
             if (!radius){
                 radius = 1;
@@ -14557,7 +14682,7 @@ KICK.namespace = function (ns_string) {
                 vertexAttributeCache.numberOfVertices = numberOfVertices ;
             },
             /**
-             * Builds meshdata component (based on a <mesh> node)
+             * Builds meshdata component (based on a &lt;mesh&gt; node)
              * @method buildMeshData
              */
             buildMeshData = function (colladaDOM, engine, geometry){
@@ -14769,8 +14894,10 @@ KICK.namespace = function (ns_string) {
         quat4 = math.quat4,
         mat4 = math.mat4;
 
-     /**
-     * Imports an obj mesh into a scene
+    /**
+     * Imports a Wavefront .obj mesh into a scene. The importer loading both normals and texture coordinates from the
+     * model if available. Note that each import can contains multiple models and each model may have multiple
+     * sub-meshes.
      * @class ObjImporter
      * @namespace KICK.importer
      */
@@ -15409,6 +15536,7 @@ KICK.namespace = function (ns_string) {
          *  <li><b>Black</b> Url: kickjs://texture/black/</li>
          *  <li><b>White</b> Url: kickjs://texture/white/<br></li>
          *  <li><b>Gray</b>  Url: kickjs://texture/gray/<br></li>
+         *  <li><b>KickJS logo</b>  Url: kickjs://texture/logo/<br></li>
          *  </ul>
          * @param uri
          * @param textureDestination
@@ -15416,21 +15544,34 @@ KICK.namespace = function (ns_string) {
         this.getImageData = function(uri,textureDestination){
             var data;
 
-            if (uri.indexOf("kickjs://texture/black/") == 0){
+            if (uri.indexOf("kickjs://texture/black/") === 0){
                 data = new Uint8Array([0, 0, 0, 255,
                                          0,   0,   0,255,
                                          0,   0,   0,255,
                                          0,   0,   0,255]);
-            } else if (uri.indexOf("kickjs://texture/white/") == 0){
+            } else if (uri.indexOf("kickjs://texture/white/") === 0){
                 data = new Uint8Array([255, 255, 255,255,
                                          255,   255,   255,255,
                                          255,   255,   255,255,
                                          255,   255,   255,255]);
-            } else if (uri.indexOf("kickjs://texture/gray/") == 0){
+            } else if (uri.indexOf("kickjs://texture/gray/") === 0){
                 data = new Uint8Array([127, 127, 127,255,
                                          127,   127,   127,255,
                                          127,   127,   127,255,
                                          127,   127,   127,255]);
+            } else if (uri.indexOf("kickjs://texture/logo/") === 0){
+                var logoResource = "data:image/png;base64,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";
+                textureDestination.setTemporaryTexture();
+                var img = document.createElement("img");
+                img.onload = function(){
+                    textureDestination.generateMipmaps = true;
+                    textureDestination.internalFormat = 6407;
+                    textureDestination.magFilter = 9729;
+                    textureDestination.minFilter = 9987;
+                    textureDestination.setImage(img,"kickjs://texture/logo/");
+                };
+                img.src = logoResource;
+                return;
             } else {
                 KICK.core.Util.fail("Unknown uri "+uri);
                 return null;

@@ -108,7 +108,7 @@ var SceneEditorView = function(Y){
                 shader: engine.project.load(engine.project.ENGINE_SHADER_UNLIT),
                 uniforms:{
                     mainColor:{
-                        value:[1, 1, 1],
+                        value:[1, 1, 1, 1],
                         type:KICK.core.Constants.GL_FLOAT_VEC3
                     },
                     mainTexture:{
@@ -122,7 +122,7 @@ var SceneEditorView = function(Y){
                 shader:engine.project.load(engine.project.ENGINE_SHADER_UNLIT),
                 uniforms:{
                     mainColor:{
-                        value:[1, 1, 1],
+                        value:[1, 1, 1, 1],
                         type:KICK.core.Constants.GL_FLOAT_VEC3
                     },
                     mainTexture:{
@@ -594,7 +594,6 @@ var SceneEditorApp = function(Y){
             projectSave.setContent("Save error!");
             setTimeout(resetSaveButton,2000);
         };
-        console.log("saving : "+projectStr );
         serverObject.resource.upload(projectName, 0, "application/json","project.json",projectStr,respWrap,errorWrap);
     };
 
