@@ -243,6 +243,7 @@ var SceneEditorApp = function(Y){
                 materials = [new KICK.material.Material(engine,{shader:project.load(project.ENGINE_SHADER_ERROR) })];
             }
             addComponent(KICK.scene.MeshRenderer,{mesh:mesh,materials:materials});
+            collapseMenu("#propertyPanelMenu");
             e.preventDefault ();
         },
         addScene = function(e){
@@ -464,6 +465,15 @@ var SceneEditorApp = function(Y){
             });
             panel.show();
             e.preventDefault();
+        },
+        hasLightOfType = function (type){
+            var lights = _view.engine.activeScene.findComponentsOfType(KICK.scene.Light);
+            for (var i=0;i<lights.length;i++){
+                if (lights[i].type === type){
+                    return true;
+                }
+            }
+            return false;
         };
 
     this.deleteProject = function(){
@@ -708,18 +718,30 @@ var SceneEditorApp = function(Y){
     Y.one("#componentAddMeshRenderer").on("click",createMeshRendererComponent);
 
     Y.one("#componentAddLightPoint").on("click",function(e){
+        collapseMenu("#propertyPanelMenu");
         addComponent(KICK.scene.Light,{type:KICK.core.Constants._LIGHT_TYPE_POINT});
         e.preventDefault ();
     });
     Y.one("#componentAddLightDirectional").on("click",function(e){
-        addComponent(KICK.scene.Light,{type:KICK.core.Constants._LIGHT_TYPE_DIRECTIONAL});
+        collapseMenu("#propertyPanelMenu");
+        if (hasLightOfType(KICK.core.Constants._LIGHT_TYPE_DIRECTIONAL)){
+            alert("The scene already contains a directional light");
+        } else {
+            addComponent(KICK.scene.Light,{type:KICK.core.Constants._LIGHT_TYPE_DIRECTIONAL});
+        }
         e.preventDefault ();
     });
     Y.one("#componentAddLightAmbient").on("click",function(e){
-        addComponent(KICK.scene.Light,{type:KICK.core.Constants._LIGHT_TYPE_AMBIENT});
+        collapseMenu("#propertyPanelMenu");
+        if (hasLightOfType(KICK.core.Constants._LIGHT_TYPE_AMBIENT)){
+            alert("The scene already contains an ambient light");
+        } else {
+            addComponent(KICK.scene.Light,{type:KICK.core.Constants._LIGHT_TYPE_AMBIENT});
+        }
         e.preventDefault ();
     });
     Y.one("#componentAddCamera").on("click",function(e){
+        collapseMenu("#propertyPanelMenu");
         addComponent(KICK.scene.Camera);
         e.preventDefault ();
     });
