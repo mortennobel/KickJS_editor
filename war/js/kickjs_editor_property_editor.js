@@ -642,7 +642,7 @@ var ComponentEditor = function(Y, object, id){
     this.addVector = function(name, displayname, tooltip,value, setValueFn, min, max, step){
         var i,nodeId;
         if (typeof min !== "number"){
-            min = Number.MIN_VALUE;
+            min = -Number.MAX_VALUE;
         }
         if (typeof max !== "number"){
             max = Number.MAX_VALUE;
