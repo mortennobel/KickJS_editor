@@ -7474,7 +7474,9 @@ KICK.namespace = function (ns_string) {
         copyStaticPropertiesToObject : function(object, type){
             for (var name in type){
                 if (type.hasOwnProperty(name)){
-                    object[name] = type[name];
+                    Object.defineProperty(object,name,{
+                        value:type[name]
+                    });
                 }
             }
         },
@@ -11569,7 +11571,8 @@ KICK.namespace = function (ns_string) {
                             updateShadowTexture();
                         }
                     }
-                }
+                },
+                enumerable: true
             },
             /**
              * Shadow strength (between 0.0 and 1.0). Default value is 1.0
@@ -11582,8 +11585,8 @@ KICK.namespace = function (ns_string) {
                 },
                 set: function(value){
                     _shadowStrength = value;
-                }
-
+                },
+                enumerable: true
             },
             /**
              * Shadow bias. Default value is 0.05
@@ -11596,7 +11599,8 @@ KICK.namespace = function (ns_string) {
                 },
                 set:function(value){
                     _shadowBias = value;
-                }
+                },
+                enumerable: true
             },
             /**
              * Color intensity of the light (RGB). Default [1,1,1]
@@ -11615,7 +11619,8 @@ KICK.namespace = function (ns_string) {
                     }
                     vec3.set(value,color);
                     updateIntensity();
-                }
+                },
+                enumerable: true
             },
             /**
              * Color type. Must be either:<br>
@@ -11634,14 +11639,6 @@ KICK.namespace = function (ns_string) {
                     return type;
                 },
                 set: function(newValue){
-                    if (ASSERT){
-                        if (config.type !== 3 &&
-                            config.type !== 2 &&
-                            config.type !== 1){
-                            KICK.core.Util.fail("Light type must be 3, " +
-                                "2 or 1");
-                        }
-                    }
                     if (!engine){
                         type = newValue;
                     } else {
@@ -11649,7 +11646,8 @@ KICK.namespace = function (ns_string) {
                             KICK.core.Util.fail("Light type cannot be changed after initialization");
                         }
                     }
-                }
+                },
+                enumerable: true
             },
             /**
              * Light intensity (a multiplier to color)
@@ -11663,7 +11661,8 @@ KICK.namespace = function (ns_string) {
                 set: function(value){
                     intensity = value;
                     updateIntensity();
-                }
+                },
+                enumerable: true
             },
             /**
              * color RGB multiplied with intensity (plus color A).<br>
@@ -11679,7 +11678,8 @@ KICK.namespace = function (ns_string) {
                 },
                 set:function(newValue){
                     colorIntensity = newValue;
-                }
+                },
+                enumerable: true
             },
             // inherited interface from component
             gameObject:{
@@ -11697,13 +11697,23 @@ KICK.namespace = function (ns_string) {
                 },
                 set:function(value){
                     scriptPriority = value;
-                }
+                },
+                enumerable: true
             }
         });
 
         this.activated = function(){
             engine = thisObj.gameObject.engine;
             updateShadowTexture();
+        };
+
+        /**
+         * @method toJSON
+         * @return {JSON}
+         */
+        this.toJSON = function(){
+            console.log(KICK.core.Util.componentToJSON(thisObj.gameObject.engine, this, "KICK.scene.Light"));
+            return KICK.core.Util.componentToJSON(thisObj.gameObject.engine, this, "KICK.scene.Light");
         };
 
         applyConfig(this,config);

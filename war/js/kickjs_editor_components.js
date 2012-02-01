@@ -77,7 +77,9 @@ var VisualGrid = function VisualGrid(){ // use explicit function name to support
             gridMesh.meshData = gridMeshData;
         }
         var errors = gridMesh.verify(gridShader);
-        console.log(errors);
+        if (errors){
+           console.log(errors);
+        }
     };
     this.render = function(engineUniforms,overwriteShader){
         if (thisObj.enabled){
