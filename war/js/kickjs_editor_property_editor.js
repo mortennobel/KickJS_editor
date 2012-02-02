@@ -699,11 +699,12 @@ var ComponentEditor = function(Y, object, id){
      * @method addButton
      * @param title
      * @param tooltip
-     * @param onClickFn
+     * @param {Function} onClickFn
+     *
      */
     this.addButton = function(title, tooltip, onClickFn){
         var id = "button"+new Date().getTime();
-        var content = '<div class="yui3-u-1"><div class="content" title="'+tooltip+'"><button id="'+id+'">'+title+'</button></div></div>';
+        var content = '<div class="yui3-u-1"><div class="content" title="'+tooltip+'"><button id="'+id+'" class="yui3-button">'+title+'</button></div></div>';
         componentPanel.setStdModContent("body",content,Y.WidgetStdMod.AFTER);
         componentPanel.render();
         Y.one("#"+id).on('click',onClickFn);

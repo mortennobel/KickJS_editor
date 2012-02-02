@@ -65,7 +65,7 @@ a:active {color:#CCB769;}  /* selected link */
 
 .deleteButton,
 .deleteButton span {
-    color: red
+    color: red;
 }
 
 .disabledButton,
