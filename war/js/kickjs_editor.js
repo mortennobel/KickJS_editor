@@ -784,6 +784,7 @@ function SceneGameObjects(Y){
             treeValues = {},
             activeSceneUids = {},
             activeScene,
+            labelTemplate = Y.Handlebars.compile('<span title="{{title}}">{{label}}</span>'),
             i;
 
         // save used elements to treeValues
@@ -806,11 +807,9 @@ function SceneGameObjects(Y){
                 var name = gameObject.name;
                 if (!name){
                     name = "GameObject #"+gameObject.uid;
-                } else if (debug){
-                    name += " #"+gameObject.uid;
                 }
                 if (name.indexOf('__') !== 0 || debug){
-                    var treeNode = sceneTreeView.add({childType:"TreeLeaf",label:name});
+                    var treeNode = sceneTreeView.add({childType:"TreeLeaf",label:labelTemplate({label:name,title:"UID: "+gameObject.uid})});
                     treeNode.item(0).set("uid",uid);
                 }
             }
@@ -900,6 +899,7 @@ function ProjectAssets(Y){
     var engine = sceneEditorApp.engine,
         selectedTreeLeaf = null,
         thisObj = this,
+        labelTemplate = Y.Handlebars.compile('<span title="{{title}}">{{label}}</span>'),
         projectTreeView = new Y.TreeView({
             srcNode: '#projectAssetList',
             contentBox: null,
@@ -907,7 +907,7 @@ function ProjectAssets(Y){
             children: [
             ]
         }),
-        getAssetName = function (uid){
+        getAssetDescription = function (uid){
             var resourceDescriptor = engine.project.getResourceDescriptor(uid);
             var name = resourceDescriptor.name;
             if (!name){
@@ -915,7 +915,11 @@ function ProjectAssets(Y){
             }
             var type = resourceDescriptor.type;
             type = type.substring(type.lastIndexOf('.')+1);
-            return name + " ("+type+")";
+            var title = type+" \nUID: "+resourceDescriptor.uid;
+            return {
+                label:name,
+                title: title
+            };
         };
 
     /**
@@ -949,8 +953,8 @@ function ProjectAssets(Y){
                     if (asset instanceof KICK.scene.Scene){
                         sceneEditorApp.tabView.updateSceneName(newName,uid);
                     }
+                    selectedTreeLeaf.get("contentBox").setContent(labelTemplate(getAssetDescription(uid)));
                 }
-                selectedTreeLeaf.get("contentBox").setContent(getAssetName(uid));
             }
         }
     };
@@ -986,12 +990,9 @@ function ProjectAssets(Y){
         // insert missing uids
         for (uid in activeProjectUids){
             if (!treeValues[uid]){
-                var name = getAssetName(uid);
-                if (debug){
-                    name += " #"+uid;
-                }
-                if ((name.indexOf('__')!==0 && uid > 0)|| debug){
-                    var treeNode = projectTreeView.add({childType:"TreeLeaf",label:name});
+                var assetDescription = getAssetDescription(uid);
+                if ((assetDescription.label.indexOf('__')!==0 && uid > 0)|| debug){
+                    var treeNode = projectTreeView.add({childType:"TreeLeaf",label:labelTemplate(assetDescription)});
                     treeNode.item(0).set("uid",uid);
                 }
             }
