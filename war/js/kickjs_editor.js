@@ -782,8 +782,7 @@ function SceneGameObjects(Y){
     sceneTreeView.render();
 
     this.updateSceneContent = function(){
-        var needsUpdate = false,
-            treeValues = {},
+        var treeValues = {},
             activeSceneUids = {},
             activeScene,
             labelTemplate = Y.Handlebars.compile('<span title="{{title}}">{{label}}</span>'),
