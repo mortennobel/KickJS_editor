@@ -566,7 +566,9 @@ var SceneEditorApp = function(Y){
     this.projectAssetSelected = function(uid){
         _projectAssets.selectProjectAssetById(uid);
         var resourceDescriptor = _view.engine.project.getResourceDescriptor(uid);
-        if (resourceDescriptor.type === "KICK.scene.Scene"){
+        if (!resourceDescriptor){
+            _propertyEditor.setContent(null);
+        } else if (resourceDescriptor.type === "KICK.scene.Scene"){
             loadScene(uid);
         } else {
             _propertyEditor.setContent(resourceDescriptor);
@@ -685,7 +687,7 @@ var SceneEditorApp = function(Y){
     );
     Y.one("#projectAssetDelete").on("click",function(e){
         collapseMenu("#projectAssetMenu");
-        alert("not implemented");
+        _projectAssets.deleteSelected();
         e.preventDefault ();
     });
     if (debug){
@@ -935,6 +937,15 @@ function ProjectAssets(Y){
             selectedTreeLeaf.get("boundingBox").addClass("selected");
             var uid = selectedTreeLeaf.get("uid");
             sceneEditorApp.projectAssetSelected(uid);
+        }
+    };
+
+    this.deleteSelected = function(){
+        if (selectedTreeLeaf){
+            var uid = parseInt(selectedTreeLeaf.get("uid"));
+            engine.project.removeResourceDescriptor(uid);
+            this.updateProjectContent();
+            sceneEditorApp.projectAssetSelected(0);
         }
     };
 
