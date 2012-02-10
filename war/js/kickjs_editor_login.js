@@ -35,7 +35,7 @@ YUI().use('node','panel', function(Y) {
             }
             for (var i = 0;i<projects.length;i++){
                 var name = projects[i];
-                var optionElement = projectsElement.create("<option></option>")
+                var optionElement = projectsElement.create("<option></option>");
                 optionElement.setContent(name);
                 optionElement.set("value",name);
                 if (i==0){
@@ -56,7 +56,6 @@ YUI().use('node','panel', function(Y) {
         };
         serverObject.project.list(onSuccess,onError);
     };
-
 
     var disableCreateProjectButton = function(){
         var node = panelCreateProject._buttonsArray[1].node;
@@ -180,6 +179,7 @@ YUI().use('node','panel', function(Y) {
                 disableCreateProjectButton();
                 setupValidateNameTimer();
             });
+            Y.one("#projectName").focus();
         }
     });
 
@@ -224,30 +224,35 @@ YUI().use('node','panel', function(Y) {
     var hideLoading = function(){
         loadingElem.addClass("hiddenElement");
     };
+
+    var showOpenProjectButton = function(allowServerVersion, loginURL){
+        if (allowServerVersion){
+            loginServerButton.setContent("Login to use Server version");
+            loginServerButton.set("href",loginURL);
+        } else {
+            loginServerButton.on("click",function(e){
+                serverObject = KICKED.server;
+                listProjects();
+                e.preventDefault();
+            });
+        }
+        loginServerButton.removeClass("hiddenElement");
+        loginLocalButton.removeClass("hiddenElement");
+        loginLocalButton.on("click",function(e){
+            serverObject = KICKED.localStorage;
+            listProjects();
+            e.preventDefault();
+        });
+        hideLoading();
+    };
+
     /**
      * Check if user is logged in. If logged in make 'server' button listProjects() else make the user login
      * @method checkLogin
      */
     var checkLogin = function(){
         var responseSuccess = function(response){
-            if (response.loginURL){
-                loginServerButton.setContent("Login to use Server version");
-                loginServerButton.set("href",response.loginURL);
-            } else {
-                loginServerButton.on("click",function(e){
-                    serverObject = KICKED.server;
-                    listProjects();
-                    e.preventDefault();
-                });
-            }
-            loginServerButton.removeClass("hiddenElement");
-            loginLocalButton.removeClass("hiddenElement");
-            loginLocalButton.on("click",function(e){
-                serverObject = KICKED.localStorage;
-                listProjects();
-                e.preventDefault();
-            });
-            hideLoading();
+            showOpenProjectButton(response.loginURL, response.loginURL);
         };
         var responseError = function(e){
             alert("Server error - only local storage available");
@@ -261,7 +266,8 @@ YUI().use('node','panel', function(Y) {
         };
         serverObject.login(responseSuccess,responseError);
     };
-    checkLogin();
+    // checkLogin(); // disable server version for now
+    showOpenProjectButton();
 });
 
 
