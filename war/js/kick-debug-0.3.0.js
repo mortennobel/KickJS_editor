@@ -2724,10 +2724,20 @@ KICK.namespace = function (ns_string) {
 */
 /**
 * GLSL file content
+* @property unlit_vertex_color_fs.glsl
+* @type String
+*/
+/**
+* GLSL file content
+* @property unlit_vertex_color_vs.glsl
+* @type String
+*/
+/**
+* GLSL file content
 * @property unlit_vs.glsl
 * @type String
 */
-{"__error_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvoid main(void)\n{\ngl_FragColor = vec4(1.0,0.5, 0.9, 1.0);\n}","__error_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\n} ","__pick_fs.glsl":"#ifdef GL_ES\nprecision mediump float;\n#endif\nvarying vec4 gameObjectUID;\nvoid main(void)\n{\ngl_FragColor = gameObjectUID;\n}","__pick_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nuniform vec4 _gameObjectUID;\nvarying vec4 gameObjectUID;\nvoid main(void) {\n// compute position\ngl_Position = _mvProj * vec4(vertex, 1.0);\ngameObjectUID = _gameObjectUID;\n}","__shadowmap_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvec4 packDepth( const in float depth ) {\nconst vec4 bitShift = vec4( 16777216.0, 65536.0, 256.0, 1.0 );\nconst vec4 bitMask = vec4( 0.0, 1.0 / 256.0, 1.0 / 256.0, 1.0 / 256.0 );\nvec4 res = fract( depth * bitShift );\nres -= res.xxyz * bitMask;\nreturn res;\n}\nvoid main() {\ngl_FragColor = packDepth( gl_FragCoord.z );\n}\n","__shadowmap_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\n} ","diffuse_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nvarying vec3 vNormal;\nuniform vec4 mainColor;\nuniform sampler2D mainTexture;\nuniform mat3 _dLight;\nuniform vec3 _ambient;\n#pragma include \"shadowmap.glsl\"\nvoid main(void)\n{\nvec3 ECLigDir = _dLight[0];\nvec3 colInt = _dLight[1];\nfloat diffuseContribution = max(dot(vNormal, ECLigDir), 0.0);\nvec3 diffuse = (colInt * diffuseContribution);\nfloat visibility;\nif (SHADOWS){\ncomputeLightVisibility();\n} else {\nvisibility = 1.0;\n}\nvec3 color = max(diffuse*visibility,_ambient.xyz)*mainColor.xyz;\ngl_FragColor = vec4(texture2D(mainTexture,vUv).xyz*color.xyz, 1.0);\n}\n","diffuse_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat4 _lightMat;\nuniform mat3 _norm;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec4 vShadowMapCoord;\nvoid main(void) {\nvec4 v = vec4(vertex, 1.0);\ngl_Position = _mvProj * v;\nvUv = uv1;\nvNormal= normalize(_norm * normal);\nvShadowMapCoord = _lightMat * v;\n} ","light.glsl":"// assumes that normal is normalized\nvoid getDirectionalLight(vec3 normal, mat3 dLight, float specularExponent, out vec3 diffuse, out float specular){\nvec3 ECLigDir = dLight[0];\nvec3 colInt = dLight[1];\nvec3 halfV = dLight[2];\nfloat diffuseContribution = max(dot(normal, ECLigDir), 0.0);\n\tfloat specularContribution = max(dot(normal, halfV), 0.0);\nspecular = pow(specularContribution, specularExponent);\n\tdiffuse = (colInt * diffuseContribution);\n}\nuniform mat3 _dLight;\nuniform vec3 _ambient;\n","shadowmap.glsl":"varying vec4 vShadowMapCoord;\nuniform sampler2D _shadowMapTexture;\nfloat unpackDepth( const in vec4 rgba_depth ) {\nconst vec4 bit_shift = vec4( 1.0 / ( 16777216.0 ), 1.0 / ( 65536.0 ), 1.0 / 256.0, 1.0 );\nreturn dot( rgba_depth, bit_shift );\n}\nfloat computeLightVisibility(){\nvec3 shadowCoord = vShadowMapCoord.xyz / vShadowMapCoord.w;\nvec4 packedShadowDepth = texture2D(_shadowMapTexture,shadowCoord.xy);\nfloat shadowDepth = unpackDepth(packedShadowDepth);\nif (shadowDepth < shadowCoord.z){\nreturn 1.0;\n}\nreturn 0.0;\n}","specular_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nvarying vec3 vNormal;\nuniform vec4 mainColor;\nuniform float specularExponent;\nuniform vec4 specularColor;\nuniform sampler2D mainTexture;\n#pragma include \"light.glsl\"\n#pragma include \"shadowmap.glsl\"\nvoid main(void)\n{\nvec3 diffuse;\nfloat specular;\ngetDirectionalLight(vNormal, _dLight, specularExponent, diffuse, specular);\nfloat visibility;\nif (SHADOWS){\ncomputeLightVisibility();\n} else {\nvisibility = 1.0;\n}\nvec3 color = max(diffuse*visibility,_ambient.xyz)*mainColor.xyz;\ngl_FragColor = vec4(texture2D(mainTexture,vUv).xyz*color.xyz, 1.0)+vec4(specular*specularColor.xyz,0.0);\n}\n","specular_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat4 _lightMat;\nuniform mat3 _norm;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec4 vShadowMapCoord;\nvoid main(void) {\nvec4 v = vec4(vertex, 1.0);\ngl_Position = _mvProj * v;\nvUv = uv1;\nvNormal= normalize(_norm * normal);\nvShadowMapCoord = _lightMat * v;\n} ","transparent_diffuse_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nvarying vec3 vNormal;\nuniform vec4 mainColor;\nuniform float specularExponent;\nuniform vec4 specularColor;\nuniform sampler2D mainTexture;\nuniform mat3 _dLight;\nuniform vec3 _ambient;\nvoid main(void)\n{\nvec3 ECLigDir = _dLight[0];\nvec3 colInt = _dLight[1];\nfloat diffuseContribution = max(dot(vNormal, ECLigDir), 0.0);\nvec3 diffuse = (colInt * diffuseContribution);\nvec4 color = vec4(max(diffuse,_ambient.xyz),1.0)*mainColor;\ngl_FragColor = texture2D(mainTexture,vUv)*color;\n}\n","transparent_diffuse_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat3 _norm;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvoid main(void) {\n// compute position\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n// compute light info\nvNormal= normalize(_norm * normal);\n} ","transparent_specular_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nvarying vec3 vNormal;\nuniform vec4 mainColor;\nuniform float specularExponent;\nuniform vec4 specularColor;\nuniform sampler2D mainTexture;\n#pragma include \"light.glsl\"\nvoid main(void)\n{\nvec3 diffuse;\nfloat specular;\ngetDirectionalLight(vNormal, _dLight, specularExponent, diffuse, specular);\nvec4 color = vec4(max(diffuse,_ambient.xyz),1.0)*mainColor;\ngl_FragColor = texture2D(mainTexture,vUv)*color+vec4(specular*specularColor.xyz,0.0);\n}\n","transparent_specular_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat3 _norm;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvoid main(void) {\n// compute position\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n// compute light info\nvNormal= normalize(_norm * normal);\n} ","transparent_unlit_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nuniform vec4 mainColor;\nuniform sampler2D mainTexture;\nvoid main(void)\n{\ngl_FragColor = texture2D(mainTexture,vUv)*mainColor;\n}\n","transparent_unlit_vs.glsl":"attribute vec3 vertex;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nvarying vec2 vUv;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n}","unlit_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nuniform vec4 mainColor;\nuniform sampler2D mainTexture;\nvoid main(void)\n{\ngl_FragColor = vec4(texture2D(mainTexture,vUv).xyz*mainColor.xyz,1.0);\n}\n","unlit_vs.glsl":"attribute vec3 vertex;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nvarying vec2 vUv;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n}"};
+{"__error_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvoid main(void)\n{\ngl_FragColor = vec4(1.0,0.5, 0.9, 1.0);\n}","__error_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\n} ","__pick_fs.glsl":"#ifdef GL_ES\nprecision mediump float;\n#endif\nvarying vec4 gameObjectUID;\nvoid main(void)\n{\ngl_FragColor = gameObjectUID;\n}","__pick_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nuniform vec4 _gameObjectUID;\nvarying vec4 gameObjectUID;\nvoid main(void) {\n// compute position\ngl_Position = _mvProj * vec4(vertex, 1.0);\ngameObjectUID = _gameObjectUID;\n}","__shadowmap_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvec4 packDepth( const in float depth ) {\nconst vec4 bitShift = vec4( 16777216.0, 65536.0, 256.0, 1.0 );\nconst vec4 bitMask = vec4( 0.0, 1.0 / 256.0, 1.0 / 256.0, 1.0 / 256.0 );\nvec4 res = fract( depth * bitShift );\nres -= res.xxyz * bitMask;\nreturn res;\n}\nvoid main() {\ngl_FragColor = packDepth( gl_FragCoord.z );\n}\n","__shadowmap_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\n} ","diffuse_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nvarying vec3 vNormal;\nuniform vec4 mainColor;\nuniform sampler2D mainTexture;\nuniform mat3 _dLight;\nuniform vec3 _ambient;\n#pragma include \"shadowmap.glsl\"\nvoid main(void)\n{\nvec3 ECLigDir = _dLight[0];\nvec3 colInt = _dLight[1];\nfloat diffuseContribution = max(dot(vNormal, ECLigDir), 0.0);\nvec3 diffuse = (colInt * diffuseContribution);\nfloat visibility;\nif (SHADOWS){\ncomputeLightVisibility();\n} else {\nvisibility = 1.0;\n}\nvec3 color = max(diffuse*visibility,_ambient.xyz)*mainColor.xyz;\ngl_FragColor = vec4(texture2D(mainTexture,vUv).xyz*color.xyz, 1.0);\n}\n","diffuse_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat4 _lightMat;\nuniform mat3 _norm;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec4 vShadowMapCoord;\nvoid main(void) {\nvec4 v = vec4(vertex, 1.0);\ngl_Position = _mvProj * v;\nvUv = uv1;\nvNormal= normalize(_norm * normal);\nvShadowMapCoord = _lightMat * v;\n} ","light.glsl":"// assumes that normal is normalized\nvoid getDirectionalLight(vec3 normal, mat3 dLight, float specularExponent, out vec3 diffuse, out float specular){\nvec3 ECLigDir = dLight[0];\nvec3 colInt = dLight[1];\nvec3 halfV = dLight[2];\nfloat diffuseContribution = max(dot(normal, ECLigDir), 0.0);\n\tfloat specularContribution = max(dot(normal, halfV), 0.0);\nspecular = pow(specularContribution, specularExponent);\n\tdiffuse = (colInt * diffuseContribution);\n}\nuniform mat3 _dLight;\nuniform vec3 _ambient;\n","shadowmap.glsl":"varying vec4 vShadowMapCoord;\nuniform sampler2D _shadowMapTexture;\nfloat unpackDepth( const in vec4 rgba_depth ) {\nconst vec4 bit_shift = vec4( 1.0 / ( 16777216.0 ), 1.0 / ( 65536.0 ), 1.0 / 256.0, 1.0 );\nreturn dot( rgba_depth, bit_shift );\n}\nfloat computeLightVisibility(){\nvec3 shadowCoord = vShadowMapCoord.xyz / vShadowMapCoord.w;\nvec4 packedShadowDepth = texture2D(_shadowMapTexture,shadowCoord.xy);\nfloat shadowDepth = unpackDepth(packedShadowDepth);\nif (shadowDepth < shadowCoord.z){\nreturn 1.0;\n}\nreturn 0.0;\n}","specular_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nvarying vec3 vNormal;\nuniform vec4 mainColor;\nuniform float specularExponent;\nuniform vec4 specularColor;\nuniform sampler2D mainTexture;\n#pragma include \"light.glsl\"\n#pragma include \"shadowmap.glsl\"\nvoid main(void)\n{\nvec3 diffuse;\nfloat specular;\ngetDirectionalLight(vNormal, _dLight, specularExponent, diffuse, specular);\nfloat visibility;\nif (SHADOWS){\ncomputeLightVisibility();\n} else {\nvisibility = 1.0;\n}\nvec3 color = max(diffuse*visibility,_ambient.xyz)*mainColor.xyz;\ngl_FragColor = vec4(texture2D(mainTexture,vUv).xyz*color.xyz, 1.0)+vec4(specular*specularColor.xyz,0.0);\n}\n","specular_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat4 _lightMat;\nuniform mat3 _norm;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec4 vShadowMapCoord;\nvoid main(void) {\nvec4 v = vec4(vertex, 1.0);\ngl_Position = _mvProj * v;\nvUv = uv1;\nvNormal= normalize(_norm * normal);\nvShadowMapCoord = _lightMat * v;\n} ","transparent_diffuse_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nvarying vec3 vNormal;\nuniform vec4 mainColor;\nuniform float specularExponent;\nuniform vec4 specularColor;\nuniform sampler2D mainTexture;\nuniform mat3 _dLight;\nuniform vec3 _ambient;\nvoid main(void)\n{\nvec3 ECLigDir = _dLight[0];\nvec3 colInt = _dLight[1];\nfloat diffuseContribution = max(dot(vNormal, ECLigDir), 0.0);\nvec3 diffuse = (colInt * diffuseContribution);\nvec4 color = vec4(max(diffuse,_ambient.xyz),1.0)*mainColor;\ngl_FragColor = texture2D(mainTexture,vUv)*color;\n}\n","transparent_diffuse_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat3 _norm;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvoid main(void) {\n// compute position\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n// compute light info\nvNormal= normalize(_norm * normal);\n} ","transparent_specular_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nvarying vec3 vNormal;\nuniform vec4 mainColor;\nuniform float specularExponent;\nuniform vec4 specularColor;\nuniform sampler2D mainTexture;\n#pragma include \"light.glsl\"\nvoid main(void)\n{\nvec3 diffuse;\nfloat specular;\ngetDirectionalLight(vNormal, _dLight, specularExponent, diffuse, specular);\nvec4 color = vec4(max(diffuse,_ambient.xyz),1.0)*mainColor;\ngl_FragColor = texture2D(mainTexture,vUv)*color+vec4(specular*specularColor.xyz,0.0);\n}\n","transparent_specular_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat3 _norm;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvoid main(void) {\n// compute position\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n// compute light info\nvNormal= normalize(_norm * normal);\n} ","transparent_unlit_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nuniform vec4 mainColor;\nuniform sampler2D mainTexture;\nvoid main(void)\n{\ngl_FragColor = texture2D(mainTexture,vUv)*mainColor;\n}\n","transparent_unlit_vs.glsl":"attribute vec3 vertex;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nvarying vec2 vUv;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n}","unlit_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nuniform vec4 mainColor;\nuniform sampler2D mainTexture;\nvoid main(void)\n{\ngl_FragColor = vec4(texture2D(mainTexture,vUv).xyz*mainColor.xyz,1.0);\n}\n","unlit_vertex_color_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nvarying vec4 vColor;\nuniform vec4 mainColor;\nuniform sampler2D mainTexture;\nvoid main(void)\n{\ngl_FragColor = vec4(texture2D(mainTexture,vUv).xyz*mainColor.xyz*vColor.xyz,1.0);\n}\n","unlit_vertex_color_vs.glsl":"attribute vec3 vertex;\nattribute vec2 uv1;\nattribute vec4 color;\nuniform mat4 _mvProj;\nvarying vec2 vUv;\nvarying vec4 vColor;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\nvColor = color;\n}","unlit_vs.glsl":"attribute vec3 vertex;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nvarying vec2 vUv;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n}"};
 })();/*!
  * New BSD License
  *
@@ -6326,7 +6336,7 @@ KICK.namespace = function (ns_string) {
                 var p = core.Project,
                     res,
                     url;
-                if (uid <= p.ENGINE_SHADER_DEFAULT && uid >= p.ENGINE_SHADER_TRANSPARENT_DIFFUSE){
+                if (uid <= p.ENGINE_SHADER_DEFAULT && uid >= p.ENGINE_SHADER_UNLIT_VERTEX_COLOR){
                     switch (uid){
                         case p.ENGINE_SHADER_DEFAULT:
                             url = "kickjs://shader/default/";
@@ -6339,6 +6349,9 @@ KICK.namespace = function (ns_string) {
                             break;
                         case p.ENGINE_SHADER_UNLIT:
                             url = "kickjs://shader/unlit/";
+                            break;
+                        case p.ENGINE_SHADER_UNLIT_VERTEX_COLOR:
+                            url = "kickjs://shader/unlit_vertex_color/";
                             break;
                         case p.ENGINE_SHADER_TRANSPARENT_SPECULAR:
                             url = "kickjs://shader/transparent_specular/";
@@ -6807,6 +6820,12 @@ KICK.namespace = function (ns_string) {
      * @static
      */
     core.Project.ENGINE_SHADER_TRANSPARENT_DIFFUSE = -109;
+    /**
+     * @property ENGINE_SHADER_UNLIT_VERTEX_COLOR
+     * @type Number
+     * @static
+     */
+    core.Project.ENGINE_SHADER_UNLIT_VERTEX_COLOR = -110;
 
     /**
      * @property ENGINE_TEXTURE_BLACK
@@ -11098,7 +11117,8 @@ KICK.namespace = function (ns_string) {
             },
             /**
              * Set the field of view Y in degrees<br>
-             * Only used when perspective camera type. Default 60.0
+             * Only used when perspective camera type. Default 60.0.
+             * Must be between 1 and 179
              * @property fieldOfView
              * @type Number
              */
@@ -11108,7 +11128,7 @@ KICK.namespace = function (ns_string) {
                     if (true){
                         assertNumber(newValue,"fieldOfView");
                     }
-                    _fieldOfView = newValue;
+                    _fieldOfView = Math.min(179,Math.max(newValue,1));
                 }
             },
             /**
@@ -13085,6 +13105,7 @@ KICK.namespace = function (ns_string) {
             glslConstants = material.GLSLConstants,
             _vertexShaderSrc = glslConstants["__error_vs.glsl"],
             _fragmentShaderSrc = glslConstants["__error_fs.glsl"],
+            _defaultUniforms,
             _errorLog = KICK.core.Util.fail,
             /**
              * Updates the blend key that identifies blend+blendSFactor+blendDFactor<br>
@@ -13204,6 +13225,17 @@ KICK.namespace = function (ns_string) {
              */
             gl:{
                 value:gl
+            },
+            /**
+             * Get default configuration of shader uniforms
+             * @property defaultUniforms
+             * @type Object
+             */
+            defaultUniforms:{
+                get:function(){ return _defaultUniforms; },
+                set:function(value){
+                    _defaultUniforms = value;
+                }
             },
             /**
              * @property vertexShaderSrc
@@ -13677,7 +13709,8 @@ KICK.namespace = function (ns_string) {
                 polygonOffsetFactor:_polygonOffsetFactor,
                 polygonOffsetUnits:_polygonOffsetUnits,
                 renderOrder:_renderOrder,
-                zTest:_zTest
+                zTest:_zTest,
+                defaultUniforms:_defaultUniforms
             };
         };
 
@@ -13923,8 +13956,25 @@ KICK.namespace = function (ns_string) {
             _shader = null,
             _uniforms = {},
             thisObj = this,
-            _renderOrder,
-            gl = engine.gl,
+            _renderOrder = 0,
+            inheritDefaultUniformsFromShader = function(){
+                var shaderDefaultUniforms = _shader.defaultUniforms;
+                var dirty = false;
+                for (var name in shaderDefaultUniforms){
+                    if (!_uniforms[name]){
+                        var defaultValue = shaderDefaultUniforms[name];
+                        _uniforms[name] = {
+                            value: defaultValue.value,
+                            type: defaultValue.type
+                        };
+                        dirty = true;
+                    }
+                }
+                if (dirty){
+                    verifyUniforms();
+                }
+            },
+
             /**
              * The method replaces any invalid uniform (Array or numbers) with a wrapped one (Float32Array or Int32Array)
              * @method verifyUniforms
@@ -13944,7 +13994,7 @@ KICK.namespace = function (ns_string) {
                             _uniforms[uniformName].value = engine.project.load(uniformValue.ref);
                         }
                         if (true){
-                            if (typeof _uniforms[uniformName].value !== KICK.texture.Texture){
+                            if (!(_uniforms[uniformName].value instanceof KICK.texture.Texture)){
                                 KICK.core.Util.fail("Uniform value should be a texture object but was "+uniformValue);
                             }
                         }
@@ -13991,8 +14041,10 @@ KICK.namespace = function (ns_string) {
                     if (!newValue instanceof KICK.material.Shader){
                         fail("KICK.material.Shader expected");
                     }
-                    _shader = newValue;
-                    thisObj.init();
+                    if (_shader !==newValue){
+                        _shader = newValue;
+                        thisObj.init();
+                    }
                 }
             },
             /**
@@ -14043,9 +14095,14 @@ KICK.namespace = function (ns_string) {
         this.init = function(){
             if (!_shader){
                 KICK.core.Util.fail("Cannot initiate shader in material "+_name);
-                _shader = engine.project.load("kickjs://shader/__error/");
+                _shader = engine.project.load(engine.project.ENGINE_SHADER___ERROR);
             }
-            _renderOrder = _shader.renderOrder;
+
+            inheritDefaultUniformsFromShader();
+
+            if (!_renderOrder){
+                _renderOrder = _shader.renderOrder;
+            }
         };
 
         /**
@@ -15499,6 +15556,7 @@ KICK.namespace = function (ns_string) {
                 depthMask = true,
                 renderOrder = 1000,
                 glslConstants = KICK.material.GLSLConstants,
+                defaultUniforms = {},
                 compareAndSetShader = function(shaderName){
                     var res = url.indexOf("kickjs://shader/"+shaderName+"/")===0;
                     if (res){
@@ -15512,10 +15570,58 @@ KICK.namespace = function (ns_string) {
                         if (shaderName==="__shadowmap"){
                             polygonOffsetEnabled = true;
                         }
+
+                        if (shaderName==="specular" || shaderName==="transparent_specular"){
+                            defaultUniforms = {
+                                mainColor: {
+                                    value: [1,1,1,1],
+                                    type: 35666
+                                },
+                                mainTexture: {
+                                    value: engine.project.load(engine.project.ENGINE_TEXTURE_WHITE),
+                                    type: 35678
+                                },
+                                specularColor: {
+                                    value: [1,1,1,1],
+                                    type: 35666
+                                },
+                                specularExponent: {
+                                    value: 50,
+                                    type: 5126
+                                }
+                            };
+                        }
+                        if (shaderName==="diffuse" ||
+                            shaderName==="transparent_diffuse" ||
+                            shaderName==="unlit" ||
+                            shaderName==="unlit_vertex_color" ||
+                            shaderName==="transparent_unlit"){
+                            defaultUniforms = {
+                                mainColor: {
+                                    value: [1,1,1,1],
+                                    type: 35666
+                                },
+                                mainTexture: {
+                                    value: engine.project.load(engine.project.ENGINE_TEXTURE_WHITE),
+                                    type: 35678
+                                }
+                            };
+                        }
+
                     }
                     return res;
                 },
-                shaderTypes = ["specular","diffuse","__shadowmap","__error","__pick","transparent_specular","transparent_diffuse","unlit","transparent_unlit"];
+                shaderTypes = [
+                    "specular",
+                    "diffuse",
+                    "__shadowmap",
+                    "__error",
+                    "__pick",
+                    "transparent_specular",
+                    "transparent_diffuse",
+                    "unlit",
+                    "unlit_vertex_color",
+                    "transparent_unlit"];
             if (url === "kickjs://shader/default/"){
                 url = "kickjs://shader/diffuse/";
             }
@@ -15529,13 +15635,16 @@ KICK.namespace = function (ns_string) {
                     KICK.core.Util.fail("Cannot find shader url '"+url+"'");
                 }
             }
+
+
             var config = {
                 blend:blend,
                 depthMask:depthMask,
                 renderOrder:renderOrder,
                 polygonOffsetEnabled:polygonOffsetEnabled,
                 vertexShaderSrc: vertexShaderSrc,
-                fragmentShaderSrc: fragmentShaderSrc
+                fragmentShaderSrc: fragmentShaderSrc,
+                defaultUniforms: defaultUniforms
             };
 
             KICK.core.Util.applyConfig(shaderDestination,config);
@@ -15550,6 +15659,7 @@ KICK.namespace = function (ns_string) {
          *  <li><b>Diffuse</b> Url: kickjs://shader/diffuse/</li>
          *  <li><b>Specular</b> Url: kickjs://shader/specular/</li>
          *  <li><b>Unlit</b> Url: kickjs://shader/unlit/</li>
+         *  <li><b>Unlit</b> Url: kickjs://shader/unlit_vertex_color/</li>
          *  <li><b>Transparent Specular</b> Url: kickjs://shader/transparent_specular/</li>
          *  <li><b>Transparent Unlit</b> Url: kickjs://shader/transparent_unlit/</li>
          *  <li><b>Shadowmap</b> Url: kickjs://shader/__shadowmap/</li>

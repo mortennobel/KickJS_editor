@@ -216,7 +216,7 @@ var SceneEditorApp = function(Y){
                 shader:engine.project.load(engine.project.ENGINE_SHADER_UNLIT),
                 uniforms:{
                     mainColor:{
-                        value:[1, 1, 1],
+                        value:[1, 1, 1, 1],
                         type:KICK.core.Constants.GL_FLOAT_VEC3
                     },
                     mainTexture:{
