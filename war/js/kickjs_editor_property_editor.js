@@ -269,7 +269,7 @@ var PropertyEditor = function(Y){
             for (var i=0;i<object.numberOfComponents;i++){
                 var component = object.getComponent(i);
                 propertyPanel.setStdModContent("body", '<div id="componentContainer_'+i+'"></div>',Y.WidgetStdMod.AFTER);
-                var compEditor = new ComponentEditor(Y, component,"componentContainer_"+i);
+                var compEditor = new PropertyEditorSection(Y, component,"componentContainer_"+i);
                 components.push(compEditor);
             }
         } else if (object instanceof KICK.core.ResourceDescriptor){
@@ -277,7 +277,7 @@ var PropertyEditor = function(Y){
             propertyPanelHeader.show();
             propertyPanelHeader.setContent("Project Asset");
             propertyPanel.setStdModContent("body", '<div id="componentContainer"></div>',Y.WidgetStdMod.AFTER);
-            var resourceEditor = new ComponentEditor(Y, object,"componentContainer");
+            var resourceEditor = new PropertyEditorSection(Y, object,"componentContainer");
             components.push(resourceEditor);
         }
     };
@@ -286,12 +286,12 @@ var PropertyEditor = function(Y){
 };
 
 /**
- *
+ * @class PropertyEditorSection
  * @param Y
  * @param {KICK.scene.Component | KICK.core.ResourceDescriptor} object
  * @param {String} id
  */
-var ComponentEditor = function(Y, object, id){
+var PropertyEditorSection = function(Y, object, id){
     var c = KICK.core.Constants,
         engine = sceneEditorApp.engine,
         thisObj = this,
