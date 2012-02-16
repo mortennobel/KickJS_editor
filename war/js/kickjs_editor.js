@@ -306,7 +306,7 @@ var SceneEditorApp = function(Y){
                         if (fileExt === "dae"){
                             modelImport = KICK.importer.ColladaImporter;
                         } else if (fileExt === "obj"){
-                            modelImport = KICK.importmodelImporter;
+                            modelImport = KICK.importer.ObjImporter;
                         }
                         var importResult = modelImport.import(fileAsString,_view.engine,_view.engine.activeScene,uploadModelRotate90x);
                         for (var i = 0;i<importResult.mesh.length;i++){
