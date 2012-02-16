@@ -151,7 +151,6 @@ function ProjectBuild(Y,engine,panel){
                 downloadImage: '/images/export.png',
                 width: 140,
                 height: 28,
-                transparent: true,
                 append: false,
                 dataType: 'base64'
             });
