@@ -1,3 +1,4 @@
+"use strict";
 var VisualGrid = function VisualGrid(){ // use explicit function name to support auto serialization
     var engine,
         gl,
@@ -106,7 +107,7 @@ var CameraNavigator = function CameraNavigator(){ // use explicit function name 
 
     this.update = function(){
         if (mouseInput.isButtonDown(0)){
-            function componentsPicked(gameObject){
+            var componentsPicked = function (gameObject){
                 sceneEditorApp.gameObjectSelected(gameObject.uid);
             }
             var x = mouseInput.mousePosition[0];

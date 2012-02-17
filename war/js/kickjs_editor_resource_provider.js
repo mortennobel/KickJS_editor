@@ -1,3 +1,4 @@
+"use strict";
 var KICKED = KICKED || {};
 
 var BlobBuilder = window.MozBlobBuilder || window.WebKitBlobBuilder || window.BlobBuilder;
@@ -39,7 +40,7 @@ KICKED.LocalStorageResourceProvider = function(engine){
             }
             console.log(res);
         };
-        var onError = function(){
+        var onError = function(res){
             console.log("Error",res);
         };
         KICKED.localStorage.resource.load(projectName,uid,onSuccess,onError);
@@ -81,7 +82,7 @@ KICKED.LocalStorageResourceProvider = function(engine){
             }
             img.src = URL.createObjectURL(blob);
         };
-        var onError = function(){
+        var onError = function(res){
             console.log("Error",res);
         };
         KICKED.localStorage.resource.load(projectName,uid,onSuccess,onError);
@@ -89,6 +90,6 @@ KICKED.LocalStorageResourceProvider = function(engine){
 
 
     this.getShaderData = function( uri , shaderDestination ){
-        fail("Not implemented yet 2");
+        KICK.core.Util.fail("Not implemented yet 2");
     };
 };

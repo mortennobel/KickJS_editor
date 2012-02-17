@@ -1,3 +1,5 @@
+"use strict";
+
 function ProjectBuild(Y,engine,panel){
     var
         buildProjectFilter = ProjectBuild.buildProjectFilter,

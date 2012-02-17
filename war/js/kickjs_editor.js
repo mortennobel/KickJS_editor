@@ -1,3 +1,5 @@
+"use strict";
+
 var getParameter = function(name){
     var pathName = location.pathname;
     pathName = pathName.substring(1);
@@ -492,7 +494,7 @@ var SceneEditorApp = function(Y){
             value  : 'Delete',
             section: Y.WidgetStdMod.FOOTER,
             classNames: ['deleteButton'],
-            action : function(){
+            action : function(e){
                 var onSuccess = function(){
                     location = location.origin;
                 };
@@ -784,7 +786,8 @@ function SceneGameObjects(Y){
     this.updateSceneContent = function(){
         var treeValues = {},
             activeSceneUids = {},
-            activeScene,
+            // activeScene,
+            sceneConfig,
             labelTemplate = Y.Handlebars.compile('<span title="{{title}}">{{label}}</span>'),
             i;
 
@@ -794,10 +797,12 @@ function SceneGameObjects(Y){
             treeValues[element.get("uid")] = element;
         }
 
+        var selectecSceneUid = engine.activeScene.uid; // todo find solution for this
+        sceneConfig = engine.project.getResourceDescriptor(selectecSceneUid).config;
         // save all uid to activeSceneUids
-        activeScene = engine.activeScene;
-        for (i=activeScene.getNumberOfGameObjects() - 1;i>=0;i--){
-            var gameObject = activeScene.getGameObject(i);
+
+        for (i=sceneConfig.gameObjects.length - 1;i>=0;i--){
+            var gameObject = sceneConfig.gameObjects[i];
             activeSceneUids[gameObject.uid] = gameObject;
         }
 
@@ -857,7 +862,7 @@ function SceneGameObjects(Y){
     };
 
     this.selectGameObject = function(uid){
-        for (i=sceneTreeView.size()-1;i>=0;i--){
+        for (var i=sceneTreeView.size()-1;i>=0;i--){
             var element = sceneTreeView.item(i);
             if (parseInt(element.get("uid")) === uid){
                 element.set("selected", 1); // full selected
@@ -984,7 +989,8 @@ function ProjectAssets(Y){
             activeProjectUidList = project.resourceDescriptorUIDs,
             activeProjectUids = {},
             treeValues = {},
-            uid;
+            uid,
+            i;
 
         // save used elements to treeValues
         for (i=projectTreeView.size()-1;i>=0;i--){
@@ -1021,7 +1027,7 @@ function ProjectAssets(Y){
      * @param {Number} uid
      */
     this.selectProjectAssetById = function(uid){
-        for (i=projectTreeView.size()-1;i>=0;i--){
+        for (var i=projectTreeView.size()-1;i>=0;i--){
             var element = projectTreeView.item(i);
             if (parseInt(element.get("uid")) === uid){
                 element.set("selected", 1); // full selected
@@ -1109,6 +1115,7 @@ function TabView(Y){
     // Since a canvas does not work well inside a TabView, it is added after the TabView and then hidden whenever the
     // selected index is not 0
     this.adjustView = function (){
+        var sceneView = document.getElementById('sceneView');
         sceneView.style.display = "inline";
         sceneView.width = sceneView.clientWidth;
         sceneView.height = sceneView.clientHeight;
