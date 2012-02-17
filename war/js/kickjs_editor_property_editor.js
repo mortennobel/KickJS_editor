@@ -201,13 +201,15 @@ KICK.material.Material.prototype.createEditorGUI = function(propertyEditor, obje
         }
         value = uniforms[name];
         switch (value.type){
+            case c.GL_FLOAT:
+            case c.GL_INT:
             case c.GL_INT_VEC2:
             case c.GL_INT_VEC3:
             case c.GL_INT_VEC4:
             case c.GL_FLOAT_VEC2:
             case c.GL_FLOAT_VEC3:
             case c.GL_FLOAT_VEC4:
-                if (name.toLowerCase().indexOf("color")>=0 && (value.type === c.GL_FLOAT_VEC3 || value.type === c.GL_FLOAT_VEC3)){
+                if (name.toLowerCase().indexOf("color")>=0 && (value.type === c.GL_FLOAT_VEC3 || value.type === c.GL_FLOAT_VEC4)){
                     propertyEditor.addColor(name, name,null,value.value, setValueOrTexture);
                 } else {
                     propertyEditor.addVector(name, name,null,value.value, setValueOrTexture);
