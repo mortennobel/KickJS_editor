@@ -500,13 +500,14 @@ KICKED.localStorage.resource.load = function(projectName,uid,responseFn,errorFn,
     };
 };
 
+
 /**
  * @method upload
  * @param {String} projectName
  * @param {Number} uid
  * @param {String} contentType
  * @param {String} contentName
- * @param {String | ArrayBuffer |ÊObject} content
+ * @param {String | ArrayBuffer |ï¿½Object} content
  * @param {Function} responseFn
  * @param {Function} errorFn
  */

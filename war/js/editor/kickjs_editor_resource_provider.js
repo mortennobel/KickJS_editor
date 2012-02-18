@@ -4,6 +4,7 @@ var KICKED = KICKED || {};
 var BlobBuilder = window.MozBlobBuilder || window.WebKitBlobBuilder || window.BlobBuilder;
 var URL = window.webkitURL || window.URL;
 
+
 /**
  * Fall back handler of resources
  * @class LocalStorageResourceProvider

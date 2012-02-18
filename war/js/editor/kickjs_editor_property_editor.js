@@ -598,7 +598,7 @@ var PropertyEditorSection = function(Y, object, id){
      * @param {Function} setValueFn Optional default ComponentEditor.setValue
      */
     this.addBoolean = function(name, displayname, tooltip, setValueFn){
-        displayname = displayname ||Êname;
+        displayname = displayname || name;
         thisObj.addFieldTitle(displayname, tooltip);
         var nodeId = thisObj.getNodeName("string",name,0);
         var value = getValue(name)==true;

@@ -22,6 +22,7 @@ KICK.onMessage = function(data){
     }
 };
 
+
 KICK.loadProject = function(dataObject){
     serverObject = dataObject.useServer? KICKED.server:KICKED.localStorage;
     var canvas = document.getElementById('kickjs_canvas');
