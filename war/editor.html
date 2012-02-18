@@ -24,7 +24,7 @@
 </head>
 <body class="yui3-skin-sam">
 <div id="hd">
-    <a id="SmallKickJSTitle" href="http://editor.kickjs.org/">KickJS Editor</a>
+    <a id="SmallKickJSTitle" href="/">KickJS Editor</a>
     <h2 class="projectHeader">Project: <span id="projectTitel"></span></h2>
     <a class="yui3-button" style="margin: auto;" id="projectSave">Save</a>
     <a class="yui3-button" style="margin: auto;" id="projectRun">Run</a>
@@ -107,10 +107,10 @@
         <div id="mainTabContainer"></div>
         <div class="mainContent">
             <!-- Hidden camera menu-->
-            <div id="mainViewMenu" class="yui3-menu yui3-menu-horizontal yui3-menubuttonnav hiddenContent"><!-- Bounding box -->
+            <div id="mainViewMenu" class="yui3-menu yui3-menu-horizontal yui3-menubuttonnav"><!-- Bounding box -->
                 <div class="yui3-menu-content "><!-- Content box -->
                     <ul>
-                        <li>
+                        <li class="hiddenContent">
                             <a class="yui3-menu-label" href="#mainViewCamera"><em>Camera</em></a>
                             <div id="mainViewCamera" class="yui3-menu">
                                 <div class="yui3-menu-content">
@@ -145,8 +145,8 @@
                             <div id="mainViewCameraDisplay" class="yui3-menu">
                                 <div class="yui3-menu-content">
                                     <ul>
-                                        <li class="yui3-menuitem"><a class="yui3-menuitem-content" href="#" id="cameraGrid">Grid</a></li>
-                                        <li class="yui3-menuitem"><a class="yui3-menuitem-content" href="#" id="cameraGizmos">Gizmos</a></li>
+                                        <li class="yui3-menuitem"><a class="yui3-menuitem-content" href="#" id="cameraGrid">Toggle grid</a></li>
+                                        <li class="yui3-menuitem hiddenContent"><a class="yui3-menuitem-content" href="#" id="cameraGizmos">Gizmos</a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -244,6 +244,7 @@
         }
     })();
 </script>
+<script src="/js/kickjs_editor_defaultProject.js"></script>
 <script src="/js/kickjs_editor_server.js"></script>
 <script src="/js/kickjs_editor_components.js"></script>
 <script src="/js/kickjs_editor_project_settings.js"></script>

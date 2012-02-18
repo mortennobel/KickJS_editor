@@ -106,18 +106,24 @@ var CameraNavigator = function CameraNavigator(){ // use explicit function name 
     };
 
     this.update = function(){
+        var mousePosDelta,
+            hasMovement,
+            rotation,
+            pos;
         if (mouseInput.isButtonDown(0)){
             var componentsPicked = function (gameObject){
-                sceneEditorApp.gameObjectSelected(gameObject.uid);
-            }
+                if (gameObject.destUid){
+                    sceneEditorApp.gameObjectSelected(gameObject.destUid);
+                }
+            };
             var x = mouseInput.mousePosition[0];
             var y = mouseInput.mousePosition[1];
             camera.pick(componentsPicked,x,y);
         }
 
         if (mouseInput.isButton(2)){
-            var mousePosDelta = mouseInput.deltaMovement;
-            var hasMovement = mousePosDelta[0] || mousePosDelta[1];
+            mousePosDelta = mouseInput.deltaMovement;
+            hasMovement = mousePosDelta[0] || mousePosDelta[1];
             if (hasMovement){
                 var mouseSensitivity = 0.1;
                 euler[0] += mousePosDelta[1]*mouseSensitivity;
@@ -125,25 +131,26 @@ var CameraNavigator = function CameraNavigator(){ // use explicit function name 
                 transform.localRotationEuler = euler;
             }
         } else if (mouseInput.isButton(1)){
-            var mousePosDelta = mouseInput.deltaMovement;
-            var hasMovement = mousePosDelta[0] || mousePosDelta[1];
+            mousePosDelta = mouseInput.deltaMovement;
+            hasMovement = mousePosDelta[0] || mousePosDelta[1];
             if (hasMovement){
                 var mousePanSensitivity = 0.01;
                 var movement = [-mousePanSensitivity*mousePosDelta[0],mousePanSensitivity*mousePosDelta[1],0];
-                var rotation = transform.rotation;
+                rotation = transform.rotation;
                 movement = KICK.math.quat4.multiplyVec3(rotation,movement);
-                var pos = transform.position;
+                pos = transform.position;
                 pos = KICK.math.vec3.add(pos,movement);
                 transform.position = pos;
             }
         }
         var wheelDelta = mouseInput.deltaWheel;
         if (wheelDelta[1]){
+            console.log(wheelDelta[1]);
             var mouseScrollWheelSensitivity = 0.01;
             var forward = [0,0,-mouseScrollWheelSensitivity*wheelDelta[1]];
-            var rotation = transform.rotation;
+            rotation = transform.rotation;
             forward = KICK.math.quat4.multiplyVec3(rotation,forward);
-            var pos = transform.position;
+            pos = transform.position;
             pos = KICK.math.vec3.add(pos,forward);
             transform.position = pos;
         }

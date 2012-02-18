@@ -200,7 +200,7 @@ KICK.material.Material.prototype.createEditorGUI = function(propertyEditor, obje
         if (!uniforms.hasOwnProperty(name)){
             continue;
         }
-        value = uniforms[name];
+        var value = uniforms[name];
         switch (value.type){
             case c.GL_FLOAT:
             case c.GL_INT:
@@ -427,8 +427,8 @@ var PropertyEditorSection = function(Y, object, id){
         var node = Y.one("#"+nodeId);
 
         if (node){
-            var engineAssets = engine.project.getEngineResourceDescriptorByType(type);
-            var assets = engine.project.getResourceDescriptorByType(type);
+            var engineAssets = engine.project.getEngineResourceDescriptorsByType(type);
+            var assets = engine.project.getResourceDescriptorsByType(type);
             if (allowNull) {
                 selected = !uid ? "selected" : "";
                 item = Y.Node.create('<option value="" ' + selected + '></option>');

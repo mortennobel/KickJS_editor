@@ -20,7 +20,6 @@ var getParameter = function(name){
 var serverObject = getParameter("useServer")? KICKED.server:KICKED.localStorage;
 var projectName = getParameter("project");
 var debug = getParameter("debug");
-var BlobBuilder = window.MozBlobBuilder || window.WebKitBlobBuilder || window.BlobBuilder;
 
 var sceneEditorApp;
 
@@ -48,41 +47,36 @@ YUI({
             menu.plug(Y.Plugin.NodeMenuNav, {autoSubmenuDisplay:false});
         }
 
-        function loadProject(){
-            var onError = function(errorObj){
-                alert("Error loading project");
-                console.log(errorObj);
-            };
-
-            var onResourceLoadSuccess = function(content, isError){
-                var sceneReady = function(){
-                    sceneEditorApp.projectAssets.updateProjectContent();
-                    sceneEditorApp.sceneGameObjects.updateSceneContent();
-                    Y.one("#loadingPanel").addClass("hiddenContent");
-                    Y.one("#layout").removeClass("hiddenContent");
-                    sceneEditorApp.tabView.adjustView();
-                };
-                if (isError){
-                    sceneEditorApp.createDefaultScene();
-                    sceneEditorApp.projectSave(sceneReady,onError,true);
-                } else {
-                    sceneEditorApp.projectLoad(content);
-                    sceneReady();
-                }
-            };
-            var onResourceLoadError = function(content, isError){
-                onResourceLoadSuccess(null,true);
-            };
-            var onProjectLoad = function(resp){
-                serverObject.resource.load(projectName, 0,onResourceLoadSuccess, onResourceLoadError,true);
-            };
-
-            serverObject.project.load(projectName, onProjectLoad, onError);
-        }
-
-        loadProject();
-        Y.one("#projectTitel").setContent(projectName);
+        sceneEditorApp.loadProject(projectName);
 });
+
+var DebugEditorScene = function(){
+    var debugChildren = function(gameObjectParent,level){
+        var components = "";
+        var gameObjectToJSON = gameObjectParent.toJSON();
+        for (var i=0;i<gameObjectToJSON .components.length;i++){
+            components += gameObjectToJSON.components[i].type+";";
+        }
+        var indent = Array(level+2).join("  ");
+        console.log(indent+gameObjectParent.name+" uid "+gameObjectParent.uid+" ("+gameObjectParent.destUid+") ["+components+"]"); // write debug to log
+        var transform = gameObjectParent.transform;
+        var transformChildren = transform.children;
+        level++;
+        for (var i=transformChildren.length-1;i>=0;i--){
+            debugChildren(transformChildren[i].gameObject, level);
+        }
+    };
+    var engine = sceneEditorApp.view.engine;
+    var activeScene = engine.activeScene;
+    for (var i=activeScene.getNumberOfGameObjects()-1;i>=0;i--){
+        var gameObject = activeScene.getGameObject(i);
+        var transform = gameObject.transform;
+        if (!transform.parent){ // if has no parent
+            debugChildren(gameObject, 0);
+        }
+    }
+    console.log("#gameObjects "+activeScene.getNumberOfGameObjects());
+};
 
 var SceneEditorView = function(Y){
     var canvas = Y.one("#sceneView"),
@@ -90,46 +84,86 @@ var SceneEditorView = function(Y){
         {
             enableDebugContext: debug
         }),
-        editorSceneCameraObject,
-        editorSceneCameraComponent,
-        editorSceneGridObject,
-        decorateScene = function(scene){
-            var cameraName = "__editorSceneCameraObject__";
-            editorSceneCameraObject = scene.getGameObjectByName(cameraName);
-            if (!editorSceneCameraObject){
-                editorSceneCameraObject = scene.createGameObject();
-                editorSceneCameraObject.name = cameraName;
-                editorSceneCameraObject.transform.position = [0,1,10];
-                editorSceneCameraComponent = new KICK.scene.Camera({
-                    clearColor : [0.1,0.1,0.15,1.0],
-                    cameraIndex: Number.MAX_VALUE
-                });
-                editorSceneCameraObject.addComponent(editorSceneCameraComponent);
-                editorSceneCameraObject.addComponent(new CameraNavigator());
+        thisObj = this,
+        cameraObject,
+        // the camera object in the scene
+        cameraComponent,
+        // the grid component in the scene
+        gridObject,
+        gridComponent,
+        // parent for actual objects in the scene
+        sceneRootObject,
+        // parent for transform components
+        transformComponentObject,
+        originalUidToNewUidMap = {},
+        destroyAllChildComponent = function(parentGameObject, destroyThis){
+            var transform = parentGameObject.transform;
+            var children = transform.children;
+            for (var i=0;i<children.length;i++){
+                destroyAllChildComponent(children[i].gameObject,true);
             }
-            var gridName = "__editorSceneGridObject__";
-            editorSceneGridObject = scene.getGameObjectByName(gridName);
-            if (!editorSceneGridObject){
-                editorSceneGridObject = scene.createGameObject();
-                editorSceneGridObject.name = gridName;
-                editorSceneGridObject.addComponent(new VisualGrid());
-            }
-            var projectSettingsName = "Project settings";
-            var projectSettingsType = "ProjectSettings";
-            var projectSettings = engine.project.loadByName(projectSettingsName, projectSettingsType);
-            if (!projectSettings){
-                new ProjectSettings(engine,{name:projectSettingsName});
+            if (destroyThis){
+                parentGameObject.destroy();
             }
         },
-        editorScene = (function(){
-            var editorSceneName = "__editorScene__";
-            var editorScene = engine.project.loadByName(editorSceneName);
-            if (!editorScene){
-                editorScene = new KICK.scene.Scene(engine, {name:editorSceneName});
+        /**
+         * Decorate the editor scene with the following gameobject structure:<br>
+         * __editorSceneRoot__ : placeholder for scene objects
+         * __editorSceneCameraObject__ : External scene camera
+         * __editorSceneGridObject__ : Grid object
+         * __editorSceneTransformComponent__ : parent object for transform objects
+         * @method decorateScene
+         * @param {KICK.scene.Scene}
+         */
+        decorateScene = function(scene){
+            var sceneRootName = "__editorSceneRoot__";
+            sceneRootObject = scene.getGameObjectByName(sceneRootName);
+            if (!sceneRootObject){
+                sceneRootObject = scene.createGameObject({name:sceneRootName});
+                console.log("Created "+sceneRootObject.name);
             }
+            var cameraName = "__editorSceneCameraObject__";
+            cameraObject = scene.getGameObjectByName(cameraName);
+            if (!cameraObject){
+                cameraObject = scene.createGameObject({name: cameraName});
+
+                cameraObject.transform.position = [0,1,10];
+                cameraComponent = new KICK.scene.Camera({
+                    clearColor : [0.1,0.1,0.15,1.0]
+                });
+                cameraObject.addComponent(cameraComponent);
+                cameraObject.addComponent(new CameraNavigator());
+            } else {
+                cameraComponent = cameraObject.getComponentOfType(KICK.scene.Camera);
+            }
+            var gridName = "__editorSceneGridObject__";
+            gridObject = scene.getGameObjectByName(gridName);
+            if (!gridObject){
+                gridObject = scene.createGameObject({name:gridName});
+                gridComponent = new VisualGrid();
+                gridObject.addComponent(gridComponent);
+            } else {
+                gridComponent = gridObject.getComponentOfType(VisualGrid);
+            }
+            var transformCompName = "__editorSceneTransformComponent__";
+            transformComponentObject = scene.getGameObjectByName(transformCompName);
+            if (!transformComponentObject){
+                transformComponentObject = scene.createGameObject({name:transformCompName});
+            }
+        },
+        getEditorScene = function(){
+            var editorSceneName = "__editorScene__";
+            // delete current editor scenes (if any)
+            var currentResources = engine.project.getResourceDescriptorsByName(editorSceneName);
+            for (var i=0;i<currentResources.length;i++){
+                engine.project.removeResourceDescriptor(currentResources[i].uid);
+            }
+            // create new editorscene
+            editorScene = new KICK.scene.Scene(engine, {name:editorSceneName});
             decorateScene(editorScene);
             return editorScene;
-        })();
+        },
+        editorScene;
 
         Y.one("window").on("resize", function(){
             canvas.set("width",canvas.get("clientWidth"));
@@ -140,55 +174,114 @@ var SceneEditorView = function(Y){
     engine.activeScene = editorScene;
     engine.resourceManager.addResourceProvider(new KICKED.LocalStorageResourceProvider(engine));
 
-    this.createDefaultScene = function (scene) {
-        // create material
-        var materials = [
-            new KICK.material.Material(engine, {
-                name:"White material",
-                shader: engine.project.load(engine.project.ENGINE_SHADER_UNLIT),
-                uniforms:{
-                    mainColor:{
-                        value:[1, 1, 1, 1],
-                        type:KICK.core.Constants.GL_FLOAT_VEC3
-                    },
-                    mainTexture:{
-                        value:engine.project.load(engine.project.ENGINE_TEXTURE_WHITE),
-                        type:KICK.core.Constants.GL_SAMPLER_2D
-                    }
-                }
-            }),
-            new KICK.material.Material(engine, {
-                name:"Gray material",
-                shader:engine.project.load(engine.project.ENGINE_SHADER_UNLIT),
-                uniforms:{
-                    mainColor:{
-                        value:[1, 1, 1, 1],
-                        type:KICK.core.Constants.GL_FLOAT_VEC3
-                    },
-                    mainTexture:{
-                        value:engine.project.load(engine.project.ENGINE_TEXTURE_GRAY),
-                        type:KICK.core.Constants.GL_SAMPLER_2D
-                    }
-                }
-            })];
+    Object.defineProperties(this,{
+        gridEnabled: {
+            get: function(){
+                return gridComponent.enabled;
+            },
+            set: function(newValue){
+                gridComponent.enabled = newValue;
+            }
+        }
+    });
 
-        // create meshes
-        var meshes = [engine.project.ENGINE_MESH_TRIANGLE, engine.project.ENGINE_MESH_CUBE];
-        var objectNames = ["Triangle", "Cube"];
-        for (var i = 0; i < meshes.length; i++) {
-            var gameObject = scene.createGameObject();
-            gameObject.transform.position = [-2.0 + 4 * i, 0, 0];
-            var meshRenderer = new KICK.scene.MeshRenderer();
-            meshRenderer.mesh = engine.project.load(meshes[i]);
-            meshRenderer.material = materials[i];
-            gameObject.addComponent(meshRenderer);
-            gameObject.name = objectNames[i];
+    this.loadScene = function(sceneResourceDescr){
+        destroyAllChildComponent(sceneRootObject);
+        originalUidToNewUidMap = {};
+        var gameObjects = sceneResourceDescr.config.gameObjects,
+            newComponents = [],
+            componentsConfigs = [],
+            applyConfig = KICK.core.Util.applyConfig,
+            hasProperty = KICK.core.Util.hasProperty;
+
+
+        // create objects
+        for (var i=0;i<gameObjects.length;i++){
+            var gameObjectSrc = gameObjects[i];
+            var gameObjectDest = editorScene.createGameObject({name:gameObjectSrc.name});
+            gameObjectDest.destUid = gameObjectSrc.uid;
+            originalUidToNewUidMap[gameObjectSrc.uid] = gameObjectDest.uid;
+
+            var comps = gameObjectSrc.components;
+            for (var j=0;j<comps.length;j++){
+                var comp = comps[j];
+                var type = comp.type;
+                if (type === "KICK.scene.Transform"){
+                    newComponents.push(gameObjectDest.transform);
+                } else {
+                    if (type === "KICK.scene.MeshRenderer"){
+                        var constructor = KICK.namespace(type);
+                        var componentInstance = new constructor();
+                        gameObjectDest.addComponent(componentInstance);
+                        var newUid = engine.getUID(componentInstance);
+                        originalUidToNewUidMap[newUid] = comp.uid;
+                        newComponents.push(componentInstance);
+                    } else {
+                        continue;
+                    }
+                }
+                componentsConfigs.push(comp.config);
+            }
         }
 
-        var cameraGameObject = scene.createGameObject();
-        cameraGameObject.addComponent(new KICK.scene.Camera());
-        cameraGameObject.name = "Camera";
-        cameraGameObject.transform.position = [0,1,10];
+        var deserialize = function(value){
+            if (typeof value === 'number'){
+                return value;
+            }
+            if (Array.isArray(value)){
+                for (var i=0;i<value.length;i++){
+                    value[i] = deserialize(value[i]);
+                }
+            } else if (value){
+                if (value && value.ref && value.reftype){
+                    if (value.reftype === "project"){
+                        value = engine.project.load(value.ref);
+                    } else if (value.reftype === "gameobject" || value.reftype === "component"){
+                        var mappedUid = originalUidToNewUidMap[value.ref];
+                        engine.project.getObjectByUID(mappedUid);
+                    }
+                }
+            }
+            return value;
+        };
+
+
+        // apply config
+        var sceneRootObjectTransform = sceneRootObject.transform;
+        for (i=0;i<componentsConfigs.length;i++){
+            var newComponent = newComponents[i];
+            var config = componentsConfigs[i];
+            var configCopy = {};
+            for (var name in config){
+                if (hasProperty(config,name)){
+                    var value = config[name];
+                    value = deserialize(value);
+                    configCopy[name] = value;
+                }
+            }
+            applyConfig(newComponent,configCopy);
+            if (newComponent instanceof KICK.scene.Transform){
+                if (!newComponent.parent){
+                    newComponent.parent = sceneRootObjectTransform;
+                }
+            }
+        }
+
+        // change parent to sceneRootObject
+
+    };
+
+    this.loadProject = function(projectConfig){
+        engine.project.loadProject(projectConfig);
+        editorScene = getEditorScene();
+        engine.activeScene = editorScene;
+        console.log("LoadProject");
+        var projectSettingsName = "Project settings";
+        var projectSettingsType = "ProjectSettings";
+        var projectSettings = engine.project.loadByName(projectSettingsName, projectSettingsType);
+        if (!projectSettings){
+            new ProjectSettings(engine,{name:projectSettingsName});
+        }
     };
 
     Object.defineProperties(this,{
@@ -207,6 +300,7 @@ var SceneEditorApp = function(Y){
         _tabView,
         _propertyEditor,
         _currentSceneUID = 0,
+        _currentSceneConfig,
         runWindow,
         thisObj = this,
         deleteSelectedGameObject = function(e){
@@ -249,7 +343,7 @@ var SceneEditorApp = function(Y){
             var engine = _view.engine,
                 project = engine.project;
             var mesh = project.load(project.ENGINE_MESH_CUBE);
-            var materials = project.getResourceDescriptorByType("KICK.material.Material");
+            var materials = project.getResourceDescriptorsByType("KICK.material.Material");
             if (materials.length>0){
                 materials = [project.load(materials[0].uid)];
             } else {
@@ -259,12 +353,14 @@ var SceneEditorApp = function(Y){
             collapseMenu("#propertyPanelMenu");
             e.preventDefault ();
         },
+        setCurrentSceneUID = function(newValue){
+            _currentSceneUID = newValue;
+            _currentSceneConfig = _view.engine.project.getResourceDescriptor(newValue);
+        },
         addScene = function(e){
             var engine = _view.engine,
                 newScene = KICK.scene.Scene.createDefault(engine);
-            _currentSceneUID = _view.engine.getUID(newScene);
-            //engine.activeScene = newScene ; // todo comment out
-            //_view.decorateScene(newScene );
+            setCurrentSceneUID(_view.engine.getUID(newScene));
             _propertyEditor.setContent(null);
             _sceneGameObjects.updateSceneContent();
             _projectAssets.updateProjectContent();
@@ -274,18 +370,17 @@ var SceneEditorApp = function(Y){
             };
             _projectAssets.renameSelected(afterRename );
             e.preventDefault();
+            return newScene;
         },
         loadScene = function(uid){
             var engine = _view.engine,
-                project = engine.project,
-                newScene = project.load(parseInt(uid));
-            _currentSceneUID = uid;
-            //engine.activeScene = newScene; // todo comment out
-            console.log("Active scene is now "+engine.activeScene.uid);
-            //_view.decorateScene(newScene);
+                project = engine.project;
+            setCurrentSceneUID(uid);
+            console.log("Active scene is now "+uid);
+            _view.loadScene(_currentSceneConfig);
             _propertyEditor.setContent(null);
             _sceneGameObjects.updateSceneContent();
-            thisObj.tabView.updateSceneName(newScene.name,newScene.uid);
+            thisObj.tabView.updateSceneName(_currentSceneConfig.name,_currentSceneConfig.uid);
         },
         panel = new Y.Panel({
             srcNode      : '#popupDialog',
@@ -324,6 +419,7 @@ var SceneEditorApp = function(Y){
                             modelImport = KICK.importer.ObjImporter;
                         }
                         var importResult = modelImport.import(fileAsString,_view.engine,_view.engine.activeScene,uploadModelRotate90x);
+                        console.log("Todo - use uploadModel "); // todo strip / recalculate model
                         for (var i = 0;i<importResult.mesh.length;i++){
                             var mesh = importResult.mesh[i];
                             (function(mesh){
@@ -491,6 +587,37 @@ var SceneEditorApp = function(Y){
             return false;
         };
 
+    this.loadProject = function(projectName){
+        var onError = function(errorObj){
+            alert("Error loading project");
+            console.log(errorObj);
+        };
+
+        var onResourceLoadSuccess = function(content, isSceneNotFound){
+            var sceneReady = function(){
+                Y.one("#loadingPanel").addClass("hiddenContent");
+                Y.one("#layout").removeClass("hiddenContent");
+                _tabView.adjustView();
+            };
+            if (isSceneNotFound){
+                thisObj.projectLoad(window.kickjsDefaultProject);
+                thisObj.saveProject(sceneReady,onError,true);
+            } else {
+                thisObj.projectLoad(content);
+                sceneReady();
+            }
+        };
+        var onResourceLoadError = function(content, isError){
+            onResourceLoadSuccess(null,true);
+        };
+        var onProjectLoad = function(resp){
+            serverObject.resource.load(projectName, 0,onResourceLoadSuccess, onResourceLoadError,true);
+        };
+
+        serverObject.project.load(projectName, onProjectLoad, onError);
+        Y.one("#projectTitel").setContent(projectName);
+    };
+
     this.deleteProject = function(){
         panel.set("headerContent", "Delete project");
         panel.setStdModContent(Y.WidgetStdMod.BODY, "Delete project permanently?");
@@ -532,6 +659,11 @@ var SceneEditorApp = function(Y){
         currentSceneUID:{
             get:function(){
                 return _currentSceneUID;
+            }
+        },
+        currentSceneConfig:{
+            get:function(){
+                return _currentSceneConfig;
             }
         },
         tabView:{
@@ -578,12 +710,6 @@ var SceneEditorApp = function(Y){
         }
     });
 
-    this.createDefaultScene = function(){
-        var scene = _view.engine.activeScene;
-        //_view.decorateScene(scene);
-        //_view.createDefaultScene(scene);
-        console.log("deprecated");
-    };
     this.projectAssetSelected = function(uid){
         _projectAssets.selectProjectAssetById(uid);
         var resourceDescriptor = _view.engine.project.getResourceDescriptor(uid);
@@ -599,15 +725,25 @@ var SceneEditorApp = function(Y){
 
     this.gameObjectSelected = function(uid){
         _sceneGameObjects.selectGameObject(uid);
-        var gameObject = _view.engine.activeScene.getObjectByUID(uid);
+        // var gameObject = _view.engine.activeScene.getObjectByUID(uid);
+        var gameObjects = _currentSceneConfig.config.gameObjects;
+        var gameObject;
+        for (var i = gameObjects.length-1;i>=0;i--){
+            if (gameObjects[i].uid == uid){
+                gameObject = gameObjects[i];
+                break;
+            }
+        }
+
         _propertyEditor.setContent(gameObject);
         _projectAssets.deselect();
     };
 
-    this.projectSave = function(responseFn, errorFn){
+    this.saveProject = function(responseFn, errorFn){
         var projectSave = Y.one("#projectSave");
         projectSave.setContent("Saving ...");
         var projectJSON = _view.engine.project.toJSON();
+        projectJSON.activeScene = _currentSceneUID; // replace with wrapping scene
         console.log(projectJSON);
         var projectStr = JSON.stringify(projectJSON);
         var resetSaveButton = function(){
@@ -630,16 +766,17 @@ var SceneEditorApp = function(Y){
         serverObject.resource.upload(projectName, 0, "application/json","project.json",projectStr,respWrap,errorWrap);
     };
 
-    this.projectLoad = function(project){
-        _view.engine.project.loadProject(project);
-        loadScene(_view.engine.activeScene.uid);
+    this.projectLoad = function(projectConfig){
+        _view.loadProject(projectConfig);
+
+        loadScene(projectConfig.activeScene);
         _sceneGameObjects.updateSceneContent();
         _projectAssets.updateProjectContent();
     };
 
     this.projectRun = function(){
         var project = engine.project,
-                    projectSettings = project.getResourceDescriptorByType('ProjectSettings')[0].config;
+                    projectSettings = project.getResourceDescriptorsByType('ProjectSettings')[0].config;
         var postMessage = {
             action: "loadProject",
             useServer: getParameter("useServer"),
@@ -679,7 +816,7 @@ var SceneEditorApp = function(Y){
     };
 
     Y.one("#projectSave").on("click",function(e){
-        thisObj.projectSave();
+        thisObj.saveProject();
         e.preventDefault ();
     });
     Y.one("#projectRun").on("click",function(e){
@@ -768,8 +905,13 @@ var SceneEditorApp = function(Y){
         addComponent(KICK.scene.Camera);
         e.preventDefault ();
     });
+    Y.one("#cameraGrid").on("click",function(e){
+        collapseMenu("#mainViewMenu");
+        sceneEditorApp.view.gridEnabled = !sceneEditorApp.view.gridEnabled;
+        e.preventDefault ();
+    });
 
-    var mainViewMenu = ["cameraWireframe","cameraShaded","cameraPerspective","cameraOrthographic","cameraSettings","cameraAlignSelected","cameraAlignCamera","cameraFrameSelected","cameraGrid","cameraGizmos"];
+    var mainViewMenu = ["cameraWireframe","cameraShaded","cameraPerspective","cameraOrthographic","cameraSettings","cameraAlignSelected","cameraAlignCamera","cameraFrameSelected","cameraGizmos"];
     for (var i=0;i<mainViewMenu.length;i++){
         Y.one("#"+mainViewMenu[i]).on("click",function(e){
             alert("Not implemented");
@@ -817,11 +959,12 @@ function SceneGameObjects(Y){
         }
 
         var selectecSceneUid = sceneEditorApp.currentSceneUID;
-        if (!selectecSceneUid){
+        sceneConfig = engine.project.getResourceDescriptor(selectecSceneUid).config;
+        if (sceneConfig.name.indexOf("__")==0){
             console.log("invalid scene");
             debugger;
         }
-        sceneConfig = engine.project.getResourceDescriptor(selectecSceneUid).config;
+
 
         // save all uid to activeSceneUids
         for (i=sceneConfig.gameObjects.length - 1;i>=0;i--){

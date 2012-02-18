@@ -5823,6 +5823,7 @@ KICK.namespace = function (ns_string) {
             mouseInput = null,
             keyInput = null,
             activeScene,
+            activeSceneNull = {updateAndRender:function(){}},
             animationFrameObj = {},
             wrapperFunctionToMethodOnObject = function (time_) {
                 thisObj._gameLoop(time_);
@@ -5871,14 +5872,20 @@ KICK.namespace = function (ns_string) {
                 value: canvas
             },
             /**
+             * If null then nothing is rendered
              * @property activeScene
              * @type KICK.scene.Scene
              */
             activeScene:{
-                get: function(){ return activeScene},
+                get: function(){
+                    if (activeScene === activeSceneNull){
+                        return null;
+                    }
+                    return activeScene;
+                },
                 set: function(value){
                     if (value === null){
-                        activeScene = KICK.scene.Scene.createDefault(thisObj);
+                        activeScene = activeSceneNull;
                     } else {
                         activeScene = value;
                     }
@@ -5992,7 +5999,7 @@ KICK.namespace = function (ns_string) {
                                 canvas.height = canvas.originalHeight;
                             }
                             thisObj.canvasResized();
-                        }
+                        };
                         canvas.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
                     } else if (canvas.mozRequestFullScreen){
                         canvas.mozRequestFullScreen();
@@ -6023,7 +6030,7 @@ KICK.namespace = function (ns_string) {
             
             eventQueue.run();
 
-            this.activeScene.updateAndRender();
+            activeScene.updateAndRender();
             for (var i=frameListeners.length-1;i>=0;i--){
                 frameListeners[i].frameUpdated();
             }
@@ -6538,16 +6545,14 @@ KICK.namespace = function (ns_string) {
             for (var i=0;i<resourceDescriptors.length;i++){
                 thisObj.addResourceDescriptor(resourceDescriptors[i]);
             }
-            engine.activeScene = null; // create temporaty default scene
 
             // preload all resources
             var onComplete = function(){
-                thisObj.removeResourceDescriptor(engine.activeScene.uid); // delete current scene
                 _maxUID = config.maxUID || 0; // reset maxUID
                 if (config.activeScene){
                     engine.activeScene = thisObj.load(config.activeScene);
                 } else {
-                    engine.activeScene = null; // create final default scene
+                    engine.activeScene = null;
                 }
             };
             onComplete();
@@ -6643,11 +6648,11 @@ KICK.namespace = function (ns_string) {
 
         /**
          * Returns the buildin engine resources
-         * @method getEngineResourceDescriptorByType
+         * @method getEngineResourceDescriptorsByType
          * @param {String} type
          * @return {Array[KICK.core.ResourceDescriptor]}
          */
-        this.getEngineResourceDescriptorByType = function(type){
+        this.getEngineResourceDescriptorsByType = function(type){
             var res = [];
             var searchFor;
             if (type === "KICK.mesh.Mesh"){
@@ -6675,11 +6680,11 @@ KICK.namespace = function (ns_string) {
         };
 
         /**
-         * @method getResourceDescriptorByType
+         * @method getResourceDescriptorsByType
          * @param {String} type
          * @return {Array[KICK.core.ResourceDescriptor]}
          */
-        this.getResourceDescriptorByType = function(type){
+        this.getResourceDescriptorsByType = function(type){
             var res = [];
             for (var uid in resourceDescriptorsByUID){
                 if (resourceDescriptorsByUID[uid].type === type){
@@ -6690,8 +6695,25 @@ KICK.namespace = function (ns_string) {
         };
 
         /**
+         * @method getResourceDescriptorsByName
+         * @param {String} type
+         * @return {Array[KICK.core.ResourceDescriptor]}
+         */
+        this.getResourceDescriptorsByName = function(name){
+            var res = [];
+            for (var uid in resourceDescriptorsByUID){
+                if (resourceDescriptorsByUID[uid].name === name){
+                    res.push(resourceDescriptorsByUID[uid]);
+                }
+            }
+            return res;
+        };
+
+
+
+        /**
          * @method getResourceDescriptor
-         * @param uid
+         * @param {Number} uid
          * @return {KICK.core.ResourceDescriptor} resource descriptor (or null if not found)
          */
         this.getResourceDescriptor = function(uid){
@@ -9671,7 +9693,7 @@ KICK.namespace = function (ns_string) {
             }
             component.gameObject = this;
             _components.push(component);
-            this.scene.addComponent(component);
+            scene.addComponent(component);
         };
 
         /**
@@ -9686,7 +9708,7 @@ KICK.namespace = function (ns_string) {
                 // ignore if gameObject cannot be deleted
             }
             core.Util.removeElementFromArray(_components,component);
-            this.scene.removeComponent(component);
+            scene.removeComponent(component);
         };
 
         /**
@@ -9698,9 +9720,9 @@ KICK.namespace = function (ns_string) {
         this.destroy = function () {
             var i;
             for (i = _components.length-1; i >= 0 ; i--) {
-                this.removeComponent(_components[i]);
+                thisObj.removeComponent(_components[i]);
             }
-            this.scene.destroyObject(thisObj);
+            scene.destroyObject(thisObj);
         };
         /**
          * Get the first component of a specified type. Internally uses instanceof.<br>
@@ -13723,8 +13745,8 @@ KICK.namespace = function (ns_string) {
                 activeAttributes,
                 attribute;
             if (compileError){
-                vertexShader = compileShader(glslConstants["error_vs.glsl"], false, errorLog);
-                fragmentShader = compileShader(glslConstants["error_fs.glsl"], true, errorLog);
+                vertexShader = compileShader(glslConstants["__error_vs.glsl"], false, errorLog);
+                fragmentShader = compileShader(glslConstants["__error_fs.glsl"], true, errorLog);
             }
 
             _shaderProgramId = gl.createProgram();

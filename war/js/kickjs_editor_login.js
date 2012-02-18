@@ -43,6 +43,7 @@ YUI().use('node','panel', function(Y) {
                 }
                 projectsElement.appendChild(optionElement);
             }
+            projectsElement.setStyle("height", Math.max(200,Math.min(60,projects.length*20)));
             if (projects.length<1){
                 panel._buttonsArray[2].node.hide();
             } else {

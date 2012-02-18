@@ -8,7 +8,7 @@ function ProjectBuild(Y,engine,panel){
             var project = engine.project,
                 H = Y.Handlebars,
                 projectJson = project.toJSON(buildProjectFilter),
-                projectSettings = project.getResourceDescriptorByType('ProjectSettings')[0].config,
+                projectSettings = project.getResourceDescriptorsByType('ProjectSettings')[0].config,
                 isZipComplete = false,
                 activeRequests = 0,
                 checkZipComplete = function(){
