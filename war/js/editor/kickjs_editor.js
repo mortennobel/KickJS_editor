@@ -1,5 +1,10 @@
 "use strict";
 
+/**
+ * KickJS Editor
+ * @module KICKED
+ */
+
 var getParameter = function(name){
     var pathName = location.pathname;
     pathName = pathName.substring(1);
@@ -78,6 +83,12 @@ var DebugEditorScene = function(){
     console.log("#gameObjects "+activeScene.getNumberOfGameObjects());
 };
 
+/**
+ * SceneEditorView
+ * @class SceneEditorView
+ * @constructor
+ * @param {YUI} Y
+ */
 var SceneEditorView = function(Y){
     var canvas = Y.one("#sceneView"),
         engine = new KICK.core.Engine('sceneView',
@@ -114,6 +125,7 @@ var SceneEditorView = function(Y){
          * __editorSceneTransformComponent__ : parent object for transform objects
          * @method decorateScene
          * @param {KICK.scene.Scene}
+         * @private
          */
         decorateScene = function(scene){
             var sceneRootName = "__editorSceneRoot__";
@@ -174,17 +186,11 @@ var SceneEditorView = function(Y){
     engine.activeScene = editorScene;
     engine.resourceManager.addResourceProvider(new KICKED.LocalStorageResourceProvider(engine));
 
-    Object.defineProperties(this,{
-        gridEnabled: {
-            get: function(){
-                return gridComponent.enabled;
-            },
-            set: function(newValue){
-                gridComponent.enabled = newValue;
-            }
-        }
-    });
 
+    /**
+     * @method loadScene
+     * @param {KICK.core.ResourceDescriptor} sceneResourceDescr
+     */
     this.loadScene = function(sceneResourceDescr){
         destroyAllChildComponent(sceneRootObject);
         originalUidToNewUidMap = {};
@@ -271,6 +277,10 @@ var SceneEditorView = function(Y){
 
     };
 
+    /**
+     * @method loadProject
+     * @param {Object} projectConfig
+     */
     this.loadProject = function(projectConfig){
         engine.project.loadProject(projectConfig);
         editorScene = getEditorScene();
@@ -285,6 +295,22 @@ var SceneEditorView = function(Y){
     };
 
     Object.defineProperties(this,{
+        /**
+         * @property gridEnabled
+         * @type Boolean
+         */
+        gridEnabled: {
+            get: function(){
+                return gridComponent.enabled;
+            },
+            set: function(newValue){
+                gridComponent.enabled = newValue;
+            }
+        },
+        /**
+         * @property engine
+         * @type KICK.core.Engine
+         */
         engine:{
             get:function(){
                 return engine;
@@ -293,6 +319,12 @@ var SceneEditorView = function(Y){
     });
 };
 
+/**
+ * SceneEditorApp
+ * @class SceneEditorApp
+ * @constructor
+ * @param {YUI} Y
+ */
 var SceneEditorApp = function(Y){
     var _view = new SceneEditorView(Y,this),
         _sceneGameObjects,
@@ -587,6 +619,10 @@ var SceneEditorApp = function(Y){
             return false;
         };
 
+    /**
+     * @method loadProject
+     * @param {String} projectName
+     */
     this.loadProject = function(projectName){
         var onError = function(errorObj){
             alert("Error loading project");
@@ -618,6 +654,9 @@ var SceneEditorApp = function(Y){
         Y.one("#projectTitel").setContent(projectName);
     };
 
+    /**
+     * @method deleteProject
+     */
     this.deleteProject = function(){
         panel.set("headerContent", "Delete project");
         panel.setStdModContent(Y.WidgetStdMod.BODY, "Delete project permanently?");
@@ -656,16 +695,30 @@ var SceneEditorApp = function(Y){
     };
 
     Object.defineProperties(this,{
+        /**
+         * Readonly
+         * @property currentSceneUID
+         * @type Number
+         */
         currentSceneUID:{
             get:function(){
                 return _currentSceneUID;
             }
         },
+        /**
+         * Readonly
+         * @property currentSceneConfig
+         * @type Object
+         */
         currentSceneConfig:{
             get:function(){
                 return _currentSceneConfig;
             }
         },
+        /**
+         * @property tabView
+         * @type TabView
+         */
         tabView:{
             get:function(){
                 return _tabView;
@@ -674,6 +727,10 @@ var SceneEditorApp = function(Y){
                 _tabView = newValue;
             }
         },
+        /**
+         * @property propertyEditor
+         * @type PropertyEditor
+         */
         propertyEditor:{
             get:function(){
                 return _propertyEditor;
@@ -682,6 +739,10 @@ var SceneEditorApp = function(Y){
                 _propertyEditor = v;
             }
         },
+        /**
+         * @property sceneGameObjects
+         * @type SceneGameObjects
+         */
         sceneGameObjects:{
             get:function(){
                 return _sceneGameObjects;
@@ -690,6 +751,10 @@ var SceneEditorApp = function(Y){
                 _sceneGameObjects = v;
             }
         },
+        /**
+         * @property projectAssets
+         * @type ProjectAssets
+         */
         projectAssets:{
             get:function(){
                 return _projectAssets;
@@ -698,11 +763,19 @@ var SceneEditorApp = function(Y){
                 _projectAssets = v;
             }
         },
+        /**
+         * @property view
+         * @type SceneEditorView
+         */
         view:{
             get:function(){
                 return _view;
             }
         },
+        /**
+         * @property Engine
+         * @type KICK.core.Engine
+         */
         engine:{
             get:function(){
                 return _view.engine;
@@ -710,6 +783,10 @@ var SceneEditorApp = function(Y){
         }
     });
 
+    /**
+     * @method projectAssetSelected
+     * @param {Number} uid
+     */
     this.projectAssetSelected = function(uid){
         _projectAssets.selectProjectAssetById(uid);
         var resourceDescriptor = _view.engine.project.getResourceDescriptor(uid);
@@ -723,6 +800,10 @@ var SceneEditorApp = function(Y){
         _sceneGameObjects.deselect();
     };
 
+    /**
+     * @method gameObjectSelected
+     * @param {Number} uid
+     */
     this.gameObjectSelected = function(uid){
         _sceneGameObjects.selectGameObject(uid);
         // var gameObject = _view.engine.activeScene.getObjectByUID(uid);
@@ -739,6 +820,11 @@ var SceneEditorApp = function(Y){
         _projectAssets.deselect();
     };
 
+    /**
+     * @method saveProject
+     * @param {Function} responseFn
+     * @param {Function} errorFn
+     */
     this.saveProject = function(responseFn, errorFn){
         var projectSave = Y.one("#projectSave");
         projectSave.setContent("Saving ...");
@@ -766,6 +852,10 @@ var SceneEditorApp = function(Y){
         serverObject.resource.upload(projectName, 0, "application/json","project.json",projectStr,respWrap,errorWrap);
     };
 
+    /**
+     * @method projectLoad
+     * @param {Object} projectConfig
+     */
     this.projectLoad = function(projectConfig){
         _view.loadProject(projectConfig);
 
@@ -774,6 +864,9 @@ var SceneEditorApp = function(Y){
         _projectAssets.updateProjectContent();
     };
 
+    /**
+     * @method projectRun
+     */
     this.projectRun = function(){
         var project = engine.project,
                     projectSettings = project.getResourceDescriptorsByType('ProjectSettings')[0].config;
@@ -797,10 +890,19 @@ var SceneEditorApp = function(Y){
         }
     };
 
+    /**
+     * @method initEngine
+     */
     this.initEngine = function(){
         _view.engine.canvasResized();
     };
 
+    /**
+     * @method addComponent
+     * @param {Function} componentType
+     * @param {Object} config
+     * @private
+     */
     var addComponent = function(componentType,config){
         var uid = _sceneGameObjects.getSelectedGameObjectUid();
         var gameObject = _view.engine.activeScene.getObjectByUID(uid);
@@ -810,6 +912,11 @@ var SceneEditorApp = function(Y){
         collapseMenu("#propertyPanelMenu");
     };
 
+    /**
+     * @method collapseMenu
+     * @param menuId
+     * @private
+     */
     var collapseMenu = function(menuId){
         var menu = Y.one(menuId);
         menu.menuNav._hideAllSubmenus(menu);
@@ -920,6 +1027,12 @@ var SceneEditorApp = function(Y){
     }
 };
 
+/**
+ * SceneGameObjects
+ * @class SceneGameObjects
+ * @constructor
+ * @param {YUI} Y
+ */
 function SceneGameObjects(Y){
     var engine = sceneEditorApp.engine,
         sceneContentList = document.getElementById('sceneContentList'),
@@ -944,6 +1057,9 @@ function SceneGameObjects(Y){
 
     sceneTreeView.render();
 
+    /**
+     * @method updateSceneContent
+     */
     this.updateSceneContent = function(){
         var treeValues = {},
             activeSceneUids = {},
@@ -995,6 +1111,9 @@ function SceneGameObjects(Y){
         }
     };
 
+    /**
+     * @method createGameObject
+     */
     this.createGameObject = function(){
         var gameObject = engine.activeScene.createGameObject();
         var uid = gameObject.uid;
@@ -1005,6 +1124,9 @@ function SceneGameObjects(Y){
         thisObj.renameSelected();
     };
 
+    /**
+     * @method renameSelected
+     */
     this.renameSelected = function(){
         if (selectedTreeLeaf){
             var uid = selectedTreeLeaf.get("uid");
@@ -1027,6 +1149,10 @@ function SceneGameObjects(Y){
         selectGameObject(null);
     };
 
+    /**
+     * @method selectGameObject
+     * @param {Number} uid
+     */
     this.selectGameObject = function(uid){
         for (var i=sceneTreeView.size()-1;i>=0;i--){
             var element = sceneTreeView.item(i);
@@ -1039,6 +1165,9 @@ function SceneGameObjects(Y){
         }
     };
 
+    /**
+     * @method removeSelected
+     */
     this.removeSelected = function(){
         if (selectedTreeLeaf){
             sceneTreeView.remove(selectedTreeLeaf.get("index"));
@@ -1065,6 +1194,12 @@ function SceneGameObjects(Y){
     });
 }
 
+/**
+ * ProjectAssets
+ * @class ProjectAssets
+ * @constructor
+ * @param {YUI} Y
+ */
 function ProjectAssets(Y){
     var engine = sceneEditorApp.engine,
         selectedTreeLeaf = null,
@@ -1094,7 +1229,9 @@ function ProjectAssets(Y){
 
     /**
      * Invoken when an asset is selected in the tree menu
+     * @method selectProjectAsset
      * @param treeLeaf
+     * @private
      */
     var selectProjectAsset = function(treeLeaf){
         if (selectedTreeLeaf){
@@ -1108,6 +1245,9 @@ function ProjectAssets(Y){
         }
     };
 
+    /**
+     * @method deleteSelected
+     */
     this.deleteSelected = function(){
         if (selectedTreeLeaf){
             var uid = parseInt(selectedTreeLeaf.get("uid"));
@@ -1117,6 +1257,10 @@ function ProjectAssets(Y){
         }
     };
 
+    /**
+     * @method renameSelected
+     * @param {Function} afterRenameFn
+     */
     this.renameSelected = function(afterRenameFn){
         if (selectedTreeLeaf){
             var uid = selectedTreeLeaf.get("uid");
@@ -1148,6 +1292,9 @@ function ProjectAssets(Y){
 
     projectTreeView.render();
 
+    /**
+     * @method updateProjectContent
+     */
     this.updateProjectContent = function(){
         var project = engine.project,
             activeProjectUidList = project.resourceDescriptorUIDs,
@@ -1210,6 +1357,12 @@ function ProjectAssets(Y){
     });
 }
 
+/**
+ * TabView
+ * @class TabView
+ * @constructor
+ * @param {YUI} Y
+ */
 function TabView(Y){
     var thisObj = this,
         Removeable = function(config) {
@@ -1260,11 +1413,20 @@ function TabView(Y){
     });
     tabview.render();
 
+    /**
+     * @method updateSceneName
+     * @param {String} sceneName
+     * @param {Number} uid
+     */
     this.updateSceneName = function(sceneName,uid){
         tabview.item(0).set("label", sceneName);
         tabview.item(0).set("uid", uid);
     };
 
+    /**
+     * @method selectTabByUID
+     * @param {Number} uid
+     */
     this.selectTabByUID = function(uid){
         for (var i = 0;i<tabview.size();i++){
             if (tabview.get("uid") == uid){
@@ -1278,6 +1440,9 @@ function TabView(Y){
 
     // Since a canvas does not work well inside a TabView, it is added after the TabView and then hidden whenever the
     // selected index is not 0
+    /**
+     * @method adjustView
+     */
     this.adjustView = function (){
         var sceneView = document.getElementById('sceneView');
         sceneView.style.display = "inline";

@@ -1,6 +1,7 @@
 "use strict";
 
 /**
+ * ProjectSettings
  * @class ProjectSettings
  * @param {KICK.core.Engine} engine
  * @param {Object} config

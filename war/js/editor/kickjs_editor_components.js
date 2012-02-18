@@ -1,4 +1,9 @@
 "use strict";
+/**
+ * VisualGrid
+ * @class VisualGrid
+ * @constructor
+ */
 var VisualGrid = function VisualGrid(){ // use explicit function name to support auto serialization
     var engine,
         gl,

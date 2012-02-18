@@ -49,6 +49,7 @@ KICKED.server.login = function(responseFn, errorFn){
 
 
 /**
+ * project
  * @class project
  * @namespace KICKED.server
  */

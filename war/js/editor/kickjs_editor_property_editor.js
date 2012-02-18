@@ -289,6 +289,7 @@ var PropertyEditor = function(Y){
 };
 
 /**
+ * PropertyEditorSection
  * @class PropertyEditorSection
  * @param Y
  * @param {KICK.scene.Component | KICK.core.ResourceDescriptor} object

@@ -1,5 +1,13 @@
 "use strict";
 
+/**
+ * ProjectBuild
+ * @class ProjectBuild
+ * @constructor
+ * @param {YUI} Y
+ * @param engine
+ * @param panel
+ */
 function ProjectBuild(Y,engine,panel){
     var
         buildProjectFilter = ProjectBuild.buildProjectFilter,
