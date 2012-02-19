@@ -3,16 +3,47 @@ var ComponentPanelModule;
 
 // decorate objects
 KICK.scene.Transform.prototype.createEditorGUI = function(propertyEditor, object){
+    var configObject = object.proxyFor;
     propertyEditor.setTitle("Transform");
-    propertyEditor.addVector("position", "Position");
-    propertyEditor.addVector("rotationEuler", "Rotation");
-    propertyEditor.addVector("localScale", "Scale",null,null,null,null,null,0.1);
+    propertyEditor.addVector("localPosition", "Position",null,null,function(name, value){
+        object.localPosition = value;
+        console.log("was ",configObject);
+        configObject.config.localPosition = value;
+        console.log("now ",configObject);
+    });
+    propertyEditor.addVector("localRotationEuler", "Rotation",null,null,function(name,value){
+        object.localRotationEuler = value;
+        configObject.config.localRotationEuler = value;
+    });
+    propertyEditor.addVector("localScale", "Scale",null,null,function(name,value){
+        object.localScale = value;
+        configObject.config.localScale = value;
+    },null,null,0.1);
 };
 
 KICK.scene.MeshRenderer.prototype.createEditorGUI = function(propertyEditor, object){
+    var sceneObject = sceneEditorApp.view.lookupSceneObjectBasedOnOriginalUID(object.uid);
     propertyEditor.setTitle("MeshRenderer");
-    propertyEditor.addAssetPointer("material", "Material","", object.material ? object.material.uid:0 ,"KICK.material.Material");
-    propertyEditor.addAssetPointer("mesh", "Mesh","", object.mesh ? object.mesh.uid:0 ,"KICK.mesh.Mesh");
+    for (var i=0;i<object.config.materials.length;i++){
+        (function(i){
+            var updateValue = function (name, value){
+                value = engine.project.load(value);
+                var materials = sceneObject.materials;
+                materials[i] = value;
+                sceneObject.materials = materials;
+                object.config.materials[i].name = value.name;
+                object.config.materials[i].ref = value.uid;
+            };
+            propertyEditor.addAssetPointer("material", "Material","", object.config.materials.length?object.config.materials[i].ref:0 ,"KICK.material.Material",updateValue);
+        })(i);
+    }
+    function UpdateMesh(name, value){
+        value = engine.project.load(value);
+        sceneObject.mesh = value;
+        object.config.mesh.name = value.name;
+        object.config.mesh.ref = value.uid;
+    }
+    propertyEditor.addAssetPointer("mesh", "Mesh","", object.config.mesh?object.config.mesh.ref:0,"KICK.mesh.Mesh",UpdateMesh);
 };
 
 KICK.scene.Camera.prototype.createEditorGUI = function(propertyEditor, object){
@@ -261,8 +292,9 @@ var PropertyEditor = function(Y){
      * Set the content of the property editor
      * @method setContent
      * @param {Object} object
+     * @param {Boolean} isGameObject
      */
-    this.setContent = function(object){
+    this.setContent = function(object, isGameObject){
         destroyComponents();
         if (!object){
             propertyPanel.setStdModContent("header", "");
@@ -275,16 +307,22 @@ var PropertyEditor = function(Y){
         propertyPanel.show();
         propertyPanel.setStdModContent("header", "Properties: "+(object.name || "GameObject #"+object.uid));
         propertyPanel.setStdModContent("body","");
-        if (object instanceof KICK.scene.GameObject){
+        if (isGameObject){
             propertyPanelMenu.show();
             propertyPanelHeader.show();
             propertyPanelHeader.setContent("GameObject");
-            console.log("Show propertyPanelMenu");
-            for (var i=0;i<object.numberOfComponents;i++){
-                var component = object.getComponent(i);
-                propertyPanel.setStdModContent("body", '<div id="componentContainer_'+i+'"></div>',Y.WidgetStdMod.AFTER);
-                var compEditor = new PropertyEditorSection(Y, component,"componentContainer_"+i);
-                components.push(compEditor);
+            for (var i=0;i<object.components.length;i++){
+                var component = object.components[i];
+                if (component.type === "KICK.scene.Transform"){
+                    var sceneTransform = sceneEditorApp.view.lookupSceneObjectBasedOnOriginalUID(component.uid);
+                    propertyPanel.setStdModContent("body", '<div id="componentContainer_'+i+'"></div>',Y.WidgetStdMod.AFTER);
+                    var compEditor = new PropertyEditorSection(Y, sceneTransform ,"componentContainer_"+i);
+                    components.push(compEditor);
+                } else {
+                    propertyPanel.setStdModContent("body", '<div id="componentContainer_'+i+'"></div>',Y.WidgetStdMod.AFTER);
+                    var compEditor = new PropertyEditorSection(Y, component,"componentContainer_"+i,true);
+                    components.push(compEditor);
+                }
             }
         } else if (object instanceof KICK.core.ResourceDescriptor){
             propertyPanelMenu.hide();
@@ -306,7 +344,7 @@ var PropertyEditor = function(Y){
  * @param {KICK.scene.Component | KICK.core.ResourceDescriptor} object
  * @param {String} id
  */
-var PropertyEditorSection = function(Y, object, id){
+var PropertyEditorSection = function(Y, object, id, isGameObjectComponent){
     var c = KICK.core.Constants,
         engine = sceneEditorApp.engine,
         thisObj = this,
@@ -773,10 +811,10 @@ var PropertyEditorSection = function(Y, object, id){
         });
     };
 
-    if (object instanceof KICK.core.ResourceDescriptor){
-        createEditorGUI = KICK.namespace(object.type).prototype.createEditorGUI;
-    } else {
+    if (object.createEditorGUI){
         createEditorGUI = object.createEditorGUI;
+    } else if (object instanceof KICK.core.ResourceDescriptor || isGameObjectComponent){
+        createEditorGUI = KICK.namespace(object.type).prototype.createEditorGUI;
     }
     if (createEditorGUI){
         createEditorGUI(this,object);

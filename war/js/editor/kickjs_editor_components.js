@@ -174,7 +174,6 @@ var CameraNavigator = function CameraNavigator(){ // use explicit function name 
         }
         var wheelDelta = mouseInput.deltaWheel;
         if (wheelDelta[1]){
-            console.log(wheelDelta[1]);
             var mouseScrollWheelSensitivity = 0.01;
             var forward = [0,0,-mouseScrollWheelSensitivity*wheelDelta[1]];
             rotation = transform.rotation;

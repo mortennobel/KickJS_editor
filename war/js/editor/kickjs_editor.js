@@ -4,7 +4,6 @@
  * KickJS Editor
  * @module KICKED
  */
-
 var getParameter = function(name){
     var pathName = location.pathname;
     pathName = pathName.substring(1);
@@ -175,7 +174,9 @@ var SceneEditorView = function(Y){
             decorateScene(editorScene);
             return editorScene;
         },
-        editorScene;
+        editorScene,
+        // a reference to the current scene
+        currentSceneConfig;
 
         Y.one("window").on("resize", function(){
             canvas.set("width",canvas.get("clientWidth"));
@@ -183,9 +184,81 @@ var SceneEditorView = function(Y){
             engine.canvasResized();
         });
 
-    engine.activeScene = editorScene;
     engine.resourceManager.addResourceProvider(new KICKED.LocalStorageResourceProvider(engine));
 
+    /**
+     * @method createGameObject
+     * @param {String} name
+     * @return KICK.scene.GameObject
+     */
+    this.createGameObject = function(name){
+        var gameObject = engine.activeScene.createGameObject({name:name});
+        originalUidToNewUidMap[gameObject.uid] = gameObject.uid; // this maps gameObject to itself
+        var transformUid = engine.getUID(gameObject.transform);
+        originalUidToNewUidMap[transformUid] = transformUid; // this maps transform to itself
+        var gameObjectJSON = gameObject.toJSON();
+        currentSceneConfig.gameObjects.push(gameObjectJSON);
+        gameObject.proxyFor = gameObjectJSON;
+        gameObject.transform.proxyFor = gameObjectJSON.components[0];
+        return gameObject;
+    };
+
+
+    /**
+     * @method saveScene
+     * @param currentSceneUID
+     */
+    this.saveScene = function(currentSceneUID){
+        var resourceDescriptor = engine.project.getResourceDescriptor(currentSceneUID);
+        resourceDescriptor.updateConfig(currentSceneConfig);
+    };
+
+    /**
+     * @method renameGameObject
+     * @param {Number} uid
+     * @param {String} name
+     */
+    this.renameGameObject = function(uid, name){
+        var gameObject = thisObj.lookupSceneObjectBasedOnOriginalUID(uid);
+        gameObject.name = name;
+        gameObject.proxyFor.name = name;
+    };
+
+    /**
+     * @method deleteGameObject
+     * @param {Number} uid
+     */
+    this.deleteGameObject = function(uid){
+        uid = parseInt(uid);
+        var gameObject = thisObj.lookupSceneObjectBasedOnOriginalUID(uid);
+        for (var i = 0;i<currentSceneConfig.gameObjects.length;i++){
+            var gameObjectConfig = currentSceneConfig.gameObjects[i];
+            if (gameObjectConfig.uid === uid){
+                // clean up references to object in originalUidToNewUidMap
+                delete originalUidToNewUidMap[uid];
+                for (var j=0;j<gameObjectConfig.components.length;j++){
+                    var componentUid = gameObjectConfig.components[j].uid;
+                    delete originalUidToNewUidMap[componentUid];
+                }
+                // remove gameobject from array
+                currentSceneConfig.gameObjects.splice(i, 1);
+                break;
+            }
+        }
+        // remove gameObject from scene
+        gameObject.destroy();
+    };
+
+    /**
+     * @method lookupSceneObjectBasedOnOriginalUID
+     * @param {Number} uid
+     * @return {GameObject|Component}
+     */
+    this.lookupSceneObjectBasedOnOriginalUID = function(uid){
+        var originalUid = originalUidToNewUidMap[uid];
+        console.log("originalUid:"+originalUid);
+        return engine.activeScene.getObjectByUID(originalUid);
+    };
 
     /**
      * @method loadScene
@@ -194,17 +267,18 @@ var SceneEditorView = function(Y){
     this.loadScene = function(sceneResourceDescr){
         destroyAllChildComponent(sceneRootObject);
         originalUidToNewUidMap = {};
-        var gameObjects = sceneResourceDescr.config.gameObjects,
+        currentSceneConfig = sceneResourceDescr.config;
+        var gameObjects = currentSceneConfig.gameObjects,
             newComponents = [],
             componentsConfigs = [],
             applyConfig = KICK.core.Util.applyConfig,
             hasProperty = KICK.core.Util.hasProperty;
 
-
         // create objects
         for (var i=0;i<gameObjects.length;i++){
             var gameObjectSrc = gameObjects[i];
             var gameObjectDest = editorScene.createGameObject({name:gameObjectSrc.name});
+            gameObjectDest.proxyFor = gameObjectSrc;
             gameObjectDest.destUid = gameObjectSrc.uid;
             originalUidToNewUidMap[gameObjectSrc.uid] = gameObjectDest.uid;
 
@@ -214,13 +288,15 @@ var SceneEditorView = function(Y){
                 var type = comp.type;
                 if (type === "KICK.scene.Transform"){
                     newComponents.push(gameObjectDest.transform);
+                    gameObjectDest.transform.proxyFor = comp;
+                    originalUidToNewUidMap[comp.uid] = engine.getUID(gameObjectDest.transform);
                 } else {
                     if (type === "KICK.scene.MeshRenderer" || type === "KICK.scene.Light"){
                         var constructor = KICK.namespace(type);
                         var componentInstance = new constructor();
+                        componentInstance.proxyFor = comp;
                         gameObjectDest.addComponent(componentInstance);
-                        var newUid = engine.getUID(componentInstance);
-                        originalUidToNewUidMap[newUid] = comp.uid;
+                        originalUidToNewUidMap[comp.uid] = engine.getUID(componentInstance);
                         newComponents.push(componentInstance);
                     } else {
                         continue;
@@ -230,27 +306,12 @@ var SceneEditorView = function(Y){
             }
         }
 
-        var deserialize = function(value){
-            if (typeof value === 'number'){
-                return value;
+        // loads a component based on the original uid
+        var sceneProxy = {
+            getObjectByUID: function(uid){
+                return thisObj.lookupSceneObjectBasedOnOriginalUID(uid);
             }
-            if (Array.isArray(value)){
-                for (var i=0;i<value.length;i++){
-                    value[i] = deserialize(value[i]);
-                }
-            } else if (value){
-                if (value && value.ref && value.reftype){
-                    if (value.reftype === "project"){
-                        value = engine.project.load(value.ref);
-                    } else if (value.reftype === "gameobject" || value.reftype === "component"){
-                        var mappedUid = originalUidToNewUidMap[value.ref];
-                        engine.project.getObjectByUID(mappedUid);
-                    }
-                }
-            }
-            return value;
         };
-
 
         // apply config
         var sceneRootObjectTransform = sceneRootObject.transform;
@@ -261,7 +322,7 @@ var SceneEditorView = function(Y){
             for (var name in config){
                 if (hasProperty(config,name)){
                     var value = config[name];
-                    value = deserialize(value);
+                    value = KICK.core.Util.deserializeConfig(value, engine, sceneProxy);
                     configCopy[name] = value;
                 }
             }
@@ -274,7 +335,6 @@ var SceneEditorView = function(Y){
         }
 
         // change parent to sceneRootObject
-
     };
 
     /**
@@ -282,8 +342,13 @@ var SceneEditorView = function(Y){
      * @param {Object} projectConfig
      */
     this.loadProject = function(projectConfig){
+        console.log("projectConfig");
+        console.log(JSON.stringify( projectConfig,null,3));
         engine.project.loadProject(projectConfig);
         editorScene = getEditorScene();
+        if (engine.activeScene && engine.activeScene.name.indexOf("__") !== 0){
+            engine.project.removeCacheReference(engine.activeScene.uid);
+        }
         engine.activeScene = editorScene;
         console.log("LoadProject");
         var projectSettingsName = "Project settings";
@@ -341,11 +406,7 @@ var SceneEditorApp = function(Y){
             if (!uid){
                 return;
             }
-            var gameObject = _view.engine.activeScene.getObjectByUID(uid);
-            if (!gameObject){
-                return;
-            }
-            gameObject.destroy();
+            _view.deleteGameObject(uid);
             _sceneGameObjects.removeSelected();
             e.preventDefault ();
         },
@@ -405,8 +466,6 @@ var SceneEditorApp = function(Y){
             return newScene;
         },
         loadScene = function(uid){
-            var engine = _view.engine,
-                project = engine.project;
             setCurrentSceneUID(uid);
             console.log("Active scene is now "+uid);
             _view.loadScene(_currentSceneConfig);
@@ -816,7 +875,7 @@ var SceneEditorApp = function(Y){
             }
         }
 
-        _propertyEditor.setContent(gameObject);
+        _propertyEditor.setContent(gameObject,true);
         _projectAssets.deselect();
     };
 
@@ -828,9 +887,9 @@ var SceneEditorApp = function(Y){
     this.saveProject = function(responseFn, errorFn){
         var projectSave = Y.one("#projectSave");
         projectSave.setContent("Saving ...");
+        _view.saveScene(_currentSceneUID);
         var projectJSON = _view.engine.project.toJSON();
         projectJSON.activeScene = _currentSceneUID; // replace with wrapping scene
-        console.log(projectJSON);
         var projectStr = JSON.stringify(projectJSON);
         var resetSaveButton = function(){
             projectSave.setContent('Save');
@@ -908,8 +967,8 @@ var SceneEditorApp = function(Y){
         var gameObject = _view.engine.activeScene.getObjectByUID(uid);
         var component = new componentType(config || {});
         gameObject.addComponent(component);
-        _propertyEditor.setContent(gameObject);
         collapseMenu("#propertyPanelMenu");
+        thisObj.gameObjectSelected(gameObject.uid);
     };
 
     /**
@@ -1035,6 +1094,7 @@ var SceneEditorApp = function(Y){
  */
 function SceneGameObjects(Y){
     var engine = sceneEditorApp.engine,
+        labelTemplate = Y.Handlebars.compile('<span title="{{title}}">{{label}}</span>'),
         sceneContentList = document.getElementById('sceneContentList'),
         thisObj = this,
         selectedTreeLeaf = null,
@@ -1065,7 +1125,6 @@ function SceneGameObjects(Y){
             activeSceneUids = {},
             // activeScene,
             sceneConfig,
-            labelTemplate = Y.Handlebars.compile('<span title="{{title}}">{{label}}</span>'),
             i;
 
         // save used elements to treeValues
@@ -1115,13 +1174,15 @@ function SceneGameObjects(Y){
      * @method createGameObject
      */
     this.createGameObject = function(){
-        var gameObject = engine.activeScene.createGameObject();
-        var uid = gameObject.uid;
-        var treeNodeContainer = sceneTreeView.add({childType:"TreeLeaf",label:"GameObject #"+uid});
-        var treeNode = treeNodeContainer.item(0);
-        treeNode.set("uid",uid);
-        sceneEditorApp.gameObjectSelected(uid);
-        thisObj.renameSelected();
+        var newName = prompt("Enter GameObjects name","GameObject");
+        if (newName){
+            var gameObject = sceneEditorApp.view.createGameObject(newName);
+            var uid = gameObject.uid;
+            var treeNodeContainer = sceneTreeView.add({childType:"TreeLeaf",label:labelTemplate({label:newName,title:"UID: "+uid})});
+            var treeNode = treeNodeContainer.item(0);
+            treeNode.set("uid",uid);
+            sceneEditorApp.gameObjectSelected(uid);
+        }
     };
 
     /**
@@ -1130,12 +1191,12 @@ function SceneGameObjects(Y){
     this.renameSelected = function(){
         if (selectedTreeLeaf){
             var uid = selectedTreeLeaf.get("uid");
-            var gameObject = engine.activeScene.getObjectByUID(uid);
+            var gameObject = sceneEditorApp.view.lookupSceneObjectBasedOnOriginalUID(uid);
             var name = gameObject.name || "GameObject #"+uid;
-            var newValue = prompt("Enter GameObjects new name",name);
-            if (newValue){
-                gameObject.name = newValue;
-                selectedTreeLeaf.get("contentBox").setContent(newValue);
+            var newName = prompt("Enter GameObjects new name",name);
+            if (newName){
+                sceneEditorApp.view.renameGameObject(uid,newName);
+                selectedTreeLeaf.get("contentBox").setContent(labelTemplate({label:newName,title:"UID: "+uid}));
                 sceneEditorApp.gameObjectSelected(uid); // forces reload of property editor
             }
         }
