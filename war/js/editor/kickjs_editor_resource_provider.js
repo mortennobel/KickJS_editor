@@ -28,6 +28,11 @@ KICKED.LocalStorageResourceProvider = function(engine){
         }
     });
 
+    /**
+     * @method getMeshData
+     * @param url
+     * @param meshDestination
+     */
     this.getMeshData = function(url,meshDestination){
         var urlContent = url.substring(thisObj.protocol.length).split("/"),
             projectName = urlContent[0],
@@ -61,6 +66,11 @@ KICKED.LocalStorageResourceProvider = function(engine){
             uInt8[7] === 10;
     };
 
+    /**
+     * @method getImageData
+     * @param {String} url
+     * @param {Object} textureDestination
+     */
     this.getImageData = function(url,textureDestination){
         var urlContent = url.substring(thisObj.protocol.length).split("/"),
             projectName = urlContent[0],
@@ -80,7 +90,7 @@ KICKED.LocalStorageResourceProvider = function(engine){
             img.onerror = function(e){
                 console.log("error get image data");
                 console.log(e);
-            }
+            };
             img.src = URL.createObjectURL(blob);
         };
         var onError = function(res){
@@ -90,6 +100,11 @@ KICKED.LocalStorageResourceProvider = function(engine){
     };
 
 
+    /**
+     * @method getShaderData
+     * @param {String} uri
+     * @param {Object} shaderDestination
+     */
     this.getShaderData = function( uri , shaderDestination ){
         KICK.core.Util.fail("Not implemented yet 2");
     };

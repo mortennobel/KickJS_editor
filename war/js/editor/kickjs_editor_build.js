@@ -111,6 +111,10 @@ function ProjectBuild(Y,engine,panel){
             addBinaryResourceByURL("/dist/SimpleWebServer.jar","SimpleWebServer.jar");
             isZipComplete = true;
         };
+
+    /**
+     * @method projectBuild
+     */
     this.projectBuild = function(){
         var removeFlashButton = function(){
             var buildButton = Y.one("#projectBuildButton");
@@ -171,6 +175,11 @@ function ProjectBuild(Y,engine,panel){
     };
 }
 
+/**
+ * @method buildProjectFilter
+ * @param object
+ * @static
+ */
 ProjectBuild.buildProjectFilter = function(object){
     if (object instanceof KICK.scene.GameObject || object instanceof KICK.core.ResourceDescriptor){
         var name = object.name || "";

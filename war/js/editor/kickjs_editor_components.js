@@ -13,8 +13,16 @@ var VisualGrid = function VisualGrid(){ // use explicit function name to support
         transform,
         thisObj = this;
 
+    /**
+     * Default true
+     * @property enabled
+     * @type Boolean
+     */
     this.enabled = true;
 
+    /**
+     * @method activated
+     */
     this.activated = function(){
         engine = this.gameObject.engine;
         transform = this.gameObject.transform;
@@ -87,6 +95,11 @@ var VisualGrid = function VisualGrid(){ // use explicit function name to support
            console.log(errors);
         }
     };
+    /**
+     * @method render
+     * @param engineUniforms
+     * @param overwriteShader
+     */
     this.render = function(engineUniforms,overwriteShader){
         if (thisObj.enabled){
             var shader = overwriteShader || gridShader;
@@ -97,11 +110,19 @@ var VisualGrid = function VisualGrid(){ // use explicit function name to support
     };
 };
 
+/**
+ * CameraNavigator
+ * @class CameraNavigator
+ * @constructor
+ */
 var CameraNavigator = function CameraNavigator(){ // use explicit function name to support auto serialization
     var transform,
         mouseInput,
         euler = KICK.math.vec3.create(),
         camera;
+    /**
+     * @method activated
+     */
     this.activated = function(){
         var gameObject = this.gameObject;
         transform = gameObject.transform;
@@ -110,6 +131,9 @@ var CameraNavigator = function CameraNavigator(){ // use explicit function name 
         camera = gameObject.getComponentOfType(KICK.scene.Camera);
     };
 
+    /**
+     * @method update
+     */
     this.update = function(){
         var mousePosDelta,
             hasMovement,

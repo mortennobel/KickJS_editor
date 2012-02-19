@@ -124,7 +124,7 @@ var SceneEditorView = function(Y){
          * __editorSceneGridObject__ : Grid object
          * __editorSceneTransformComponent__ : parent object for transform objects
          * @method decorateScene
-         * @param {KICK.scene.Scene}
+         * @param {KICK.scene.Scene} scene
          * @private
          */
         decorateScene = function(scene){
@@ -215,7 +215,7 @@ var SceneEditorView = function(Y){
                 if (type === "KICK.scene.Transform"){
                     newComponents.push(gameObjectDest.transform);
                 } else {
-                    if (type === "KICK.scene.MeshRenderer"){
+                    if (type === "KICK.scene.MeshRenderer" || type === "KICK.scene.Light"){
                         var constructor = KICK.namespace(type);
                         var componentInstance = new constructor();
                         gameObjectDest.addComponent(componentInstance);

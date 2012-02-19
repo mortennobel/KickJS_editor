@@ -21,6 +21,10 @@ function ProjectSettings(engine, config){
         canvasWidth = 300;
 
     Object.defineProperties(this,{
+        /**
+         * @property canvasHeight
+         * @type Number
+         */
         canvasHeight:{
             get:function(){
                 return canvasHeight;
@@ -29,6 +33,10 @@ function ProjectSettings(engine, config){
                 canvasHeight = newValue;
             }
         },
+        /**
+         * @property canvasWidth
+         * @type Number
+         */
         canvasWidth:{
             get:function(){
                 return canvasWidth;
@@ -37,6 +45,11 @@ function ProjectSettings(engine, config){
                 canvasWidth = newValue;
             }
         },
+        /**
+         * Component unique identifier (uid)
+         * @property uid
+         * @type Number
+         */
         uid:{
             get:function(){
                 return uid;
@@ -45,6 +58,9 @@ function ProjectSettings(engine, config){
                 uid = newValue;
             }
         },
+        /**
+         * @property alpha
+         */
         alpha:{
             get:function(){
                 return alpha;
@@ -53,6 +69,10 @@ function ProjectSettings(engine, config){
                 alpha = newValue;
             }
         },
+        /**
+         * @property name
+         * @type String
+         */
         name:{
             get:function(){
                 return name;
@@ -61,6 +81,10 @@ function ProjectSettings(engine, config){
                 name = newValue;
             }
         },
+        /**
+         * @property antialias
+         * @type Boolean
+         */
         antialias:{
             get:function(){
                 return antialias;
@@ -69,6 +93,10 @@ function ProjectSettings(engine, config){
                 antialias = newValue;
             }
         },
+        /**
+         * @property premultipliedAlpha
+         * @type Boolean
+         */
         premultipliedAlpha:{
             get:function(){
                 return premultipliedAlpha;
@@ -77,6 +105,11 @@ function ProjectSettings(engine, config){
                 premultipliedAlpha = newValue;
             }
         },
+        /**
+         * 0 means don't check
+         * @property checkCanvasResizeInterval
+         * @type Number
+         */
         checkCanvasResizeInterval:{
             get:function(){
                 return checkCanvasResizeInterval;
@@ -85,6 +118,10 @@ function ProjectSettings(engine, config){
                 checkCanvasResizeInterval = parseInt(newValue) || 0;
             }
         },
+        /**
+         * @property shadows
+         * @type Boolean
+         */
         shadows:{
             get:function(){
                 return shadows;
@@ -93,6 +130,10 @@ function ProjectSettings(engine, config){
                 shadows = newValue;
             }
         },
+        /**
+         * @property maxNumerOfLights
+         * @type Number
+         */
         maxNumerOfLights:{
             get:function(){
                 return maxNumerOfLights;
@@ -125,8 +166,13 @@ function ProjectSettings(engine, config){
             canvasWidth: canvasWidth
         };
     };
-};
+}
 
+/**
+ * @method createEditorGUI
+ * @param propertyEditor
+ * @param object
+ */
 ProjectSettings.prototype.createEditorGUI = function(propertyEditor, object){
     propertyEditor.setTitle("Project settings");
     propertyEditor.addBoolean("alpha", "Alpha", "If the value is true, the drawing buffer has an alpha channel for the purposes of performing OpenGL destination alpha operations and compositing with the page. If the value is false, no alpha buffer is available.");
@@ -140,5 +186,4 @@ ProjectSettings.prototype.createEditorGUI = function(propertyEditor, object){
     propertyEditor.addNumber("canvasHeight", "Canvas height", null,null,1,8096,1);
     propertyEditor.addSeparator();
     propertyEditor.addButton("Delete project", "Delete the project permanently", sceneEditorApp.deleteProject);
-
 };

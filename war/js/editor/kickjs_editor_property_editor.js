@@ -227,6 +227,12 @@ KICK.material.Material.prototype.createEditorGUI = function(propertyEditor, obje
     }
 };
 
+/**
+ * PropertyEditor
+ * @class PropertyEditor
+ * @constructor
+ * @param {YUI} Y
+ */
 var PropertyEditor = function(Y){
     var engine = sceneEditorApp.engine,
         propertyPanelMenu = Y.one("#propertyPanelMenu"),
@@ -251,6 +257,11 @@ var PropertyEditor = function(Y){
     propertyPanel.setStdModContent("body", "");
     propertyPanel.setStdModContent("footer", "");
 
+    /**
+     * Set the content of the property editor
+     * @method setContent
+     * @param {Object} object
+     */
     this.setContent = function(object){
         destroyComponents();
         if (!object){
@@ -712,7 +723,7 @@ var PropertyEditorSection = function(Y, object, id){
         componentPanel.setStdModContent("body",content,Y.WidgetStdMod.AFTER);
         componentPanel.render();
         Y.one("#"+id).on('click',onClickFn);
-    }
+    };
 
     componentPanel.hide();
 
@@ -777,6 +788,10 @@ var PropertyEditorSection = function(Y, object, id){
     if (body){
         body.addClass("yui3-g");
     }
+
+    /**
+     * @method destroy
+     */
     this.destroy = function(){
         componentPanel.destroy();
     }

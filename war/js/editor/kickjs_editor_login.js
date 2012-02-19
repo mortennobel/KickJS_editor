@@ -1,3 +1,7 @@
+/**
+ * Login
+ * @class Login
+ */
 YUI().use('node','panel', function(Y) {
     var
         panelCreateProject,

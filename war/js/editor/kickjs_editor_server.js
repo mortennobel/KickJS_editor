@@ -120,6 +120,7 @@ KICKED.server.project.load = function(name,responseFn, errorFn){
 };
 
 /**
+ * resource
  * @class resource
  * @namespace KICKED
  */
@@ -261,6 +262,7 @@ var IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction;
 var IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange;
 
 /**
+ * project
  * @class project
  * @namespace KICKED.localStorage
  */
@@ -410,6 +412,7 @@ KICKED.localStorage.project.load = function(name,onSuccessFn, errorFn){
 };
 
 /**
+ * resource
  * @class resource
  * @namespace KICKED
  */
