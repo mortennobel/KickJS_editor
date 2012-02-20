@@ -19,6 +19,20 @@ function ProjectBuild(Y,engine,panel){
                 projectSettings = project.getResourceDescriptorsByType('ProjectSettings')[0].config,
                 isZipComplete = false,
                 activeRequests = 0,
+                verifyValidInitialScene = function(projectSettings){
+                    var scene = engine.project.getResourceDescriptor(projectSettings.initialScene);
+                    if (!scene || scene.name.indexOf('__') === 0){
+                        // invalid name
+                        // choose any other scene name
+                        var allScenes = engine.project.getResourceDescriptorsByType("KICK.scene.Scene");
+                        for (var i=0;i<allScenes.length;i++){
+                            if (allScenes[i].name.indexOf('__')!==0){
+                                projectSettings.initialScene = allScenes[i].uid;
+                                break;
+                            }
+                        }
+                    }
+                },
                 checkZipComplete = function(){
                     if (isZipComplete && activeRequests === 0){
                         var content = zip.generate();
@@ -97,16 +111,19 @@ function ProjectBuild(Y,engine,panel){
                     resourceDescriptor.config.dataURI = url;
                 }
             }
+            verifyValidInitialScene(projectSettings);
+            projectJson.activeScene = projectSettings.initialScene;
             zip.add("project.json", JSON.stringify(projectJson,null,debug?3:0));
+            var reloadTS = "?ts="+new Date().getTime();
             // copy existing resouces
-            addTextResourceByURL("/dist/export-template.html","index.html",
+            addTextResourceByURL("/dist/export-template.html"+reloadTS,"index.html",
                 {
                     canvasWidth: projectSettings.canvasWidth,
                     canvasHeight:projectSettings.canvasHeight,
                     projectName: projectName
                 });
-            addTextResourceByURL("/js/kick-min-0.3.1.js","kick-min-0.3.1.js");
-            addTextResourceByURL("/dist/initKickJS.handlebar","initKickJS.js",projectSettings);
+            addTextResourceByURL("/js/kick-min-0.3.1.js"+reloadTS,"kick-min-0.3.1.js");
+            addTextResourceByURL("/dist/initKickJS.handlebar"+reloadTS,"initKickJS.js",projectSettings);
             addTextResourceByURL("/dist/readme.html","readme.html");
             addBinaryResourceByURL("/dist/SimpleWebServer.jar","SimpleWebServer.jar");
             isZipComplete = true;

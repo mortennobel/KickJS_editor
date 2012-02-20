@@ -18,9 +18,18 @@ function ProjectSettings(engine, config){
         shadows = false,
         maxNumerOfLights = 1,
         canvasHeight = 300,
-        canvasWidth = 300;
+        canvasWidth = 300,
+        initialScene = 1;
 
     Object.defineProperties(this,{
+        initialScene:{
+            get:function(){
+                return initialScene;
+            },
+            set:function(newValue){
+                initialScene = newValue;
+            }
+        },
         /**
          * @property canvasHeight
          * @type Number
@@ -155,6 +164,7 @@ function ProjectSettings(engine, config){
     this.toJSON = function(){
         return {
             uid: thisObj.uid,
+            initialScene:initialScene,
             name:name,
             alpha:alpha,
             antialias:antialias,
@@ -184,6 +194,21 @@ ProjectSettings.prototype.createEditorGUI = function(propertyEditor, object){
     propertyEditor.addSeparator();
     propertyEditor.addNumber("canvasWidth", "Canvas width", null,null,1,8096,1);
     propertyEditor.addNumber("canvasHeight", "Canvas height", null,null,1,8096,1);
+    propertyEditor.addSeparator();
+
+    var values = [];
+    var scenes = sceneEditorApp.view.engine.project.getResourceDescriptorsByType("KICK.scene.Scene");
+    for (var i=0;i<scenes.length;i++){
+        var scene = scenes[i];
+        var sceneName = scene.name;
+        if (sceneName.indexOf('__')!==0){
+            values.push({
+                value:scene.uid,
+                name:sceneName
+            });
+        }
+    }
+    propertyEditor.addEnum("initialScene", "Initial Scene", null,values);
     propertyEditor.addSeparator();
     propertyEditor.addButton("Delete project", "Delete the project permanently", sceneEditorApp.deleteProject);
 };

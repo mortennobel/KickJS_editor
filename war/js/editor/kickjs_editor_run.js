@@ -30,5 +30,6 @@ KICK.loadProject = function(dataObject){
     canvas.height = dataObject.projectSettings.canvasHeight;
     var engine = new KICK.core.Engine(canvas,dataObject.projectSettings);
     engine.project.loadProject(dataObject.projectConfig);
+    engine.activeScene = engine.project.load(dataObject.projectSettings.initialScene);
 };
 
