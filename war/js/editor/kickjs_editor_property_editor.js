@@ -803,10 +803,7 @@ var PropertyEditorSection = function(Y, object, id, isGameObjectComponent){
             }
             node.setAttribute("clickListener",true);
             node.on("click", function(e){
-                var gameObject = object.gameObject;
-                gameObject.removeComponent(object);
-                // reload game object
-                sceneEditorApp.gameObjectSelected(gameObject.uid);
+                sceneEditorApp.view.deleteComponent(object.uid);
             });
         });
     };
