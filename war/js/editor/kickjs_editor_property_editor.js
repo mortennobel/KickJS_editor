@@ -356,13 +356,15 @@ var PropertyEditorSection = function(Y, object, id, isGameObjectComponent){
                 contentBox: "#"+id
             }),
         getValue = function(name){
-            if (isResourceDescriptor){
+            if (isResourceDescriptor || isGameObjectComponent){
                 return object.config[name];
             }
             return object[name];
         },
         setValue = function(name, value){
-            if (isResourceDescriptor){
+            if (isGameObjectComponent){
+                object.config[name] = value;
+            } else if (isResourceDescriptor){
                 var uid = object.uid;
                 var projectAsset = engine.project.load(uid);
                 projectAsset[name] = value;
@@ -523,10 +525,11 @@ var PropertyEditorSection = function(Y, object, id, isGameObjectComponent){
                 parentNode.append(item);
             }
 
-            var updateModel = function(){
+            var updateModel = function(e){
                 var newUid = parseInt(Y.one("#"+nodeId).get('value'));
                 setValueFn = setValueFn || setValue;
                 setValueFn(name,newUid);
+                e.preventDefault();
             };
             node.on("change",updateModel);
             node.after("click",updateModel);
@@ -804,6 +807,7 @@ var PropertyEditorSection = function(Y, object, id, isGameObjectComponent){
             node.setAttribute("clickListener",true);
             node.on("click", function(e){
                 sceneEditorApp.view.deleteComponent(object.uid);
+                e.preventDefault();
             });
         });
     };

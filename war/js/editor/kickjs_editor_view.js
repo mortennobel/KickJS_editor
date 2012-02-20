@@ -143,21 +143,42 @@ var SceneEditorView = function(Y){
 
     this.deleteComponent = function(uid){
         uid = parseInt(uid);
-        var component = thisObj.lookupSceneObjectBasedOnOriginalUID(uid);
-        var gameObject = component.gameObject;
+        var component = thisObj.lookupSceneObjectBasedOnOriginalUID(uid),
+            gameObject,
+            configurationComponents,
+            i,
+            gameObjectUid;
+        if (component){
+            gameObject = component.gameObject;
+            configurationComponents = gameObject.proxyFor.components;
+            gameObjectUid = gameObject.uid;
+        } else {
+            // manually search for component based on uid
+            for (i = 0;i<currentSceneConfig.gameObjects.length;i++){
+                var gameObjectConfig = currentSceneConfig.gameObjects[i];
+                for (var j=0;j<gameObjectConfig.components.length;j++){
+                    var componentUid = gameObjectConfig.components[j].uid;
+                    if (componentUid === uid){
+                        configurationComponents = gameObjectConfig.components;
+                        gameObjectUid = gameObjectConfig.uid;
+                    }
+                }
+            }
+        }
         // remove component on configuration
-        var configurationComponents = gameObject.proxyFor.components;
-        for (var i = 0;i<configurationComponents.length;i++){
+        for (i = 0;i<configurationComponents.length;i++){
             if (configurationComponents[i].uid === uid){
                 configurationComponents.splice(i,1); // remove element from array
                 delete originalUidToNewUidMap[uid]; // delete reference
-                gameObject.removeComponent(component); // remove scene component from scene object
+                if (component){
+                    gameObject.removeComponent(component); // remove scene component from scene object if exist
+                }
                 break;
             }
         }
 
         // reload game object
-        sceneEditorApp.gameObjectSelected(gameObject.proxyFor.uid);
+        sceneEditorApp.gameObjectSelected(gameObjectUid);
     };
 
     /**
