@@ -141,8 +141,8 @@ var CameraNavigator = function CameraNavigator(){ // use explicit function name 
             pos;
         if (mouseInput.isButtonDown(0)){
             var componentsPicked = function (gameObject){
-                if (gameObject.destUid){
-                    sceneEditorApp.gameObjectSelected(gameObject.destUid);
+                if (gameObject.proxyFor.uid){
+                    sceneEditorApp.gameObjectSelected(gameObject.proxyFor.uid);
                 }
             };
             var x = mouseInput.mousePosition[0];

@@ -19,7 +19,13 @@ var getParameter = function(name){
         return splittedPathName.length >=4 && splittedPathName[3] === "debug";
     }
     return null;
-};
+},
+    /**
+     * Global helper method to ensure valid asset / gameObject names
+     */
+    isNameValid = function(name){
+        return name  && name.length>0 && name.indexOf('__')!==0;
+    };
 
 var serverObject = getParameter("useServer")? KICKED.server:KICKED.localStorage;
 var projectName = getParameter("project");
@@ -62,7 +68,7 @@ var DebugEditorScene = function(){
             components += gameObjectToJSON.components[i].type+";";
         }
         var indent = Array(level+2).join("  ");
-        console.log(indent+gameObjectParent.name+" uid "+gameObjectParent.uid+" ("+gameObjectParent.destUid+") ["+components+"]"); // write debug to log
+        console.log(indent+gameObjectParent.name+" uid "+gameObjectParent.uid+" ("+gameObjectParent.proxyFor.uid+") ["+components+"]"); // write debug to log
         var transform = gameObjectParent.transform;
         var transformChildren = transform.children;
         level++;
@@ -150,19 +156,19 @@ var SceneEditorApp = function(Y){
             _currentSceneConfig = _view.engine.project.getResourceDescriptor(newValue);
         },
         addScene = function(e){
-            var engine = _view.engine,
-                newScene = KICK.scene.Scene.createDefault(engine);
-            setCurrentSceneUID(_view.engine.getUID(newScene));
-            _propertyEditor.setContent(null);
-            _sceneGameObjects.updateSceneContent();
-            _projectAssets.updateProjectContent();
-            _projectAssets.selectProjectAssetById(newScene.uid);
-            var afterRename = function(){
-                thisObj.tabView.updateSceneName(newScene.name,newScene.uid);
-            };
-            _projectAssets.renameSelected(afterRename );
+            var engine = _view.engine;
+            var sceneName = prompt("Create scene","Scene");
+            if (isNameValid(sceneName)){
+                var newScene = KICK.scene.Scene.createDefault(engine);
+                newScene.name = sceneName;
+                setCurrentSceneUID(_view.engine.getUID(newScene));
+                _propertyEditor.setContent(null);
+                _sceneGameObjects.updateSceneContent();
+                _projectAssets.updateProjectContent();
+                _projectAssets.selectProjectAssetById(newScene.uid);
+                thisObj.tabView.updateSceneName(sceneName,newScene.uid);
+            }
             e.preventDefault();
-            return newScene;
         },
         loadScene = function(uid){
             setCurrentSceneUID(uid);
@@ -193,6 +199,7 @@ var SceneEditorApp = function(Y){
                     var uploadModelNormals = Y.one("#uploadModelNormals").get("checked"),
                         uploadModelNormalsRecalc = Y.one("#uploadModelNormalsRecalc").get("checked"),
                         uploadModelUV1 = Y.one("#uploadModelUV1").get("checked"),
+                        uploadModelUV2 = Y.one("#uploadModelUV2").get("checked"),
                         uploadModelTangent = Y.one("#uploadModelTangent").get("checked"),
                         uploadModelTangentRecalc = Y.one("#uploadModelTangentRecalc").get("checked"),
                         uploadModelCreateGameObjects = Y.one("#uploadModelCreateGameObjects").get("checked"),
@@ -201,19 +208,39 @@ var SceneEditorApp = function(Y){
 
                     var reader = new FileReader();
                     reader.onload = function(e) {
-                        var fileAsString = e.target.result;
-                        var modelImport;
+                        var fileAsString = e.target.result,
+                            modelImport,
+                            i;
                         if (fileExt === "dae"){
                             modelImport = KICK.importer.ColladaImporter;
                         } else if (fileExt === "obj"){
                             modelImport = KICK.importer.ObjImporter;
                         }
                         var importResult = modelImport.import(fileAsString,_view.engine,_view.engine.activeScene,uploadModelRotate90x);
-                        console.log("Todo - use uploadModel "); // todo strip / recalculate model
-                        for (var i = 0;i<importResult.mesh.length;i++){
+                        for (i = 0;i<importResult.mesh.length;i++){
                             var mesh = importResult.mesh[i];
                             (function(mesh){
                                 var meshData = mesh.meshData;
+                                if (!uploadModelNormals){
+                                    meshData.normal = null;
+                                }
+                                if (uploadModelNormalsRecalc){
+                                    meshData.recalculateNormals();
+                                }
+                                if (!uploadModelUV1){
+                                    meshData.uv1 = null;
+                                }
+                                if (!uploadModelUV2){
+                                    meshData.uv2 = null;
+                                }
+                                if (!uploadModelTangent){
+                                    meshData.tangent = null;
+                                }
+                                if (uploadModelTangentRecalc){
+                                    meshData.recalculateTangents();
+                                }
+                                mesh.meshData = meshData; // update mesh
+
                                 var meshDataSerialized = meshData.serialize();
                                 var onSuccess = function(resp){
                                     mesh.setDataURI(resp.response.dataURI);
@@ -225,6 +252,25 @@ var SceneEditorApp = function(Y){
                                 serverObject.resource.upload(projectName,mesh.uid,"mesh/kickjs",mesh.name,meshDataSerialized,onSuccess,onError);
                             })(mesh);
                         }
+
+                        for (i=0;i<importResult.gameObjects.length;i++){
+                            var newGameObject = importResult.gameObjects[i];
+                            if (!uploadModelCreateGameObjects){
+                                newGameObject.destroy();
+                            } else {
+                                _view.createGameObject(newGameObject.name,newGameObject);
+                                for (var j=0;j<newGameObject.numberOfComponents;j++){
+                                    var component = newGameObject.getComponent(j);
+                                    if (component instanceof KICK.scene.MeshRenderer){
+                                        _view.addExistingComponent(component);
+                                    } else if (! (component instanceof KICK.scene.Transform)){
+                                        KICK.core.Util.warn("Unknown type of component : "+component);
+                                        console.log(component);
+                                    }
+                                }
+                            }
+                        }
+
                         _sceneGameObjects.updateSceneContent();
                         _projectAssets.updateProjectContent();
                         panel.hide();
@@ -866,13 +912,12 @@ function SceneGameObjects(Y){
             }
         }
     };
-
     /**
      * @method createGameObject
      */
     this.createGameObject = function(){
         var newName = prompt("Enter GameObjects name","GameObject");
-        if (newName){
+        if (isNameValid(newName)){
             var gameObject = sceneEditorApp.view.createGameObject(newName);
             var uid = gameObject.uid;
             var treeNodeContainer = sceneTreeView.add({childType:"TreeLeaf",label:labelTemplate({label:newName,title:"UID: "+uid})});
@@ -1026,7 +1071,7 @@ function ProjectAssets(Y){
             if (asset){
                 var name = asset.name || "";
                 var newName = prompt("Enter asset name", name);
-                if (newName && newName.length>0 && newName.indexOf('__')!==0){
+                if (isNameValid(newName)){
                     asset.name = newName;
                     if (afterRenameFn){
                         afterRenameFn();

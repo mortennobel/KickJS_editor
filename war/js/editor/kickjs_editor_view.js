@@ -106,10 +106,11 @@ var SceneEditorView = function(Y){
     /**
      * @method createGameObject
      * @param {String} name
+     * @param {KICK.scene.GameObject} gameObjectToWrap optional
      * @return KICK.scene.GameObject
      */
-    this.createGameObject = function(name){
-        var gameObject = engine.activeScene.createGameObject({name:name});
+    this.createGameObject = function(name, gameObjectToWrap){
+        var gameObject = gameObjectToWrap || engine.activeScene.createGameObject({name:name});
         originalUidToNewUidMap[gameObject.uid] = gameObject.uid; // this maps gameObject to itself
         var transformUid = engine.getUID(gameObject.transform);
         originalUidToNewUidMap[transformUid] = transformUid; // this maps transform to itself
@@ -222,18 +223,27 @@ var SceneEditorView = function(Y){
      * @param {Object} config
      * @private
      */
-    this.addComponent = function(uid,componentType,config){
-        if (uid){
-            var gameObject = thisObj.lookupSceneObjectBasedOnOriginalUID (uid);
+    this.addComponent = function(gameObjectUid,componentType,config){
+        if (gameObjectUid){
+            var gameObject = thisObj.lookupSceneObjectBasedOnOriginalUID (gameObjectUid);
             var component = new componentType(config || {});
-            var componentUid = engine.getUID(component);
-            originalUidToNewUidMap[componentUid] = componentUid;
             gameObject.addComponent(component);
-            var jsonObject = component.toJSON();
-            component.proxyFor = jsonObject;
-            gameObject.proxyFor.components.push(jsonObject);
+            thisObj.addExistingComponent(component);
             sceneEditorApp.gameObjectSelected(gameObject.uid);
         }
+    };
+
+    /**
+     * Used to register component to listeners. (Mainly used after model import)
+     * @method addExistingComponent
+     * @param {KICK.scene.Component} component
+     */
+    this.addExistingComponent = function(component){
+        var componentUid = engine.getUID(component);
+        originalUidToNewUidMap[componentUid] = componentUid;
+        var jsonObject = component.toJSON();
+        component.proxyFor = jsonObject;
+        component.gameObject.proxyFor.components.push(jsonObject);
     };
 
     /**
@@ -255,7 +265,6 @@ var SceneEditorView = function(Y){
             var gameObjectSrc = gameObjects[i];
             var gameObjectDest = editorScene.createGameObject({name:gameObjectSrc.name});
             gameObjectDest.proxyFor = gameObjectSrc;
-            gameObjectDest.destUid = gameObjectSrc.uid;
             originalUidToNewUidMap[gameObjectSrc.uid] = gameObjectDest.uid;
 
             var comps = gameObjectSrc.components;
