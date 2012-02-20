@@ -1161,10 +1161,6 @@ function TabView(Y){
         children: [{
             label: 'Scene',
             content: ''
-        },
-        {
-            label: 'Test',
-            content: ''
         }
         ],
         plugins: [Removeable]
