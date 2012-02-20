@@ -656,6 +656,13 @@ var SceneEditorApp = function(Y){
     };
 
 
+    /**
+     * @method reloadSelected
+     */
+    this.reloadSelected = function(){
+        var gameObjectUid = _sceneGameObjects.getSelectedGameObjectUid();
+        thisObj.gameObjectSelected(gameObjectUid);
+    };
 
     /**
      * @method collapseMenu
@@ -748,7 +755,11 @@ var SceneEditorApp = function(Y){
         if (hasLightOfType(KICK.core.Constants._LIGHT_TYPE_AMBIENT)){
             alert("The scene already contains an ambient light");
         } else {
-            _view.addComponent(_sceneGameObjects.getSelectedGameObjectUid(),KICK.scene.Light,{type:KICK.core.Constants._LIGHT_TYPE_AMBIENT});
+            _view.addComponent(_sceneGameObjects.getSelectedGameObjectUid(),KICK.scene.Light,
+                {
+                    type:KICK.core.Constants._LIGHT_TYPE_AMBIENT,
+                    intensity:0.3
+                });
         }
         e.preventDefault ();
     });

@@ -178,7 +178,7 @@ var SceneEditorView = function(Y){
         }
 
         // reload game object
-        sceneEditorApp.gameObjectSelected(gameObjectUid);
+        sceneEditorApp.reloadSelected();
     };
 
     /**
@@ -318,15 +318,12 @@ var SceneEditorView = function(Y){
      * @param {Object} projectConfig
      */
     this.loadProject = function(projectConfig){
-        console.log("projectConfig");
-        console.log(JSON.stringify( projectConfig,null,3));
         engine.project.loadProject(projectConfig);
         editorScene = getEditorScene();
         if (engine.activeScene && engine.activeScene.name.indexOf("__") !== 0){
             engine.project.removeCacheReference(engine.activeScene.uid);
         }
         engine.activeScene = editorScene;
-        console.log("LoadProject");
         var projectSettingsName = "Project settings";
         var projectSettingsType = "ProjectSettings";
         var projectSettings = engine.project.loadByName(projectSettingsName, projectSettingsType);

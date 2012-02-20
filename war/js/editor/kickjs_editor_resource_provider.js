@@ -103,7 +103,7 @@ KICKED.LocalStorageResourceProvider = function(engine){
     /**
      * @method getShaderData
      * @param {String} uri
-     * @param {Object} shaderDestination
+     * @param {} shaderDestination
      */
     this.getShaderData = function( uri , shaderDestination ){
         KICK.core.Util.fail("Not implemented yet 2");

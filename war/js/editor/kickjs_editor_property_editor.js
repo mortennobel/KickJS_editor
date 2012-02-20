@@ -7,9 +7,7 @@ KICK.scene.Transform.prototype.createEditorGUI = function(propertyEditor, object
     propertyEditor.setTitle("Transform");
     propertyEditor.addVector("localPosition", "Position",null,null,function(name, value){
         object.localPosition = value;
-        console.log("was ",configObject);
         configObject.config.localPosition = value;
-        console.log("now ",configObject);
     });
     propertyEditor.addVector("localRotationEuler", "Rotation",null,null,function(name,value){
         object.localRotationEuler = value;
@@ -47,23 +45,37 @@ KICK.scene.MeshRenderer.prototype.createEditorGUI = function(propertyEditor, obj
 };
 
 KICK.scene.Camera.prototype.createEditorGUI = function(propertyEditor, object){
+    var reloadAfterSetValue = function(name,value){
+        if (object.config[name] !== value){
+            object.config[name] = value;
+            sceneEditorApp.reloadSelected();
+        }
+    };
     propertyEditor.setTitle("Camera");
     propertyEditor.addBoolean("enabled", "Enabled");
     propertyEditor.addEnum("perspective", "Type",null, [
         {value:1,name:"Perspective"},
         {value:0,name:"Orthographic"}
-    ]);
-    propertyEditor.addNumber("fieldOfView", "Field of view Y","Perspective only");
-    propertyEditor.addNumber("near", "Near clip plane");
-    propertyEditor.addNumber("far", "Far clip plane");
-    propertyEditor.addNumber("left", "Left","Orthographic only");
-    propertyEditor.addNumber("right", "Right","Orthographic only");
-    propertyEditor.addNumber("bottom", "Bottom","Orthographic only");
-    propertyEditor.addNumber("top", "top","Orthographic only");
+    ],reloadAfterSetValue);
+    if (object.config.perspective){
+        propertyEditor.addNumber("fieldOfView", "Field of view Y","Perspective only");
+        propertyEditor.addNumber("near", "Near clip plane");
+        propertyEditor.addNumber("far", "Far clip plane");
+    } else {
+        propertyEditor.addNumber("near", "Near clip plane");
+        propertyEditor.addNumber("far", "Far clip plane");
+        propertyEditor.addNumber("left", "Left","Orthographic only");
+        propertyEditor.addNumber("right", "Right","Orthographic only");
+        propertyEditor.addNumber("bottom", "Bottom","Orthographic only");
+        propertyEditor.addNumber("top", "top","Orthographic only");
+    }
+
     propertyEditor.addSeparator();
     propertyEditor.addBoolean("clearFlagDepth", "Clear depth buffer");
-    propertyEditor.addBoolean("clearFlagColor", "Clear color buffer");
-    propertyEditor.addColor("clearColor", "Clear color");
+    propertyEditor.addBoolean("clearFlagColor", "Clear color buffer",null,reloadAfterSetValue);
+    if (object.config.clearFlagColor){
+        propertyEditor.addColor("clearColor", "Clear color");
+    }
     propertyEditor.addSeparator();
     propertyEditor.addBoolean("renderShadow", "Render shadow");
     propertyEditor.addNumber("layerMask", "Layer mask", "Camera renders only objects where the components layer exist in the layer mask.");
@@ -73,9 +85,21 @@ KICK.scene.Camera.prototype.createEditorGUI = function(propertyEditor, object){
 };
 
 KICK.scene.Light.prototype.createEditorGUI = function(propertyEditor, object){
-    var c = KICK.core.Constants,
-        lightName;
-    switch(object.type){
+    var sceneObject = sceneEditorApp.view.lookupSceneObjectBasedOnOriginalUID(object.uid),
+        c = KICK.core.Constants,
+        lightName,
+        reloadAfterSetValue = function(name,value){
+            if (object.config[name] !== value){
+                object.config[name] = value;
+                sceneObject[name] = value;
+                sceneEditorApp.reloadSelected();
+            }
+        },
+        setValue = function(name,value){
+            sceneObject[name] = value;
+            object.config[name] = value;
+        };
+    switch(sceneObject.type){
         case c._LIGHT_TYPE_AMBIENT:
             lightName = "Ambient light";
             break;
@@ -90,12 +114,14 @@ KICK.scene.Light.prototype.createEditorGUI = function(propertyEditor, object){
             break;
     }
     propertyEditor.setTitle(lightName);
-    propertyEditor.addColor("color", "Color");
-    propertyEditor.addNumber("intensity", "Intensity");
+    propertyEditor.addColor("color", "Color",null,null,setValue);
+    propertyEditor.addNumber("intensity", "Intensity",null,setValue,null,null,0.05);
     if (object.type===c._LIGHT_TYPE_DIRECTIONAL){
-        propertyEditor.addBoolean("shadow", "Shadow");
-        propertyEditor.addNumber("shadowBias", "Shadow bias");
-        propertyEditor.addNumber("shadowStrength", "Shadow strength");
+        propertyEditor.addBoolean("shadow", "Shadow",null,reloadAfterSetValue);
+        if (object.shadow){
+            propertyEditor.addNumber("shadowBias", "Shadow bias",null,setValue);
+            propertyEditor.addNumber("shadowStrength", "Shadow strength",null,setValue);
+        }
     }
 };
 
