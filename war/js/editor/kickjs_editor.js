@@ -224,7 +224,8 @@ var SceneEditorApp = function(Y){
                                 if (!uploadModelNormals){
                                     meshData.normal = null;
                                 }
-                                if (uploadModelNormalsRecalc){
+                                if (uploadModelNormalsRecalc ||
+                                    (uploadModelNormals && !meshData.normal)){ // recompute if not exist
                                     meshData.recalculateNormals();
                                 }
                                 if (!uploadModelUV1){
@@ -236,7 +237,8 @@ var SceneEditorApp = function(Y){
                                 if (!uploadModelTangent){
                                     meshData.tangent = null;
                                 }
-                                if (uploadModelTangentRecalc){
+                                if (uploadModelTangentRecalc ||
+                                    (uploadModelTangent && !meshData.tangent)){ // recompute if not exists
                                     meshData.recalculateTangents();
                                 }
                                 mesh.meshData = meshData; // update mesh
