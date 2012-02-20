@@ -141,7 +141,7 @@ var SceneEditorApp = function(Y){
             } else {
                 materials = [new KICK.material.Material(engine,{shader:project.load(project.ENGINE_SHADER_ERROR) })];
             }
-            addComponent(KICK.scene.MeshRenderer,{mesh:mesh,materials:materials});
+            _view.addComponent(_sceneGameObjects.getSelectedGameObjectUid(),KICK.scene.MeshRenderer,{mesh:mesh,materials:materials});
             collapseMenu("#propertyPanelMenu");
             e.preventDefault ();
         },
@@ -655,20 +655,7 @@ var SceneEditorApp = function(Y){
         _view.engine.canvasResized();
     };
 
-    /**
-     * @method addComponent
-     * @param {Function} componentType
-     * @param {Object} config
-     * @private
-     */
-    var addComponent = function(componentType,config){
-        var uid = _sceneGameObjects.getSelectedGameObjectUid();
-        var gameObject = _view.engine.activeScene.getObjectByUID(uid);
-        var component = new componentType(config || {});
-        gameObject.addComponent(component);
-        collapseMenu("#propertyPanelMenu");
-        thisObj.gameObjectSelected(gameObject.uid);
-    };
+
 
     /**
      * @method collapseMenu
@@ -744,7 +731,7 @@ var SceneEditorApp = function(Y){
 
     Y.one("#componentAddLightPoint").on("click",function(e){
         collapseMenu("#propertyPanelMenu");
-        addComponent(KICK.scene.Light,{type:KICK.core.Constants._LIGHT_TYPE_POINT});
+        _view.addComponent(_sceneGameObjects.getSelectedGameObjectUid(),KICK.scene.Light,{type:KICK.core.Constants._LIGHT_TYPE_POINT});
         e.preventDefault ();
     });
     Y.one("#componentAddLightDirectional").on("click",function(e){
@@ -752,7 +739,7 @@ var SceneEditorApp = function(Y){
         if (hasLightOfType(KICK.core.Constants._LIGHT_TYPE_DIRECTIONAL)){
             alert("The scene already contains a directional light");
         } else {
-            addComponent(KICK.scene.Light,{type:KICK.core.Constants._LIGHT_TYPE_DIRECTIONAL});
+            _view.addComponent(_sceneGameObjects.getSelectedGameObjectUid(),KICK.scene.Light,{type:KICK.core.Constants._LIGHT_TYPE_DIRECTIONAL});
         }
         e.preventDefault ();
     });
@@ -761,13 +748,13 @@ var SceneEditorApp = function(Y){
         if (hasLightOfType(KICK.core.Constants._LIGHT_TYPE_AMBIENT)){
             alert("The scene already contains an ambient light");
         } else {
-            addComponent(KICK.scene.Light,{type:KICK.core.Constants._LIGHT_TYPE_AMBIENT});
+            _view.addComponent(_sceneGameObjects.getSelectedGameObjectUid(),KICK.scene.Light,{type:KICK.core.Constants._LIGHT_TYPE_AMBIENT});
         }
         e.preventDefault ();
     });
     Y.one("#componentAddCamera").on("click",function(e){
         collapseMenu("#propertyPanelMenu");
-        addComponent(KICK.scene.Camera);
+        _view.addComponent(_sceneGameObjects.getSelectedGameObjectUid(),KICK.scene.Camera);
         e.preventDefault ();
     });
     Y.one("#cameraGrid").on("click",function(e){

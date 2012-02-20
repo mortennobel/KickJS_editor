@@ -217,6 +217,26 @@ var SceneEditorView = function(Y){
     };
 
     /**
+     * @method addComponent
+     * @param {Function} componentType
+     * @param {Object} config
+     * @private
+     */
+    this.addComponent = function(uid,componentType,config){
+        if (uid){
+            var gameObject = thisObj.lookupSceneObjectBasedOnOriginalUID (uid);
+            var component = new componentType(config || {});
+            var componentUid = engine.getUID(component);
+            originalUidToNewUidMap[componentUid] = componentUid;
+            gameObject.addComponent(component);
+            var jsonObject = component.toJSON();
+            component.proxyFor = jsonObject;
+            gameObject.proxyFor.components.push(jsonObject);
+            sceneEditorApp.gameObjectSelected(gameObject.uid);
+        }
+    };
+
+    /**
      * @method loadScene
      * @param {KICK.core.ResourceDescriptor} sceneResourceDescr
      */
