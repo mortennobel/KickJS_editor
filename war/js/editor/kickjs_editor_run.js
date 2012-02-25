@@ -29,7 +29,11 @@ KICK.loadProject = function(dataObject){
     canvas.width = dataObject.projectSettings.canvasWidth;
     canvas.height = dataObject.projectSettings.canvasHeight;
     var engine = new KICK.core.Engine(canvas,dataObject.projectSettings);
-    engine.project.loadProject(dataObject.projectConfig);
-    engine.activeScene = engine.project.load(dataObject.projectSettings.initialScene);
+    var projectName = dataObject.projectName;
+    KICKED.localStorage.project.load(projectName, function(){
+        engine.resourceLoader.addResourceProvider(new KICKED.LocalStorageResourceProvider(engine));
+            engine.project.loadProject(dataObject.projectConfig);
+            engine.activeScene = engine.project.load(dataObject.projectSettings.initialScene);
+    }, function(e){alert("Error loading project"+e);})
 };
 

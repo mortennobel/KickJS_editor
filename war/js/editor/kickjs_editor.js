@@ -348,7 +348,6 @@ var SceneEditorApp = function(Y){
                                 var img = new Image();
                                 img.onload = function(){
                                     texture.setImage(img, imageUrl);
-                                    console.log("Set image to "+imageUrl);
                                 };
                                 img.src = e.target.result;
 

@@ -48,7 +48,6 @@ var SceneEditorView = function(Y){
             sceneRootObject = scene.getGameObjectByName(sceneRootName);
             if (!sceneRootObject){
                 sceneRootObject = scene.createGameObject({name:sceneRootName});
-                console.log("Created "+sceneRootObject.name);
             }
             var cameraName = "__editorSceneCameraObject__";
             cameraObject = scene.getGameObjectByName(cameraName);
@@ -101,7 +100,7 @@ var SceneEditorView = function(Y){
             engine.canvasResized();
         });
 
-    engine.resourceManager.addResourceProvider(new KICKED.LocalStorageResourceProvider(engine));
+    engine.resourceLoader.addResourceProvider(new KICKED.LocalStorageResourceProvider(engine));
 
     /**
      * @method createGameObject
