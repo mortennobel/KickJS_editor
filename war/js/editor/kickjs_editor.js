@@ -441,11 +441,12 @@ var SceneEditorApp = function(Y){
                 _tabView.adjustView();
             };
             if (isSceneNotFound){
-                thisObj.projectLoad(window.kickjsDefaultProject);
-                thisObj.saveProject(sceneReady,onError,true);
+                thisObj.projectLoad(window.kickjsDefaultProject, function(){
+                    thisObj.saveProject(sceneReady,onError,true);
+                    sceneReady();
+                });
             } else {
-                thisObj.projectLoad(content);
-                sceneReady();
+                thisObj.projectLoad(content,sceneReady);
             }
         };
         var onResourceLoadError = function(content, isError){
@@ -661,12 +662,15 @@ var SceneEditorApp = function(Y){
      * @method projectLoad
      * @param {Object} projectConfig
      */
-    this.projectLoad = function(projectConfig){
-        _view.loadProject(projectConfig);
+    this.projectLoad = function(projectConfig, onSuccess){
+        _view.loadProject(projectConfig, function(){
+            loadScene(projectConfig.activeScene);
+            _sceneGameObjects.updateSceneContent();
+            _projectAssets.updateProjectContent();
+            onSuccess();
+        });
 
-        loadScene(projectConfig.activeScene);
-        _sceneGameObjects.updateSceneContent();
-        _projectAssets.updateProjectContent();
+
     };
 
     /**

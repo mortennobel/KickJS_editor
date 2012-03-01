@@ -482,7 +482,12 @@ KICKED.localStorage.resource.load = function(projectName,uid,responseFn,errorFn,
     request.onsuccess = function(){
         var value = request.result;
         if (!value){ // value not found (null values are now 'allowed' in my table
-            errorFn({message:"Row not found"});
+            var errObj = {message:"Row not found - "+projectName+" "+uid};
+            if (errorFn){
+                errorFn(errObj);
+            } else {
+                console.log(errObj);
+            }
         }
         else {
             var res = value.value;

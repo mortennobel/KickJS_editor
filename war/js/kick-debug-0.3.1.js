@@ -2737,7 +2737,7 @@ KICK.namespace = function (ns_string) {
 * @property unlit_vs.glsl
 * @type String
 */
-{"__error_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvoid main(void)\n{\ngl_FragColor = vec4(1.0,0.5, 0.9, 1.0);\n}","__error_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\n} ","__pick_fs.glsl":"#ifdef GL_ES\nprecision mediump float;\n#endif\nvarying vec4 gameObjectUID;\nvoid main(void)\n{\ngl_FragColor = gameObjectUID;\n}","__pick_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nuniform vec4 _gameObjectUID;\nvarying vec4 gameObjectUID;\nvoid main(void) {\n// compute position\ngl_Position = _mvProj * vec4(vertex, 1.0);\ngameObjectUID = _gameObjectUID;\n}","__shadowmap_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvec4 packDepth( const in float depth ) {\nconst vec4 bitShift = vec4( 16777216.0, 65536.0, 256.0, 1.0 );\nconst vec4 bitMask = vec4( 0.0, 1.0 / 256.0, 1.0 / 256.0, 1.0 / 256.0 );\nvec4 res = fract( depth * bitShift );\nres -= res.xxyz * bitMask;\nreturn res;\n}\nvoid main() {\ngl_FragColor = packDepth( gl_FragCoord.z );\n}\n","__shadowmap_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\n} ","diffuse_fs.glsl":"precision mediump float;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec3 vEcPosition;\nuniform vec4 mainColor;\nuniform sampler2D mainTexture;\n#pragma include \"light.glsl\"\n#pragma include \"shadowmap.glsl\"\nvoid main(void)\n{\nvec3 normal = normalize(vNormal);\nvec3 directionalLight = getDirectionalLightDiffuse(normal,_dLight);\nvec3 pointLight = getPointLightDiffuse(normal,vEcPosition, _pLights);\nfloat visibility;\nif (SHADOWS){\nvisibility = computeLightVisibility();\n} else {\nvisibility = 1.0;\n}\nvec3 color = max((directionalLight+pointLight)*visibility,_ambient.xyz)*mainColor.xyz;\ngl_FragColor = vec4(texture2D(mainTexture,vUv).xyz*color, 1.0);\n}\n","diffuse_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat4 _mv;\nuniform mat4 _m;\nuniform mat4 _lightMat;\nuniform mat3 _norm;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec4 vShadowMapCoord;\nvarying vec3 vEcPosition;\nvoid main(void) {\nvec4 v = vec4(vertex, 1.0);\ngl_Position = _mvProj * v;\nvEcPosition = (_mv * v).xyz;\nvUv = uv1;\nvNormal = _norm * normal;\nvShadowMapCoord = _lightMat * _m * v;\n} ","light.glsl":"vec3 getPointLightDiffuse(vec3 normal, vec3 ecPosition, mat3 pLights[LIGHTS]){\nvec3 diffuse = vec3(0.0);\nfor (int i=0;i<LIGHTS;i++){\nvec3 ecLightPos = pLights[i][0]; // light position in eye coordinates\nvec3 colorIntensity = pLights[i][1];\nvec3 attenuationVector = pLights[i][2];\n// direction from surface to light position\nvec3 VP = ecLightPos - ecPosition;\n// compute distance between surface and light position\nfloat d = length(VP);\n// normalize the vector from surface to light position\nVP = normalize(VP);\n// compute attenuation\nfloat attenuation = 1.0 / dot(vec3(1.0,d,d*d),attenuationVector); // short for constA + liniearA * d + quadraticA * d^2\nfloat nDotVP = max(0.0, dot(normal, VP));\ndiffuse += colorIntensity*nDotVP * attenuation;\n}\nreturn diffuse;\n}\nvoid getPointLight(vec3 normal, vec3 ecPosition, mat3 pLights[LIGHTS],float specularExponent, out vec3 diffuse, out float specular){\ndiffuse = vec3(0.0, 0.0, 0.0);\nspecular = 0.0;\nvec3 eye = vec3(0.0,0.0,1.0);\nfor (int i=0;i<LIGHTS;i++){\nvec3 ecLightPos = pLights[i][0]; // light position in eye coordinates\nvec3 colorIntensity = pLights[i][1];\nvec3 attenuationVector = pLights[i][2];\n// direction from surface to light position\nvec3 VP = ecLightPos - ecPosition;\n// compute distance between surface and light position\nfloat d = length(VP);\n// normalize the vector from surface to light position\nVP = normalize(VP);\n// compute attenuation\nfloat attenuation = 1.0 / dot(vec3(1.0,d,d*d),attenuationVector); // short for constA + liniearA * d + quadraticA * d^2\nvec3 halfVector = normalize(VP + eye);\nfloat nDotVP = max(0.0, dot(normal, VP));\nfloat nDotHV = max(0.0, dot(normal, halfVector));\nfloat pf;\nif (nDotVP == 0.0){\npf = 0.0;\n} else {\npf = pow(nDotHV, specularExponent);\n}\nbool isLightEnabled = (attenuationVector[0]+attenuationVector[1]+attenuationVector[2])>0.0;\nif (isLightEnabled){\ndiffuse += colorIntensity * nDotVP * attenuation;\nspecular += pf * attenuation;\n}\n}\n}\nvec3 getDirectionalLightDiffuse(vec3 normal, mat3 dLight){\nvec3 ecLightDir = dLight[0]; // light direction in eye coordinates\nvec3 colorIntensity = dLight[1];\nfloat diffuseContribution = max(dot(normal, ecLightDir), 0.0);\nreturn (colorIntensity * diffuseContribution);\n}\n// assumes that normal is normalized\nvoid getDirectionalLight(vec3 normal, mat3 dLight, float specularExponent, out vec3 diffuse, out float specular){\nvec3 ecLightDir = dLight[0]; // light direction in eye coordinates\nvec3 colorIntensity = dLight[1];\nvec3 halfVector = dLight[2];\nfloat diffuseContribution = max(dot(normal, ecLightDir), 0.0);\n\tfloat specularContribution = max(dot(normal, halfVector), 0.0);\nspecular = pow(specularContribution, specularExponent);\n\tdiffuse = (colorIntensity * diffuseContribution);\n}\nuniform mat3 _dLight;\nuniform vec3 _ambient;\nuniform mat3 _pLights[LIGHTS];\n","shadowmap.glsl":"varying vec4 vShadowMapCoord;\nuniform sampler2D _shadowMapTexture;\nconst float shadowBias = 0.005;\nfloat unpackDepth( const in vec4 rgba_depth ) {\nconst vec4 bit_shift = vec4( 1.0 / ( 16777216.0 ), 1.0 / ( 65536.0 ), 1.0 / 256.0, 1.0 );\nreturn dot( rgba_depth, bit_shift );\n}\nfloat computeLightVisibility(){\nvec3 shadowCoord = vShadowMapCoord.xyz / vShadowMapCoord.w;\nif (shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0 && shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0){\nvec4 packedShadowDepth = texture2D(_shadowMapTexture,shadowCoord.xy);\nfloat shadowDepth = unpackDepth(packedShadowDepth);\nif (shadowDepth < shadowCoord.z + shadowBias){\nreturn 1.0;\n}\nreturn 0.0;\n}\nreturn 1.0; // if outside shadow map, then not occcluded\n}","specular_fs.glsl":"precision mediump float;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec3 vEcPosition;\nuniform vec4 mainColor;\nuniform float specularExponent;\nuniform vec4 specularColor;\nuniform sampler2D mainTexture;\n#pragma include \"light.glsl\"\n#pragma include \"shadowmap.glsl\"\nvoid main(void)\n{\nvec3 normal = normalize(vNormal);\nvec3 diffuse;\nfloat specular;\ngetDirectionalLight(normal, _dLight, specularExponent, diffuse, specular);\nvec3 diffusePoint;\nfloat specularPoint;\ngetPointLight(normal,vEcPosition, _pLights,specularExponent,diffusePoint,specularPoint);\nfloat visibility;\nif (SHADOWS){\nvisibility = computeLightVisibility();\n} else {\nvisibility = 1.0;\n}\nvec3 color = max((diffuse+diffusePoint)*visibility,_ambient.xyz)*mainColor.xyz;\ngl_FragColor = vec4(texture2D(mainTexture,vUv).xyz*color.xyz, 1.0)+vec4((specular+specularPoint)*specularColor.xyz,0.0);\n}\n","specular_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat4 _mv;\nuniform mat4 _m;\nuniform mat4 _lightMat;\nuniform mat3 _norm;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec3 vEcPosition;\nvarying vec4 vShadowMapCoord;\nvoid main(void) {\nvec4 v = vec4(vertex, 1.0);\ngl_Position = _mvProj * v;\nvUv = uv1;\nvEcPosition = (_mv * v).xyz;\nvNormal= _norm * normal;\nvShadowMapCoord = _lightMat * _m * v;\n} ","transparent_diffuse_fs.glsl":"precision mediump float;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec3 vEcPosition;\nuniform vec4 mainColor;\nuniform float specularExponent;\nuniform vec4 specularColor;\nuniform sampler2D mainTexture;\n#pragma include \"light.glsl\"\nvoid main(void)\n{\nvec3 normal = normalize(vNormal);\nvec3 diffuseDirectionalLight = getDirectionalLightDiffuse(normal,_dLight);\nvec3 diffusePointLight = getPointLightDiffuse(normal,vEcPosition, _pLights);\nvec4 color = vec4(max(diffuseDirectionalLight+diffusePointLight,_ambient.xyz),1.0)*mainColor;\ngl_FragColor = texture2D(mainTexture,vUv)*color;\n}\n","transparent_diffuse_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat3 _norm;\nuniform mat4 _mv;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec3 vEcPosition;\nvoid main(void) {\nvec4 v = vec4(vertex, 1.0);\n// compute position\ngl_Position = _mvProj * v;\nvEcPosition = (_mv * v).xyz;\nvUv = uv1;\n// compute light info\nvNormal= _norm * normal;\n} ","transparent_specular_fs.glsl":"precision mediump float;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec3 vEcPosition;\nuniform vec4 mainColor;\nuniform float specularExponent;\nuniform vec4 specularColor;\nuniform sampler2D mainTexture;\n#pragma include \"light.glsl\"\nvoid main(void)\n{\nvec3 normal = normalize(vNormal);\nvec3 diffuse;\nfloat specular;\ngetDirectionalLight(normal, _dLight, specularExponent, diffuse, specular);\nvec3 diffusePoint;\nfloat specularPoint;\ngetPointLight(normal,vEcPosition, _pLights,specularExponent,diffusePoint,specularPoint);\nvec4 color = vec4(max(diffuse+diffusePoint,_ambient.xyz),1.0)*mainColor;\ngl_FragColor = texture2D(mainTexture,vUv)*color+vec4((specular+specularPoint)*specularColor.xyz,0.0);\n}\n","transparent_specular_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat4 _mv;\nuniform mat3 _norm;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec3 vEcPosition;\nvoid main(void) {\nvec4 v = vec4(vertex, 1.0);\n// compute position\ngl_Position = _mvProj * v;\nvEcPosition = (_mv * v).xyz;\nvUv = uv1;\n// compute light info\nvNormal= _norm * normal;\n} ","transparent_unlit_fs.glsl":"precision mediump float;\nvarying vec2 vUv;\nuniform vec4 mainColor;\nuniform sampler2D mainTexture;\nvoid main(void)\n{\ngl_FragColor = texture2D(mainTexture,vUv)*mainColor;\n}\n","transparent_unlit_vs.glsl":"attribute vec3 vertex;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nvarying vec2 vUv;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n}","unlit_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nuniform vec4 mainColor;\nuniform sampler2D mainTexture;\nvoid main(void)\n{\ngl_FragColor = vec4(texture2D(mainTexture,vUv).xyz*mainColor.xyz,1.0);\n}\n","unlit_vertex_color_fs.glsl":"precision mediump float;\nvarying vec2 vUv;\nvarying vec4 vColor;\nuniform vec4 mainColor;\nuniform sampler2D mainTexture;\nvoid main(void)\n{\ngl_FragColor = vec4(texture2D(mainTexture,vUv).xyz*mainColor.xyz*vColor.xyz,1.0);\n}\n","unlit_vertex_color_vs.glsl":"attribute vec3 vertex;\nattribute vec2 uv1;\nattribute vec4 color;\nuniform mat4 _mvProj;\nvarying vec2 vUv;\nvarying vec4 vColor;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\nvColor = color;\n}","unlit_vs.glsl":"attribute vec3 vertex;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nvarying vec2 vUv;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n}"};
+{"__error_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvoid main(void)\n{\ngl_FragColor = vec4(1.0,0.5, 0.9, 1.0);\n}","__error_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\n} ","__pick_fs.glsl":"#ifdef GL_ES\nprecision mediump float;\n#endif\nvarying vec4 gameObjectUID;\nvoid main(void)\n{\ngl_FragColor = gameObjectUID;\n}","__pick_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nuniform vec4 _gameObjectUID;\nvarying vec4 gameObjectUID;\nvoid main(void) {\n// compute position\ngl_Position = _mvProj * vec4(vertex, 1.0);\ngameObjectUID = _gameObjectUID;\n}","__shadowmap_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvec4 packDepth( const in float depth ) {\nconst vec4 bitShift = vec4( 16777216.0, 65536.0, 256.0, 1.0 );\nconst vec4 bitMask = vec4( 0.0, 1.0 / 256.0, 1.0 / 256.0, 1.0 / 256.0 );\nvec4 res = fract( depth * bitShift );\nres -= res.xxyz * bitMask;\nreturn res;\n}\nvoid main() {\ngl_FragColor = packDepth( gl_FragCoord.z );\n}\n","__shadowmap_vs.glsl":"attribute vec3 vertex;\nuniform mat4 _mvProj;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\n} ","diffuse_fs.glsl":"precision mediump float;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec3 vEcPosition;\nuniform vec4 mainColor;\nuniform sampler2D mainTexture;\n#pragma include \"light.glsl\"\n#pragma include \"shadowmap.glsl\"\nvoid main(void)\n{\nvec3 normal = normalize(vNormal);\nvec3 directionalLight = getDirectionalLightDiffuse(normal,_dLight);\nvec3 pointLight = getPointLightDiffuse(normal,vEcPosition, _pLights);\nfloat visibility;\nif (SHADOWS){\nvisibility = computeLightVisibility();\n} else {\nvisibility = 1.0;\n}\nvec3 color = max((directionalLight+pointLight)*visibility,_ambient.xyz)*mainColor.xyz;\ngl_FragColor = vec4(texture2D(mainTexture,vUv).xyz*color, 1.0);\n}\n","diffuse_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat4 _mv;\nuniform mat4 _lightMat;\nuniform mat3 _norm;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec4 vShadowMapCoord;\nvarying vec3 vEcPosition;\nvoid main(void) {\nvec4 v = vec4(vertex, 1.0);\ngl_Position = _mvProj * v;\nvEcPosition = (_mv * v).xyz;\nvUv = uv1;\nvNormal = _norm * normal;\nvShadowMapCoord = _lightMat * v;\n} ","light.glsl":"vec3 getPointLightDiffuse(vec3 normal, vec3 ecPosition, mat3 pLights[LIGHTS]){\nvec3 diffuse = vec3(0.0);\nfor (int i=0;i<LIGHTS;i++){\nvec3 ecLightPos = pLights[i][0]; // light position in eye coordinates\nvec3 colorIntensity = pLights[i][1];\nvec3 attenuationVector = pLights[i][2];\n// direction from surface to light position\nvec3 VP = ecLightPos - ecPosition;\n// compute distance between surface and light position\nfloat d = length(VP);\n// normalize the vector from surface to light position\nVP = normalize(VP);\n// compute attenuation\nfloat attenuation = 1.0 / dot(vec3(1.0,d,d*d),attenuationVector); // short for constA + liniearA * d + quadraticA * d^2\nfloat nDotVP = max(0.0, dot(normal, VP));\ndiffuse += colorIntensity*nDotVP * attenuation;\n}\nreturn diffuse;\n}\nvoid getPointLight(vec3 normal, vec3 ecPosition, mat3 pLights[LIGHTS],float specularExponent, out vec3 diffuse, out float specular){\ndiffuse = vec3(0.0, 0.0, 0.0);\nspecular = 0.0;\nvec3 eye = vec3(0.0,0.0,1.0);\nfor (int i=0;i<LIGHTS;i++){\nvec3 ecLightPos = pLights[i][0]; // light position in eye coordinates\nvec3 colorIntensity = pLights[i][1];\nvec3 attenuationVector = pLights[i][2];\n// direction from surface to light position\nvec3 VP = ecLightPos - ecPosition;\n// compute distance between surface and light position\nfloat d = length(VP);\n// normalize the vector from surface to light position\nVP = normalize(VP);\n// compute attenuation\nfloat attenuation = 1.0 / dot(vec3(1.0,d,d*d),attenuationVector); // short for constA + liniearA * d + quadraticA * d^2\nvec3 halfVector = normalize(VP + eye);\nfloat nDotVP = max(0.0, dot(normal, VP));\nfloat nDotHV = max(0.0, dot(normal, halfVector));\nfloat pf;\nif (nDotVP == 0.0){\npf = 0.0;\n} else {\npf = pow(nDotHV, specularExponent);\n}\nbool isLightEnabled = (attenuationVector[0]+attenuationVector[1]+attenuationVector[2])>0.0;\nif (isLightEnabled){\ndiffuse += colorIntensity * nDotVP * attenuation;\nspecular += pf * attenuation;\n}\n}\n}\nvec3 getDirectionalLightDiffuse(vec3 normal, mat3 dLight){\nvec3 ecLightDir = dLight[0]; // light direction in eye coordinates\nvec3 colorIntensity = dLight[1];\nfloat diffuseContribution = max(dot(normal, ecLightDir), 0.0);\nreturn (colorIntensity * diffuseContribution);\n}\n// assumes that normal is normalized\nvoid getDirectionalLight(vec3 normal, mat3 dLight, float specularExponent, out vec3 diffuse, out float specular){\nvec3 ecLightDir = dLight[0]; // light direction in eye coordinates\nvec3 colorIntensity = dLight[1];\nvec3 halfVector = dLight[2];\nfloat diffuseContribution = max(dot(normal, ecLightDir), 0.0);\n\tfloat specularContribution = max(dot(normal, halfVector), 0.0);\nspecular = pow(specularContribution, specularExponent);\n\tdiffuse = (colorIntensity * diffuseContribution);\n}\nuniform mat3 _dLight;\nuniform vec3 _ambient;\nuniform mat3 _pLights[LIGHTS];\n","shadowmap.glsl":"varying vec4 vShadowMapCoord;\nuniform sampler2D _shadowMapTexture;\nconst float shadowBias = 0.005;\nfloat unpackDepth( const in vec4 rgba_depth ) {\nconst vec4 bit_shift = vec4( 1.0 / ( 16777216.0 ), 1.0 / ( 65536.0 ), 1.0 / 256.0, 1.0 );\nreturn dot( rgba_depth, bit_shift );\n}\nfloat computeLightVisibility(){\nvec3 shadowCoord = vShadowMapCoord.xyz / vShadowMapCoord.w;\nif (shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0 && shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0){\nvec4 packedShadowDepth = texture2D(_shadowMapTexture,shadowCoord.xy);\nbool isMaxDepth = dot(packedShadowDepth, vec4(1.0,1.0,1.0,1.0))==4.0;\nif (!isMaxDepth){\nfloat shadowDepth = unpackDepth(packedShadowDepth);\nif (shadowDepth > shadowCoord.z - shadowBias){\nreturn 1.0;\n}\nreturn 0.0;\n}\n}\nreturn 1.0; // if outside shadow map, then not occcluded\n}","specular_fs.glsl":"precision mediump float;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec3 vEcPosition;\nuniform vec4 mainColor;\nuniform float specularExponent;\nuniform vec4 specularColor;\nuniform sampler2D mainTexture;\n#pragma include \"light.glsl\"\n#pragma include \"shadowmap.glsl\"\nvoid main(void)\n{\nvec3 normal = normalize(vNormal);\nvec3 diffuse;\nfloat specular;\ngetDirectionalLight(normal, _dLight, specularExponent, diffuse, specular);\nvec3 diffusePoint;\nfloat specularPoint;\ngetPointLight(normal,vEcPosition, _pLights,specularExponent,diffusePoint,specularPoint);\nfloat visibility;\nif (SHADOWS){\nvisibility = computeLightVisibility();\n} else {\nvisibility = 1.0;\n}\nvec3 color = max((diffuse+diffusePoint)*visibility,_ambient.xyz)*mainColor.xyz;\ngl_FragColor = vec4(texture2D(mainTexture,vUv).xyz*color.xyz, 1.0)+vec4((specular+specularPoint)*specularColor.xyz,0.0);\n}\n","specular_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat4 _mv;\nuniform mat4 _lightMat;\nuniform mat3 _norm;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec3 vEcPosition;\nvarying vec4 vShadowMapCoord;\nvoid main(void) {\nvec4 v = vec4(vertex, 1.0);\ngl_Position = _mvProj * v;\nvUv = uv1;\nvEcPosition = (_mv * v).xyz;\nvNormal= _norm * normal;\nvShadowMapCoord = _lightMat * v;\n} ","transparent_diffuse_fs.glsl":"precision mediump float;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec3 vEcPosition;\nuniform vec4 mainColor;\nuniform float specularExponent;\nuniform vec4 specularColor;\nuniform sampler2D mainTexture;\n#pragma include \"light.glsl\"\nvoid main(void)\n{\nvec3 normal = normalize(vNormal);\nvec3 diffuseDirectionalLight = getDirectionalLightDiffuse(normal,_dLight);\nvec3 diffusePointLight = getPointLightDiffuse(normal,vEcPosition, _pLights);\nvec4 color = vec4(max(diffuseDirectionalLight+diffusePointLight,_ambient.xyz),1.0)*mainColor;\ngl_FragColor = texture2D(mainTexture,vUv)*color;\n}\n","transparent_diffuse_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat3 _norm;\nuniform mat4 _mv;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec3 vEcPosition;\nvoid main(void) {\nvec4 v = vec4(vertex, 1.0);\n// compute position\ngl_Position = _mvProj * v;\nvEcPosition = (_mv * v).xyz;\nvUv = uv1;\n// compute light info\nvNormal= _norm * normal;\n} ","transparent_specular_fs.glsl":"precision mediump float;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec3 vEcPosition;\nuniform vec4 mainColor;\nuniform float specularExponent;\nuniform vec4 specularColor;\nuniform sampler2D mainTexture;\n#pragma include \"light.glsl\"\nvoid main(void)\n{\nvec3 normal = normalize(vNormal);\nvec3 diffuse;\nfloat specular;\ngetDirectionalLight(normal, _dLight, specularExponent, diffuse, specular);\nvec3 diffusePoint;\nfloat specularPoint;\ngetPointLight(normal,vEcPosition, _pLights,specularExponent,diffusePoint,specularPoint);\nvec4 color = vec4(max(diffuse+diffusePoint,_ambient.xyz),1.0)*mainColor;\ngl_FragColor = texture2D(mainTexture,vUv)*color+vec4((specular+specularPoint)*specularColor.xyz,0.0);\n}\n","transparent_specular_vs.glsl":"attribute vec3 vertex;\nattribute vec3 normal;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nuniform mat4 _mv;\nuniform mat3 _norm;\nvarying vec2 vUv;\nvarying vec3 vNormal;\nvarying vec3 vEcPosition;\nvoid main(void) {\nvec4 v = vec4(vertex, 1.0);\n// compute position\ngl_Position = _mvProj * v;\nvEcPosition = (_mv * v).xyz;\nvUv = uv1;\n// compute light info\nvNormal= _norm * normal;\n} ","transparent_unlit_fs.glsl":"precision mediump float;\nvarying vec2 vUv;\nuniform vec4 mainColor;\nuniform sampler2D mainTexture;\nvoid main(void)\n{\ngl_FragColor = texture2D(mainTexture,vUv)*mainColor;\n}\n","transparent_unlit_vs.glsl":"attribute vec3 vertex;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nvarying vec2 vUv;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n}","unlit_fs.glsl":"#ifdef GL_ES\nprecision highp float;\n#endif\nvarying vec2 vUv;\nuniform vec4 mainColor;\nuniform sampler2D mainTexture;\nvoid main(void)\n{\ngl_FragColor = vec4(texture2D(mainTexture,vUv).xyz*mainColor.xyz,1.0);\n}\n","unlit_vertex_color_fs.glsl":"precision mediump float;\nvarying vec2 vUv;\nvarying vec4 vColor;\nuniform vec4 mainColor;\nuniform sampler2D mainTexture;\nvoid main(void)\n{\ngl_FragColor = vec4(texture2D(mainTexture,vUv).xyz*mainColor.xyz*vColor.xyz,1.0);\n}\n","unlit_vertex_color_vs.glsl":"attribute vec3 vertex;\nattribute vec2 uv1;\nattribute vec4 color;\nuniform mat4 _mvProj;\nvarying vec2 vUv;\nvarying vec4 vColor;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\nvColor = color;\n}","unlit_vs.glsl":"attribute vec3 vertex;\nattribute vec2 uv1;\nuniform mat4 _mvProj;\nvarying vec2 vUv;\nvoid main(void) {\ngl_Position = _mvProj * vec4(vertex, 1.0);\nvUv = uv1;\n}"};
 })();/*!
  * New BSD License
  *
@@ -2815,6 +2815,7 @@ KICK.namespace = function (ns_string) {
         mat4 = KICK.namespace("KICK.math.mat4"),
         quat4 = KICK.namespace("KICK.math.quat4"),
         aabb = KICK.namespace("KICK.math.aabb"),
+        frustum = KICK.namespace("KICK.math.frustum"),
         min = Math.min,
         max = Math.max,
         sqrt = Math.sqrt,
@@ -2852,6 +2853,7 @@ KICK.namespace = function (ns_string) {
      * @method wrapArray
      * @param {Float32Array} array
      * @return {Array[KICK.math.vec2]} of vec2
+     * @static
      */
     vec2.wrapArray = function(array){
         return wrapArray(array,2);
@@ -2864,6 +2866,7 @@ KICK.namespace = function (ns_string) {
      * @param {Number} count Number of vec 2 to be layed out in memory
      * @param {Object} ref Optional, if set a memory reference is set to ref.mem
      * @return {KICK.math.vec2} New vec2
+     * @static
      */
     vec2.array = function(count,ref){
         var memory = new Float32Array(count*2);
@@ -2879,6 +2882,7 @@ KICK.namespace = function (ns_string) {
      * @method create
      * @param {Array[Number]} vec Optional, vec2 containing values to initialize with
      * @return {KICK.math.vec2} New vec2
+     * @static
      */
     vec2.create = function(vec) {
         var dest = new Float32Array(2);
@@ -2897,6 +2901,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec2} vec vec2 containing values to copy
      * @param {KICK.math.vec2} dest vec2 receiving copied values
      * @return {KICK.math.vec2} dest
+     * @static
      */
     vec2.set = function(vec, dest) {
         dest[0] = vec[0];
@@ -2912,6 +2917,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec2} vec2  second operand
      * @param {KICK.math.vec2} dest Optional, vec3 receiving operation result. If not specified result is written to vec
      * @return {KICK.math.vec2} dest if specified, vec otherwise
+     * @static
      */
     vec2.add = function(vec, vec2, dest) {
         if(!dest || vec == dest) {
@@ -2932,6 +2938,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec2} vec2 second operand
      * @param {KICK.math.vec2} dest Optional, vec2 receiving operation result. If not specified result is written to vec
      * @return {KICK.math.vec2} dest if specified, vec otherwise
+     * @static
      */
     vec2.subtract = function(vec, vec2, dest) {
         if(!dest || vec == dest) {
@@ -2952,6 +2959,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec2} vec2 second operand
      * @param {Number} epsilon Optional - default value is
      * @return {Boolean} true if two vectors are equals
+     * @static
      */
     vec2.equal = function(vec, vec2, epsilon) {
         if (!epsilon){
@@ -2972,6 +2980,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec2} vec vec3 to normalize
      * @param {KICK.math.vec2} dest Optional, vec2 receiving operation result. If not specified result is written to vec
      * @return {KICK.math.vec2} dest if specified, vec otherwise
+     * @static
      */
     vec2.normalize = function(vec, dest) {
         if(!dest) { dest = vec; }
@@ -3009,6 +3018,7 @@ KICK.namespace = function (ns_string) {
      * @method wrapArray
      * @param {Float32Array} array
      * @return {Array[KICK.math.vec3]} of vec3
+     * @static
      */
     vec3.wrapArray = function(array){
         return wrapArray(array,3);
@@ -3034,6 +3044,7 @@ KICK.namespace = function (ns_string) {
      * @param {Number} count Number of vec 3 to be layed out in memory
      * @param {Object} ref Optional, if set a memory reference is set to ref.mem
      * @return {KICK.math.vec3} New vec3
+     * @static
      */
     vec3.array = function(count,ref){
         var memory = new Float32Array(count*3);
@@ -3049,6 +3060,7 @@ KICK.namespace = function (ns_string) {
      * @method create
      * @param {Array[Number]} vec Optional, vec3 containing values to initialize with
      * @return {KICK.math.vec3} New vec3
+     * @static
      */
     vec3.create = function(vec) {
         var dest = new Float32Array(3);
@@ -3068,6 +3080,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec3} vec vec3 containing values to copy
      * @param {KICK.math.vec3} dest vec3 receiving copied values
      * @return {KICK.math.vec3} dest
+     * @static
      */
     vec3.set = function(vec, dest) {
         dest[0] = vec[0];
@@ -3084,6 +3097,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec3} vec2  second operand
      * @param {KICK.math.vec3} dest Optional, vec3 receiving operation result. If not specified result is written to vec
      * @return {KICK.math.vec3} dest if specified, vec otherwise
+     * @static
      */
     vec3.add = function(vec, vec2, dest) {
         if (!dest || vec === dest) {
@@ -3106,6 +3120,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec3} vec2 second operand
      * @param {KICK.math.vec3} dest Optional, vec3 receiving operation result. If not specified result is written to vec
      * @return {KICK.math.vec3} dest if specified, vec otherwise
+     * @static
      */
     vec3.subtract = function(vec, vec2, dest) {
         if (!dest || vec === dest) {
@@ -3128,6 +3143,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec3} vec2 second operand
      * @param {Number} epsilon Optional - default value is
      * @return {Boolean} true if two vectors are equals
+     * @static
      */
     vec3.equal = function(vec, vec2, epsilon) {
         if (!epsilon){
@@ -3148,6 +3164,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec3} vec2 second operand
      * @param {KICK.math.vec3} dest Optional, vec3 receiving operation result. If not specified result is written to vec
      * @return {KICK.math.vec3} dest if specified, vec otherwise
+     * @static
      */
     vec3.multiply = function(vec, vec2, dest) {
         if(!dest || vec == dest) {
@@ -3169,6 +3186,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec3} vec vec3 to negate
      * @param {KICK.math.vec3} dest Optional, vec3 receiving operation result. If not specified result is written to vec
      * @return {KICK.math.vec3} dest if specified, vec otherwise
+     * @static
      */
     vec3.negate = function(vec, dest) {
         if (!dest) { dest = vec; }
@@ -3186,6 +3204,7 @@ KICK.namespace = function (ns_string) {
      * @param {Number} val Numeric value to scale by
      * @param {KICK.math.vec3} dest Optional, vec3 receiving operation result. If not specified result is written to vec
      * @return {KICK.math.vec3} dest if specified, vec otherwise
+     * @static
      */
     vec3.scale = function(vec, val, dest) {
         if (!dest || vec === dest) {
@@ -3208,6 +3227,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec3} vec vec3 to normalize
      * @param {KICK.math.vec3} dest Optional, vec3 receiving operation result. If not specified result is written to vec
      * @return {KICK.math.vec3} dest if specified, vec otherwise
+     * @static
      */
     vec3.normalize = function(vec, dest) {
         if (!dest) { dest = vec; }
@@ -3241,6 +3261,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec3} vec2 second operand
      * @param {KICK.math.vec3} dest Optional, vec3 receiving operation result. If not specified result is written to vec
      * @return {KICK.math.vec3} dest if specified, vec otherwise
+     * @static
      */
     vec3.cross = function(vec, vec2, dest){
         if(!dest) { dest = vec; }
@@ -3259,6 +3280,7 @@ KICK.namespace = function (ns_string) {
      * @method length
      * @param {KICK.math.vec3} vec vec3 to calculate length of
      * @return {Number} Length of vec
+     * @static
      */
     vec3.length = function(vec){
         var x = vec[0], y = vec[1], z = vec[2];
@@ -3270,6 +3292,7 @@ KICK.namespace = function (ns_string) {
      * @method lengthSqr
      * @param {KICK.math.vec3} vec vec3 to calculate squared length of
      * @return {Number} Squared length of vec
+     * @static
      */
     vec3.lengthSqr = function(vec){
         var x = vec[0], y = vec[1], z = vec[2];
@@ -3282,6 +3305,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec3} vec first operand
      * @param {KICK.math.vec3} vec2 second operand
      * @return {Number} Dot product of vec and vec2
+     * @static
      */
     vec3.dot = function(vec, vec2){
         return vec[0]*vec2[0] + vec[1]*vec2[1] + vec[2]*vec2[2];
@@ -3294,6 +3318,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec3} vec2 vec3 to point to
      * @param {KICK.math.vec3} dest Optional, vec3 receiving operation result. If not specified result is written to vec
      * @return {KICK.math.vec3} dest if specified, vec otherwise
+     * @static
      */
     vec3.direction = function(vec, vec2, dest) {
         if (!dest) { dest = vec; }
@@ -3325,6 +3350,7 @@ KICK.namespace = function (ns_string) {
      * @param {Number} lerp interpolation amount between the two inputs
      * @param {KICK.math.vec3} dest Optional, vec3 receiving operation result. If not specified result is written to vec
      * @return {KICK.math.vec3} dest if specified, vec otherwise
+     * @static
      */
     vec3.lerp = function(vec, vec2, lerp, dest){
         if(!dest) { dest = vec; }
@@ -3343,6 +3369,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec3} vec first vector
      * @param {KICK.math.vec3} vec2 second vector
      * @return {Number} distance between vec and vec2
+     * @static
      */
     vec3.dist = function (vec, vec2) {
         var x = vec2[0] - vec[0],
@@ -3364,6 +3391,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec4} viewport Viewport as given to gl.viewport [x, y, width, height]
      * @param {KICK.math.vec3} dest Optional, vec3 receiving unprojected result. If not specified result is written to vec
      * @return {KICK.math.vec3} dest if specified, vec otherwise
+     * @static
      */
     vec3.unproject = (function(){
         var m = new Float32Array(16);
@@ -3397,6 +3425,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec3} spherical spherical coordinates
      * @param {KICK.math.vec3} dest optionally if not specified a new vec3 is returned
      * @return {KICK.math.vec3} position in cartesian angles
+     * @static
      */
     vec3.sphericalToCarterian = function(spherical, dest){
         var radius = spherical[0],
@@ -3419,6 +3448,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec3} cartesian
      * @param {KICK.math.vec3} dest Optional
      * @return {KICK.math.vec3}
+     * @static
      */
     vec3.cartesianToSpherical = function(cartesian, dest){
         var x = cartesian[0],
@@ -3445,6 +3475,7 @@ KICK.namespace = function (ns_string) {
      * @method str
      * @param {KICK.math.vec3} vec vec3 to represent as a string
      * @return {String} string representation of vec
+     * @static
      */
     vec3.str = function(vec) {
         return '[' + vec[0] + ', ' + vec[1] + ', ' + vec[2] + ']';
@@ -3479,7 +3510,8 @@ KICK.namespace = function (ns_string) {
      * </pre>
      * @method wrapArray
      * @param {Float32Array} array
-     * @return {Array[KICK.math.vec4]} 
+     * @return {Array[KICK.math.vec4]}
+     * @static
      */
     vec4.wrapArray = function(array){
         return wrapArray(array,4);
@@ -3503,6 +3535,7 @@ KICK.namespace = function (ns_string) {
      * @param {Number} count Number of vec 3 to be layed out in memory
      * @param {Object} ref Optional, if set a memory reference is set to ref.mem
      * @return {KICK.math.vec3} New vec3
+     * @static
      */
     vec4.array = function(count,ref){
         var memory = new Float32Array(count*4);
@@ -3518,6 +3551,7 @@ KICK.namespace = function (ns_string) {
      * @method create
      * @param {Array[Number]} vec Optional, vec4 containing values to initialize with
      * @return {KICK.math.vec4} New vec4
+     * @static
      */
     vec4.create = function(vec) {
         var dest = new Float32Array(4);
@@ -3538,6 +3572,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec4} vec vec4 containing values to copy
      * @param {KICK.math.vec4} dest vec4 receiving copied values
      * @return {KICK.math.vec4} dest
+     * @static
      */
     vec4.set = function(vec, dest) {
         dest[0] = vec[0];
@@ -3555,6 +3590,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec4} vec2  second operand
      * @param {KICK.math.vec4} dest Optional, vec4 receiving operation result. If not specified result is written to vec
      * @return {KICK.math.vec4} dest if specified, vec otherwise
+     * @static
      */
     vec4.add = function(vec, vec2, dest) {
         if(!dest || vec == dest) {
@@ -3579,6 +3615,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec4} vec2 second operand
      * @param {KICK.math.vec4} dest Optional, vec4 receiving operation result. If not specified result is written to vec
      * @return {KICK.math.vec4} dest if specified, vec otherwise
+     * @static
      */
     vec4.subtract = function(vec, vec2, dest) {
         if(!dest || vec == dest) {
@@ -3603,6 +3640,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec4} vec2 second operand
      * @param {Number} epsilon Optional - default value is
      * @return {Boolean} true if two vectors are equals
+     * @static
      */
     vec4.equal = function(vec, vec2, epsilon) {
         if (!epsilon){
@@ -3623,6 +3661,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec4} vec2 second operand
      * @param {KICK.math.vec4} dest Optional, vec4 receiving operation result. If not specified result is written to vec
      * @return {KICK.math.vec4} dest if specified, vec otherwise
+     * @static
      */
     vec4.multiply = function(vec, vec2, dest) {
         if(!dest || vec == dest) {
@@ -3646,6 +3685,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec4} vec vec4 to negate
      * @param {KICK.math.vec4} dest Optional, vec4 receiving operation result. If not specified result is written to vec
      * @return {KICK.math.vec4} dest if specified, vec otherwise
+     * @static
      */
     vec4.negate = function(vec, dest) {
         if(!dest) { dest = vec; }
@@ -3662,6 +3702,7 @@ KICK.namespace = function (ns_string) {
      * @method length
      * @param {KICK.math.vec4} vec vec4 to calculate length of
      * @return {Number} Length of vec
+     * @static
      */
     vec4.length = function(vec){
         var x = vec[0], y = vec[1], z = vec[2], w = vec[3];
@@ -3674,6 +3715,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec4} vec first operand
      * @param {KICK.math.vec4} vec2 second operand
      * @return {Number} Dot product of vec and vec2
+     * @static
      */
     vec4.dot = function(vec, vec2){
         return vec[0]*vec2[0] + vec[1]*vec2[1] + vec[2]*vec2[2] + vec[3]*vec2[3];
@@ -3686,6 +3728,7 @@ KICK.namespace = function (ns_string) {
      * @param {Number} val Numeric value to scale by
      * @param {KICK.math.vec4} dest Optional, vec4 receiving operation result. If not specified result is written to vec
      * @return {KICK.math.vec4} dest if specified, vec otherwise
+     * @static
      */
     vec4.scale = function(vec, val, dest) {
         if(!dest || vec == dest) {
@@ -3708,6 +3751,7 @@ KICK.namespace = function (ns_string) {
      * @method str
      * @param {KICK.math.vec4} vec vec4 to represent as a string
      * @return {String} string representation of vec
+     * @static
      */
     vec4.str = function(vec) {
         return '[' + vec[0] + ', ' + vec[1] + ', ' + vec[2]+ ', ' + vec[3] + ']';
@@ -3727,6 +3771,7 @@ KICK.namespace = function (ns_string) {
      * @method create
      * @param {Array[Number]} mat Optional, mat3 containing values to initialize with
      * @return {KICK.math.mat3} New mat3
+     * @static
      */
     mat3.create = function(mat) {
         var dest = new Float32Array(9);
@@ -3752,6 +3797,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.mat3} mat mat3 containing values to copy
      * @param {KICK.math.mat3} dest mat3 receiving copied values
      * @return {KICK.math.mat3} dest
+     * @static
      */
     mat3.set = function(mat, dest) {
         dest[0] = mat[0];
@@ -3771,6 +3817,7 @@ KICK.namespace = function (ns_string) {
      * @method identity
      * @param {KICK.math.mat3} dest mat3 to set
      * @return {KICK.math.mat3} dest
+     * @static
      */
     mat3.identity = function(dest) {
         if (!dest) { dest = mat3.create(); }
@@ -3792,6 +3839,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.mat3} mat mat3 to transpose
      * @param {KICK.math.mat3} dest Optional, mat3 receiving transposed values. If not specified result is written to mat
      * @return {KICK.math.mat3} dest is specified, mat otherwise
+     * @static
      */
     mat3.transpose = function(mat, dest) {
         // If we are transposing ourselves we can skip a few steps but have to cache some values
@@ -3826,6 +3874,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.mat3} mat mat3 containing values to copy
      * @param {KICK.math.mat4} dest Optional, mat4 receiving copied values
      * @return {KICK.math.mat4} dest if specified, a new mat4 otherwise
+     * @static
      */
     mat3.toMat4 = function(mat, dest) {
         if (!dest) { dest = mat4.create(); }
@@ -3858,6 +3907,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.mat3} mat
      * @param {KICK.math.quat4} dest
      * @return {KICK.math.quat4}
+     * @static
      */
     mat3.toQuat = function(mat,dest){
         // Code based on http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm
@@ -3905,6 +3955,7 @@ KICK.namespace = function (ns_string) {
      * @method str
      * @param {KICK.math.mat3} mat mat3 to represent as a string
      * @return {String} string representation of mat
+     * @static
      */
     mat3.str = function(mat) {
         return '[' + mat[0] + ', ' + mat[1] + ', ' + mat[2] +
@@ -3917,6 +3968,7 @@ KICK.namespace = function (ns_string) {
      * @method strPretty
      * @param {KICK.math.mat3} mat mat3 to represent as a string
      * @return {String} string representation of mat
+     * @static
      */
     mat3.strPretty = function(mat) {
         return '[' + mat[0] + ', ' + mat[3] + ', ' + mat[6] + '\n' +
@@ -3937,6 +3989,7 @@ KICK.namespace = function (ns_string) {
      * @method create
      * @param {Array[Number]} mat Optional, mat4 containing values to initialize with
      * @return {KICK.math.mat4} New mat4
+     * @static
      */
     mat4.create = function(mat) {
         var dest = new Float32Array(16);
@@ -3969,6 +4022,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.mat4} mat mat4 containing values to copy
      * @param {KICK.math.mat4} dest mat4 receiving copied values
      * @return {KICK.math.mat4} dest
+     * @static
      */
     mat4.set = function(mat, dest) {
         dest[0] = mat[0];
@@ -3998,6 +4052,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec3} scale
      * @param {KICK.math.mat4} dest Optinal
      * @return {KICK.math.mat4} dest if specified mat4 otherwise
+     * @static
      */
     mat4.setTRS = function(translate, rotateQuat, scale, dest){
         if (!dest) { dest = mat4.create(); }
@@ -4047,6 +4102,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec3} scale
      * @param {KICK.math.mat4} dest Optinal
      * @return {KICK.math.mat4} dest if specified mat4 otherwise
+     * @static
      */
     mat4.setTRSInverse = function(translate, rotateQuat, scale, dest){
         if (!dest) { dest = mat4.create(); }
@@ -4125,6 +4181,7 @@ KICK.namespace = function (ns_string) {
      * @method identity
      * @param {KICK.math.mat4} dest mat4 to set
      * @return {KICK.math.mat4} dest
+     * @static
      */
     mat4.identity = function(dest) {
         dest[0] = 1;
@@ -4152,6 +4209,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.mat4} mat mat4 to transpose
      * @param {KICK.math.mat4} dest Optional, mat4 receiving transposed values. If not specified result is written to mat
      * @return {KICK.math.mat4} dest is specified, mat otherwise
+     * @static
      */
     mat4.transpose = function(mat, dest) {
         // If we are transposing ourselves we can skip a few steps but have to cache some values
@@ -4199,6 +4257,7 @@ KICK.namespace = function (ns_string) {
      * @method determinant
      * @param {KICK.math.mat4} mat mat4 to calculate determinant of
      * @return {Number} determinant of mat
+     * @static
      */
     mat4.determinant = function(mat) {
         // Cache the matrix values (makes for huge speed increases!)
@@ -4221,6 +4280,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.mat4} mat mat4 to calculate inverse of
      * @param {KICK.math.mat4} dest Optional, mat4 receiving inverse matrix. If not specified result is written to mat
      * @return {KICK.math.mat4} dest is specified, mat otherwise
+     * @static
      */
     mat4.inverse = function(mat, dest) {
         if (!dest) { dest = mat; }
@@ -4277,6 +4337,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.mat4} mat mat4 containing values to copy
      * @param {KICK.math.mat4} dest Optional, mat4 receiving copied values
      * @return {KICK.math.mat4} dest is specified, a new mat4 otherwise
+     * @static
      */
     mat4.toRotationMat = function(mat, dest) {
         if (!dest) { dest = mat4.create(); }
@@ -4306,7 +4367,8 @@ KICK.namespace = function (ns_string) {
      * @method toMat3
      * @param {KICK.math.mat4} mat mat4 containing values to copy
      * @param {KICK.math.mat3} dest Optional, mat3 receiving copied values
-     * return {KICK.math.mat3} dest is specified, a new mat3 otherwise
+     * @return {KICK.math.mat3} dest is specified, a new mat3 otherwise
+     * @static
      */
     mat4.toMat3 = function(mat, dest) {
         if (!dest) { dest = mat3.create(); }
@@ -4331,6 +4393,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.mat4} mat mat4 containing values to tranpose, invert and copy
      * @param {KICK.math.mat3} dest Optional, mat3 receiving values
      * @return {KICK.math.mat3} dest is specified, a new mat3 otherwise
+     * @static
      */
     mat4.toNormalMat3 = function(mat, dest){
         // Cache the matrix values (makes for huge speed increases!)
@@ -4370,6 +4433,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.mat4} mat mat4 containing values to invert and copy
      * @param {KICK.math.mat3} dest Optional, mat3 receiving values
      * @return {KICK.math.mat3} dest is specified, a new mat3 otherwise
+     * @static
      */
     mat4.toInverseMat3 = function(mat, dest) {
         // Cache the matrix values (makes for huge speed increases!)
@@ -4409,6 +4473,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.mat4} mat2 second operand
      * @param {KICK.math.mat4} dest Optional, mat4 receiving operation result. If not specified result is written to mat
      * @return {KICK.math.mat4} dest if specified, mat otherwise
+     * @static
      */
     mat4.multiply = function(mat, mat2, dest) {
         if (!dest) { dest = mat; }
@@ -4452,6 +4517,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec3} vec vec3 to transform
      * @param {KICK.math.vec3} dest Optional, vec3 receiving operation result. If not specified result is written to vec
      * @return {KICK.math.vec3} dest if specified, vec otherwise
+     * @static
      */
     mat4.multiplyVec3 = function(mat, vec, dest) {
         if (!dest) { dest = vec; }
@@ -4473,6 +4539,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec3} vec vec3 to transform
      * @param {KICK.math.vec3} dest Optional, vec3 receiving operation result. If not specified result is written to vec
      * @return {KICK.math.vec3} dest if specified, vec otherwise
+     * @static
      */
     mat4.multiplyVec3Vector = function(mat, vec, dest) {
         if(!dest) { dest = vec }
@@ -4494,6 +4561,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec4} vec vec4 to transform
      * @param {KICK.math.vec4} dest Optional, vec4 receiving operation result. If not specified result is written to vec
      * @return {KICK.math.vec4} dest if specified, vec otherwise
+     * @static
      */
     mat4.multiplyVec4 = function(mat, vec, dest) {
         if (!dest) { dest = vec; }
@@ -4515,6 +4583,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec3} vec vec3 specifying the translation
      * @param {KICK.math.mat4} dest Optional, mat4 receiving operation result. If not specified result is written to mat
      * @return {KICK.math.mat4} dest if specified, mat otherwise
+     * @static
      */
     mat4.translate = function(mat, vec, dest) {
         var x = vec[0], y = vec[1], z = vec[2],
@@ -4552,6 +4621,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec3} vec vec3 specifying the scale for each axis
      * @param {KICK.math.mat4} dest Optional, mat4 receiving operation result. If not specified result is written to mat
      * @return {KICK.math.mat4} dest if specified, mat otherwise
+     * @static
      */
     mat4.scale = function(mat, vec, dest) {
         var x = vec[0], y = vec[1], z = vec[2];
@@ -4601,6 +4671,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec3} axis vec3 representing the axis to rotate around
      * @param {KICK.math.mat4} dest Optional, mat4 receiving operation result. If not specified result is written to mat
      * @return {KICK.math.mat4} dest if specified, mat otherwise
+     * @static
      */
     mat4.rotate = function(mat, angle, axis, dest) {
         var x = axis[0], y = axis[1], z = axis[2],
@@ -4668,6 +4739,7 @@ KICK.namespace = function (ns_string) {
      * @param {Number} angle angle (in radians) to rotate
      * @param {KICK.math.mat4} dest Optional, mat4 receiving operation result. If not specified result is written to mat
      * @return {KICK.math.mat4} dest if specified, mat otherwise
+     * @static
      */
     mat4.rotateX = function(mat, angle, dest) {
         var s = sin(angle);
@@ -4711,6 +4783,7 @@ KICK.namespace = function (ns_string) {
      * @param {Number} angle angle (in radians) to rotate
      * @param {KICK.math.mat4} dest Optional, mat4 receiving operation result. If not specified result is written to mat
      * @return {KICK.math.mat4} dest if specified, mat otherwise
+     * @static
      */
     mat4.rotateY = function(mat, angle, dest) {
         var s = sin(angle);
@@ -4754,6 +4827,7 @@ KICK.namespace = function (ns_string) {
      * @param {Number} angle angle (in radians) to rotate
      * @param {KICK.math.mat4} dest Optional, mat4 receiving operation result. If not specified result is written to mat
      * @return {KICK.math.mat4} dest if specified, mat otherwise
+     * @static
      */
     mat4.rotateZ = function(mat, angle, dest) {
         var s = sin(angle);
@@ -4802,6 +4876,7 @@ KICK.namespace = function (ns_string) {
      * @param {Number} far far bounds of the frustum
      * @param {KICK.math.mat4} dest Optional, mat4 frustum matrix will be written into
      * @return {KICK.math.mat4} dest if specified, a new mat4 otherwise
+     * @static
      */
     mat4.frustum = function(left, right, bottom, top, near, far, dest) {
         if(!dest) { dest = mat4.create(); }
@@ -4836,6 +4911,7 @@ KICK.namespace = function (ns_string) {
      * @param {Number} far far bounds of the frustum
      * @param {KICK.math.mat4} dest Optional, mat4 frustum matrix will be written into
      * @return {KICK.math.mat4} dest if specified, a new mat4 otherwise
+     * @static
      */
     mat4.perspective = function(fovy, aspect, near, far, dest) {
         var top = near*tan(fovy*PI / 360.0);
@@ -4854,6 +4930,7 @@ KICK.namespace = function (ns_string) {
      * @param {Number} far far bounds of the frustum
      * @param {KICK.math.mat4} dest Optional, mat4 frustum matrix will be written into
      * @return {KICK.math.mat4} dest if specified, a new mat4 otherwise
+     * @static
      */
     mat4.ortho = function(left, right, bottom, top, near, far, dest) {
         if(!dest) { dest = mat4.create(); }
@@ -4887,6 +4964,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec3} up vec3 pointing "up"
      * @param {KICK.math.mat4} dest Optional, mat4 frustum matrix will be written into
      * @return {KICK.math.mat4} dest if specified, a new mat4 otherwise
+     * @static
      */
     mat4.lookAt = function(eye, center, up, dest) {
         if(!dest) { dest = mat4.create(); }
@@ -4978,6 +5056,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.quat4} rotate Optional
      * @param {KICK.math.vec3} scale Optional
      * @return Array[tranlate,rotate,scale]
+     * @static
      */
     mat4.decompose = (function(){
         var copy = mat4.create();
@@ -5045,6 +5124,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec3} vec specifying the translation
      * @param {KICK.math.mat4} dest Optional, mat4 receiving operation result. If not specified result is written to a new mat4
      * @return {KICK.math.mat4} dest if specified, a new mat4 otherwise
+     * @static
      */
     mat4.fromRotationTranslation = function (quat, vec, dest) {
         if (!dest) { dest = mat4.create(); }
@@ -5090,6 +5170,7 @@ KICK.namespace = function (ns_string) {
      * @method str
      * @param {KICK.math.mat4} mat mat4 to represent as a string
      * @return {String} string representation of mat
+     * @static
      */
     mat4.str = function(mat) {
         return '[' + mat[0] + ', ' + mat[1] + ', ' + mat[2] + ', ' + mat[3] +
@@ -5103,6 +5184,7 @@ KICK.namespace = function (ns_string) {
      * @method strPretty
      * @param {KICK.math.mat4} mat mat4 to represent as a string
      * @return {String} string representation of mat
+     * @static
      */
     mat4.strPretty = function(mat) {
         return '[' + mat[0] + ', ' + mat[4] + ', ' + mat[8] + ', ' + mat[12] + '\n' +
@@ -5124,6 +5206,7 @@ KICK.namespace = function (ns_string) {
      * @method create
      * @param {Array[Number]} quat Optional, quat4 containing values to initialize with
      * @return {KICK.math.quat4} New quat4
+     * @static
      */
     quat4.create = vec4.create;
 
@@ -5133,6 +5216,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.quat4} quat quat4 containing values to copy
      * @param {KICK.math.quat4} dest quat4 receiving copied values
      * @return {KICK.math.quat4} dest
+     * @static
      */
     quat4.set = vec4.set;
 
@@ -5144,6 +5228,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.quat4} quat quat4 to calculate W component of
      * @param {KICK.math.quat4} dest Optional, quat4 receiving calculated values. If not specified result is written to quat
      * @return {KICK.math.quat4} dest if specified, quat otherwise
+     * @static
      */
     quat4.calculateW = function(quat, dest) {
         var x = quat[0], y = quat[1], z = quat[2],
@@ -5167,6 +5252,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.quat4} quat quat4 to calculate inverse of
      * @param {KICK.math.quat4} dest Optional, quat4 receiving inverse values. If not specified result is written to quat
      * @return {KICK.math.quat4} dest if specified, quat otherwise
+     * @static
      */
     quat4.inverse = function(quat, dest) {
         var dot = quat4.dot(quat,quat),
@@ -5191,6 +5277,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.quat4} quat quat4 to calculate conjugate of
      * @param {KICK.math.quat4} dest Optional, quat4 receiving inverse values. If not specified result is written to quat
      * @return {KICK.math.quat4} dest if specified, quat otherwise
+     * @static
      */
     quat4.conjugate = function(quat, dest) {
         if(!dest || quat == dest) {
@@ -5211,7 +5298,7 @@ KICK.namespace = function (ns_string) {
      * @method length
      * @param {KICK.math.quat4} quat quat4 to calculate length of
      * @return {Number} Length of quat
-     *
+     * @static
      */
     quat4.length = vec4.length;
 
@@ -5221,6 +5308,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.quat4} q1
      * @param {KICK.math.quat4} q2
      * @return {Number}
+     * @static
      */
     quat4.dot = vec4.dot;
 
@@ -5231,6 +5319,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.quat4} quat quat4 to normalize
      * @param {KICK.math.quat4} dest Optional, quat4 receiving operation result. If not specified result is written to quat
      * @return {KICK.math.quat4} dest if specified, quat otherwise
+     * @static
      */
     quat4.normalize = function(quat, dest) {
         if (!dest) { dest = quat; }
@@ -5260,6 +5349,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.quat4} quat2 second operand
      * @param {KICK.math.quat4} dest Optional, quat4 receiving operation result. If not specified result is written to quat
      * @return {KICK.math.quat4} dest if specified, quat otherwise
+     * @static
      */
     quat4.multiply = function(quat, quat2, dest) {
         if (!dest) { dest = quat; }
@@ -5282,6 +5372,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec3} vec vec3 to transform
      * @param {KICK.math.vec3} dest Optional, vec3 receiving operation result. If not specified result is written to vec
      * @return {KICK.math.vec3} dest if specified, vec otherwise
+     * @static
      */
     quat4.multiplyVec3 = function(quat, vec, dest) {
         if (!dest) { dest = vec; }
@@ -5308,6 +5399,7 @@ KICK.namespace = function (ns_string) {
      * @method identity
      * @param {KICK.math.quat4} dest Optional, quat4 to set the identity to
      * @return {KICK.math.quat4} dest if specified, a new quat4 otherwise
+     * @static
      */
     quat4.identity = function(dest){
         if(!dest) { dest = quat4.create(); }
@@ -5325,6 +5417,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.quat4} quat quat4 to create matrix from
      * @param {KICK.math.vec3} dest Optional, vec3  receiving operation result
      * @return {KICK.math.vec3} dest if specified, a new vec3 otherwise
+     * @static
      */
     quat4.toEuler = function(quat, dest) {
         var x = quat[0], y = quat[1], z = quat[2],w = quat[3],
@@ -5347,6 +5440,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec3} vec normalized axis
      * @param {KICK.math.quat4} dest Optional, quat4 receiving operation result
      * @return {KICK.math.quat4} dest if specified, a new quat4 otherwise
+     * @static
      */
     quat4.angleAxis = function(angle,vec, dest) {
         var degreeToRadian = 0.01745329251994,
@@ -5370,6 +5464,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec3} up
      * @param {KICK.math.quat4} dest optional
      * @return {KICK.math.quat4} dest if specified, a new quat4 otherwise
+     * @static
      */
     quat4.lookAt = (function(){
         var upVector = vec3.create(),
@@ -5404,6 +5499,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.vec3} vec vec3 eulers angles (degrees)
      * @param {KICK.math.quat4} dest Optional, quat4 receiving operation result
      * @return {KICK.math.quat4} dest if specified, a new quat4 otherwise
+     * @static
      */
     quat4.setEuler = function(vec, dest) {
         // code based on GLM
@@ -5428,6 +5524,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.mat4} mat
      * @param {KICK.math.quat4} dest Optional
      * @return {KICK.math.quat4}
+     * @static
      */
     quat4.setFromRotationMatrix = function(mat,dest){
         var x,y,z,w,
@@ -5462,6 +5559,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.quat4} quat quat4 to create matrix from
      * @param {KICK.math.mat3} dest Optional, mat3 receiving operation result
      * @return {KICK.math.mat3} dest if specified, a new mat3 otherwise
+     * @static
      */
     quat4.toMat3 = function(quat, dest) {
         if (!dest) { dest = mat3.create(); }
@@ -5502,6 +5600,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.quat4} quat quat4 to create matrix from
      * @param {KICK.math.mat4} dest Optional, mat4 receiving operation result
      * @return {KICK.math.mat4} dest if specified, a new mat4 otherwise
+     * @static
      */
     quat4.toMat4 = function(quat, dest) {
         if (!dest) { dest = mat4.create(); }
@@ -5552,6 +5651,7 @@ KICK.namespace = function (ns_string) {
      * @param {Number} slerp interpolation amount between the two inputs
      * @param {KICK.math.quat4} dest Optional, quat4 receiving operation result. If not specified result is written to quat
      * @return {KICK.math.quat4} dest if specified, quat otherwise
+     * @static
      */
     quat4.slerp = function(quat, quat2, slerp, dest) {
         if(!dest) { dest = quat; }
@@ -5598,6 +5698,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.quat4} quat2 to rotation
      * @param {KICK.math.quat4} dest Optional
      * @return {KICK.math.quat4} dest if specified, quat otherwise
+     * @static
      */
     quat4.difference = function(quat, quat2, dest) {
         if(!dest) { dest = quat; }
@@ -5620,6 +5721,7 @@ KICK.namespace = function (ns_string) {
      * @method str
      * @param {KICK.math.quat4} quat quat4 to represent as a string
      * @return {String} string representation of quat
+     * @static
      */
     quat4.str = function(quat) {
         return '[' + quat[0] + ', ' + quat[1] + ', ' + quat[2] + ', ' + quat[3] + ']';
@@ -5630,7 +5732,9 @@ KICK.namespace = function (ns_string) {
 
 
     /**
-     * Axis-Aligned Bounding Box. A rectangle or box with the restriction that it's sides or faces are parallel to the axes of the system.
+     * Axis-Aligned Bounding Box. A rectangle or box with the restriction that it's sides or faces are parallel to the
+     * axes of the system.
+     * The aabb is represented using an array: [min_x,min_y,min_z,max_x,max_y,max_z]
      * @class aabb
      * @namespace KICK.math
      */
@@ -5642,6 +5746,7 @@ KICK.namespace = function (ns_string) {
      * @param {Array[Number] | KICK.math.aabb} vec3Min Optional, vec3Min containing values to initialize minimum values with Default. Or an aabb.
      * @param {Array[Number]} vec3Max Optional, vec3Max containing values to initialize maximum values with
      * @return {KICK.math.aabb} New aabb
+     * @static
      */
     aabb.create = function(vec3Min, vec3Max){
         var dest = new Float32Array(6);
@@ -5667,9 +5772,9 @@ KICK.namespace = function (ns_string) {
             dest[0] = Number.MAX_VALUE;
             dest[1] = Number.MAX_VALUE;
             dest[2] = Number.MAX_VALUE;
-            dest[3] = Number.MIN_VALUE;
-            dest[4] = Number.MIN_VALUE;
-            dest[5] = Number.MIN_VALUE;
+            dest[3] = -Number.MAX_VALUE;
+            dest[4] = -Number.MAX_VALUE;
+            dest[5] = -Number.MAX_VALUE;
         }
         return dest;
     };
@@ -5680,6 +5785,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.aabb} aabb containing values to copy
      * @param {KICK.math.aabb} dest receiving copied values
      * @return {KICK.math.aabb} dest
+     * @static
      */
     aabb.set = function(aabb,dest){
         dest[0] = aabb[0];
@@ -5692,15 +5798,49 @@ KICK.namespace = function (ns_string) {
     };
 
     /**
+     * Transforms the eight points of the Axis-Aligned Bounding Box into a new AABB
+     * @method transform
+     * @param {KICK.math.aabb} aabbIn
+     * @param {KICK.math.mat4} mat
+     * @param {KICK.math.aabb} dest Optional new aabb create if not specified
+     * @return {KICK.math.aabb}
+     * @static
+     */
+    aabb.transform = (function(){
+        var point = vec3.create();
+        return function(aabbIn, mat,dest){
+            var max = Number.MAX_VALUE,
+                min = -Number.MAX_VALUE;
+            if (!dest){
+                dest = aabb.create();
+            } else {
+                aabb.set([max,max,max,min,min,min],dest);
+            }
+            for (var i=0;i<2;i++){
+                for (var j=0;j<2;j++){
+                    for (var k=0;k<2;k++){
+                        point[0] = aabbIn[i*3];
+                        point[1] = aabbIn[j*3+1];
+                        point[2] = aabbIn[k*3+2];
+                        var transformedPoint = mat4.multiplyVec3(mat,point);
+                        aabb.addPoint(dest,transformedPoint);
+                    }
+                }
+            }
+            return dest;
+        }})();
+
+    /**
      * @method merge
      * @param {KICK.math.aabb} aabb
      * @param {KICK.math.aabb} aabb2
-     * @param {KICK.math.aabb} dest Optional, receiving copied values
+     * @param {KICK.math.aabb} dest Optional, receiving copied values - otherwise using aabb
      * @return {KICK.math.aabb} dest if specified - otherwise a new value is returned
+     * @static
      */
     aabb.merge = function(aabb,aabb2,dest){
         if (!dest){
-            dest = new Float32Array(6);
+            dest = aabb;
         }
         dest[0] = min(aabb[0],aabb2[0]);
         dest[1] = min(aabb[1],aabb2[1]);
@@ -5716,6 +5856,7 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.aabb} aabb
      * @param {KICK.math.vec3} vec3Point
      * @return {KICK.math.aabb} aabb (same object as input)
+     * @static
      */
     aabb.addPoint = function(aabb,vec3Point){
         aabb[0] = min(aabb[0],vec3Point[0]);
@@ -5732,17 +5873,209 @@ KICK.namespace = function (ns_string) {
      * @param {KICK.math.aabb} aabb
      * @param {KICK.math.vec3} centerVec3 Optional
      * @return {KICK.math.vec3} Center of aabb, (centerVec3 if specified)
+     * @static
      */
     aabb.center = function(aabb,centerVec3){
         if (!centerVec3){
             centerVec3 = vec3.create();
         }
-        centerVec3[0] = aabb[3]-aabb[0];
-        centerVec3[1] = aabb[4]-aabb[1];
-        centerVec3[2] = aabb[5]-aabb[2];
+        centerVec3[0] = (aabb[0]+aabb[3])*0.5;
+        centerVec3[1] = (aabb[1]+aabb[4])*0.5;
+        centerVec3[2] = (aabb[2]+aabb[5])*0.5;
 
         return centerVec3;
     };
+
+    /**
+     * @method halfVector
+     * @param {KICK.math.aabb} aabb
+     * @param {KICK.math.vec3} halfVec3 Optional
+     * @return {KICK.math.vec3} Halfvector of aabb, (halfVec3 if specified)
+     * @static
+     */
+    aabb.halfVec3 = function(aabb,halfVec3){
+        if (!halfVec3){
+            halfVec3 = vec3.create();
+        }
+        halfVec3[0] = (aabb[3]-aabb[0])*0.5;
+        halfVec3[1] = (aabb[4]-aabb[1])*0.5;
+        halfVec3[2] = (aabb[5]-aabb[2])*0.5;
+
+        return halfVec3;
+    };
+
+    /**
+     * Diagonal from min to max
+     * @method diagonal
+     * @param {KICK.math.aabb} aabb
+     * @param {KICK.math.vec3} diagonalVec3 optional
+     * @return {KICK.math.vec3}
+     * @static
+     */
+    aabb.diagonal = function(aabb,diagonalVec3){
+        if (!diagonalVec3){
+            diagonalVec3 = vec3.create();
+        }
+        diagonalVec3[0] = aabb[3]-aabb[0];
+        diagonalVec3[1] = aabb[4]-aabb[1];
+        diagonalVec3[2] = aabb[5]-aabb[2];
+        return diagonalVec3;
+    };
+
+    /**
+     * @method str
+     * @param {KICK.math.aabb} aabb
+     * @static
+     */
+    aabb.str = function(aabb){
+        return "{("+
+            aabb[0]+","+
+            aabb[1]+","+
+            aabb[2]+"),("+
+            aabb[3]+","+
+            aabb[4]+","+
+            aabb[5]+")}";
+    };
+
+    /**
+     * Frustum represented as 6 line equations (a*x+b*y+c*z+d=0 , where [a,b,c] is the normal of the plane).
+     * Note the normals of the frustum points inwards. The order of the planes are left, right, top, bottom, near, far
+     * The implementation is based on
+     * "Fast Extraction of Viewing Frustum Planes from the WorldView-Projection Matrix" by Gil Grib and Klaus Hartmann
+     * http://www.cs.otago.ac.nz/postgrads/alexis/planeExtraction.pdf
+     * @class frustum
+     * @namespace KICK.math
+     */
+    math.frustum = frustum;
+
+    /**
+     * @method extractPlanes
+     * @param {KICK.math.mat4} modelViewMatrix
+     * @param {Boolean} normalize normalize plane normal
+     * @param {Array[24]} dest
+     * @return {Array[24]} 6 plane equations
+     * @static
+     */
+    frustum.extractPlanes = function(modelViewMatrix, normalize, dest){
+        if (!dest){
+            dest = new Float32Array(6*4);
+        }
+        var   _11 = modelViewMatrix[0], _21 = modelViewMatrix[1], _31 = modelViewMatrix[2], _41 = modelViewMatrix[3];
+        var   _12 = modelViewMatrix[4], _22 = modelViewMatrix[5], _32 = modelViewMatrix[6], _42 = modelViewMatrix[7];
+        var   _13 = modelViewMatrix[8], _23 = modelViewMatrix[9], _33 = modelViewMatrix[10], _43 = modelViewMatrix[11];
+        var   _14 = modelViewMatrix[12], _24 = modelViewMatrix[13], _34 = modelViewMatrix[14], _44 = modelViewMatrix[15];
+        // Left clipping plane
+        dest[0] = _41 + _11;
+        dest[1] = _42 + _12;
+        dest[2] = _43 + _13;
+        dest[3] = _44 + _14;
+        // Right clipping plane
+        dest[4] = _41 - _11;
+        dest[4+1] = _42 - _12;
+        dest[4+2] = _43 - _13;
+        dest[4+3] = _44 - _14;
+        // Top clipping plane
+        dest[2*4] = _41 - _21;
+        dest[2*4+1] = _42 - _22;
+        dest[2*4+2] = _43 - _23;
+        dest[2*4+3] = _44 - _24;
+        // Bottom clipping plane
+        dest[3*4] = _41 + _21;
+        dest[3*4+1] = _42 + _22;
+        dest[3*4+2] = _43 + _23;
+        dest[3*4+3] = _44 + _24;
+        // Near clipping plane
+        dest[4*4] = _41 + _31;
+        dest[4*4+1] = _42 + _32;
+        dest[4*4+2] = _43 + _33;
+        dest[4*4+3] = _44 + _34;
+        // Far clipping plane
+        dest[5*4] = _41 - _31;
+        dest[5*4+1] = _42 - _32;
+        dest[5*4+2] = _43 - _33;
+        dest[5*4+3] = _44 - _34;
+        if (normalize){
+            for (var i=0;i<6;i++){
+                var x = dest[i*4+0],
+                    y = dest[i*4+1],
+                    z = dest[i*4+2],
+                    length = Math.sqrt(x*x+y*y+z*z),
+                    lengthRecip = 1 / length;
+                dest[i*4+0] *= lengthRecip;
+                dest[i*4+1] *= lengthRecip;
+                dest[i*4+2] *= lengthRecip;
+                dest[i*4+3] *= lengthRecip;
+            }
+        }
+        return dest;
+    };
+
+    /**
+     * Value = 0
+     * @property OUTSIDE
+     * @type Number
+     * @static
+     */
+    frustum.OUTSIDE = 0;
+    /**
+     * Value = 1
+     * @property INSIDE
+     * @type Number
+     * @static
+     */
+    frustum.INSIDE = 1;
+    /**
+     * Value = 2
+     * @property INTERSECTING
+     * @type Number
+     * @static
+     */
+    frustum.INTERSECTING = 2;
+
+    /**
+     * Based on [Akenine-Moller's Real-Time Rendering 3rd Ed] chapter 16.14.3
+     * @method intersectAabb
+     * @param {KICK.math.frustum} frustumPlanes
+     * @param {KICK.math.aabb} aabbIn
+     * @return {Number} frustum.OUTSIDE = outside(0), frustum.INSIDE = inside(1), frustum.INTERSECTING = intersecting(2)
+     * @static
+     */
+    frustum.intersectAabb = (function(){
+            var c = vec3.create();
+            var h = vec3.create();
+            return function(frustumPlanes,aabbIn){
+                    var result = frustum.INSIDE,
+                        testResult,
+                        c = aabb.center(aabbIn,c),
+                        h = aabb.halfVec3(aabbIn,h),
+                        // based on [Akenine-Moller's Real-Time Rendering 3rd Ed] chapter 16.10.1
+                        planeAabbIntersect = function(planeIndex){
+                            var offset = planeIndex*4,
+                                nx = frustumPlanes[offset],
+                                ny = frustumPlanes[offset+1],
+                                nz = frustumPlanes[offset+2],
+                                d = frustumPlanes[offset+3],
+                                e = h[0]*Math.abs(nx)+h[1]*Math.abs(ny)+h[2]*Math.abs(nz),
+                                s = c[0]*nx + c[1]*ny + c[2]*nz + d;
+                            // Note that the following is reverse than in [Akenine-Moller's Real-Time Rendering 3rd Ed],
+                            // since we define outside as the negative halfspace
+                            if (s-e > 0) return frustum.INSIDE;
+                            if (s+e < 0) return frustum.OUTSIDE;
+                            return frustum.INTERSECTING;
+                        };
+                    for (var i=0;i<6;i++){
+                        testResult = planeAabbIntersect(i);
+                        if (testResult === frustum.OUTSIDE){
+                            return testResult;
+                        } else if (testResult === frustum.INTERSECTING) {
+                            result = frustum.INTERSECTING;
+                        }
+                    }
+                    return result;
+                };
+        })();
+
+
 })();/*!
  * New BSD License
  *
@@ -6307,6 +6640,31 @@ KICK.namespace = function (ns_string) {
     };
 
     /**
+     * Class used for tracking initialization of resources (such as loading, creating, etc.)
+     * @class ResourceTracker
+     * @param {KICK.core.Project} project
+     */
+    core.ResourceTracker = function(project){
+        var thisObj = this;
+        /**
+         * Calls project.removeResourceTracker
+         * @method resourceReady
+         */
+        this.resourceReady = function(){
+            project.removeResourceTracker(thisObj);
+        };
+
+        /**
+         * Calls project.removeResourceTracker
+         * @method resourceFailed
+         */
+        this.resourceFailed = function(){
+            project.removeResourceTracker(thisObj);
+        }
+    };
+
+
+    /**
      * A project asset is an object that can be serialized into a project and restored at a later state.<br>
      * The class only exist in documentation and is used to describe the behavior any project asset must implement.<br>
      * The constructor must take the following two parameters: KICK.core.Engine engine, {Object} config<br>
@@ -6331,6 +6689,13 @@ KICK.namespace = function (ns_string) {
             resourceCache = {},
             thisObj = this,
             _maxUID = 0,
+            resourceTrackers = [],
+            resourceTrackerListeners = [],
+            notifyTrackedResourcesChanged = function(){
+                for (var i=0;i<resourceTrackerListeners.length;i++){
+                    resourceTrackerListeners[i].resourceTrackerChanged();
+                }
+            },
             refreshResourceDescriptor = function(uid,filter){
                 if (resourceDescriptorsByUID[uid] instanceof core.ResourceDescriptor){
                     var liveObject = resourceCache[uid];
@@ -6527,8 +6892,7 @@ KICK.namespace = function (ns_string) {
                     if (oXHR.status === 200) {
                         var value = JSON.parse(oXHR.responseText);
                         try{
-                            thisObj.loadProject(value);
-                            onSuccess();
+                            thisObj.loadProject(value,onSuccess,onError);
                         } catch(e) {
                             debugger;
                             onError(e);
@@ -6542,11 +6906,35 @@ KICK.namespace = function (ns_string) {
         };
 
         /**
+         * @method createResourceTracker
+         * @return {KICK.core.ResourceTracker}
+         */
+        this.createResourceTracker = function(){
+            var newResourceTracker = new KICK.core.ResourceTracker(thisObj);
+            resourceTrackers.push(newResourceTracker);
+            notifyTrackedResourcesChanged();
+            return newResourceTracker;
+        };
+
+        /**
+         * @method removeResourceTracker
+         * @param {KICK.core.ResourceTracker} resourceTracker
+         */
+        this.removeResourceTracker = function(resourceTracker){
+            var removed = KICK.core.Util.removeElementFromArray(resourceTrackers, resourceTracker);
+            if (removed){
+                notifyTrackedResourcesChanged();
+            }
+        };
+
+        /**
          * Load a project of the form {maxUID:number,resourceDescriptors:[KICK.core.ResourceDescriptor],activeScene:number}
          * @method loadProject
          * @param {object} config
+         * @param {Function} onSuccess
+         * @param {Function} onFail
          */
-        this.loadProject = function(config){
+        this.loadProject = function(config, onSuccess, onError){
             if (_maxUID>0){
                 thisObj.closeProject();
             }
@@ -6558,6 +6946,16 @@ KICK.namespace = function (ns_string) {
             }
 
             // preload all resources
+            for (var uid in resourceDescriptorsByUID){
+                if (resourceDescriptorsByUID.hasOwnProperty(uid)){
+                    try{
+                        thisObj.load(uid);
+                    }catch(e){
+                        onError ? onError(e) : KICK.core.Util.warn(e);
+                    }
+                }
+            }
+
             var onComplete = function(){
                 _maxUID = config.maxUID || 0; // reset maxUID
                 if (config.activeScene){
@@ -6565,8 +6963,20 @@ KICK.namespace = function (ns_string) {
                 } else {
                     engine.activeScene = null;
                 }
+                if (onSuccess){
+                    onSuccess();
+                }
             };
-            onComplete();
+            var resourceLoadedListener = {
+                resourceTrackerChanged : function(){
+                    if (resourceTrackers.length==0){
+                        KICK.core.Util.removeElementFromArray(resourceTrackerListeners,resourceLoadedListener);
+                        onComplete();
+                    }
+                }
+            };
+            resourceTrackerListeners.push(resourceLoadedListener);
+            notifyTrackedResourcesChanged();
         };
 
         /**
@@ -7071,12 +7481,33 @@ KICK.namespace = function (ns_string) {
          * @type Boolean
          */
         this.shadows = config.shadows || false;
+        /**
+         * The maximum distance shadows are displayed from camera (the smaller the better quality of shadow map).
+         * Default value is 20
+         * @property shadowDistance
+         * @type Number
+         */
+        this.shadowDistance = config.shadowDistance || 20;
+        /**
+         * A multiplier that moves the near plane of the shadow map. Default is 2.0
+         * @property shadowNearMultiplier
+         * @type Number
+         */
+        this.shadowNearMultiplier = config.shadowNearMultiplier || 2.0;
+        /**
+         * Shadow map resolution (relative to max texture size). Default is 1.0.
+         * Allowed values are 1/2, 1/4, 1/8, etc.
+         * @property shadowMapQuality
+         * @type Number
+         */
+        this.shadowMapQuality = config.shadowMapQuality || 1.0;
+
          /**
          * Maximum number of lights in scene. Default value is 1
          * @property maxNumerOfLights
          * @type Number
          */
-        this.maxNumerOfLights = config.maxNumerOfLights ? config.maxNumerOfLights : 1;
+        this.maxNumerOfLights = typeof(config.maxNumerOfLights) === 'number' ? config.maxNumerOfLights : 1;
 
         /**
          * Checks for WebGL errors after each webgl function is called.
@@ -7108,7 +7539,7 @@ KICK.namespace = function (ns_string) {
          * @property alpha
          * @type Boolean
          */
-        this.alpha = typeof config.alpha === 'boolean' ? config.alpha : true;
+        this.alpha = typeof(config.alpha) === 'boolean' ? config.alpha : true;
 
         /**
          * WebGL spec: Default: true. If the value is true, the drawing buffer has a depth buffer of at least 16 bits.
@@ -7116,7 +7547,7 @@ KICK.namespace = function (ns_string) {
          * @property alpha
          * @type Boolean
          */
-        this.depth = typeof config.depth === 'boolean' ? config.depth : true;
+        this.depth = typeof(config.depth) === 'boolean' ? config.depth : true;
 
         /**
          * WebGL spec: Default: false. If the value is true, the drawing buffer has a stencil buffer of at least 8 bits.
@@ -7124,7 +7555,7 @@ KICK.namespace = function (ns_string) {
          * @property stencil
          * @type Boolean
          */
-        this.stencil = typeof config.stencil === 'boolean' ? config.stencil : false;
+        this.stencil = typeof(config.stencil) === 'boolean' ? config.stencil : false;
 
         /**
          * WebGL spec: Default: true. If the value is true and the implementation supports antialiasing the drawing
@@ -7133,7 +7564,7 @@ KICK.namespace = function (ns_string) {
          * @property antialias
          * @type Boolean
          */
-        this.antialias = typeof config.antialias === 'boolean' ? config.antialias : true;
+        this.antialias = typeof(config.antialias) === 'boolean' ? config.antialias : true;
 
         /**
          * WebGL spec: Default: true. If the value is true the page compositor will assume the drawing buffer contains
@@ -7143,7 +7574,7 @@ KICK.namespace = function (ns_string) {
          * @property premultipliedAlpha
          * @type Boolean
          */
-        this.premultipliedAlpha = typeof config.premultipliedAlpha === 'boolean' ? config.premultipliedAlpha : true;
+        this.premultipliedAlpha = typeof(config.premultipliedAlpha) === 'boolean' ? config.premultipliedAlpha : true;
 
         /**
          * Polling of canvas resize. Default is 0 (meaning not polling)
@@ -7739,6 +8170,11 @@ KICK.namespace = function (ns_string) {
         getJSONReference: function(engine,object){
             if (object == null){
                 return null;
+            }
+            if (DEBUG){
+                if (!engine instanceof KICK.core.Engine){
+                    KICK.core.Util.fail("getJSONReference - engine not defined");
+                }
             }
             var isGameObject = object instanceof KICK.scene.GameObject;
             var isComponent = !isGameObject && object.gameObject instanceof KICK.scene.GameObject;
@@ -9673,6 +10109,8 @@ KICK.namespace = function (ns_string) {
         quat4 = KICK.namespace("KICK.math.quat4"),
         vec4 = KICK.namespace("KICK.math.vec4"),
         mat4 = KICK.namespace("KICK.math.mat4"),
+        aabb = KICK.namespace("KICK.math.aabb"),
+        frustum = KICK.namespace("KICK.math.frustum"),
         constants = KICK.core.Constants,
         DEBUG = true,
         ASSERT = true,
@@ -9975,6 +10413,13 @@ KICK.namespace = function (ns_string) {
      */
 
     /**
+     * Defines the axis aligned bounding box used for view frustum culling
+     * May be undefined or null.
+     * @property aabb
+     * @type KICK.math.aabb
+     */
+
+    /**
      * Default value is 1000<br>
      * &lt; 2000 default geometry<br>
      * 2000 - 2999 transparent geometry (sorted back-to-front when rendered)<br>
@@ -10215,6 +10660,11 @@ KICK.namespace = function (ns_string) {
                     if (newParent === this) {
                         KICK.core.Util.fail('Cannot assign parent to self');
                     }
+                    if (ASSERT){
+                        if (typeof newParent === 'undefined'){
+                            fail("Cannot set newParent to undefined - should be null");
+                        }
+                    }
                     if (newParent !== parentTransform){
                         if (newParent === null){
                             parentTransform = null;
@@ -10306,6 +10756,11 @@ KICK.namespace = function (ns_string) {
          */
         this.toJSON = function(){
             var typedArrayToArray = KICK.core.Util.typedArrayToArray;
+            if (ASSERT){
+                if (!thisObj.gameObject || !thisObj.gameObject.engine){
+                    fail("Cannot serialize a Transform object that has no reference to gameObject/engine");
+                }
+            }
             return {
                 type:"KICK.scene.Transform",
                 uid: gameObject.engine.getUID(thisObj),
@@ -10313,7 +10768,7 @@ KICK.namespace = function (ns_string) {
                     localPosition: typedArrayToArray(localPosition),
                     localRotation: typedArrayToArray(localRotationQuat),
                     localScale: typedArrayToArray(localScale),
-                    parent: parentTransform ? KICK.core.Util.getJSONReference(parentTransform): null // todo
+                    parent: parentTransform ? KICK.core.Util.getJSONReference(thisObj.gameObject.engine,parentTransform): null
                 }
             };
         };
@@ -10857,7 +11312,6 @@ KICK.namespace = function (ns_string) {
             _currentClearFlags,
             _cameraIndex = 1,
             _layerMask = 0xffffffff,
-            _renderer = new KICK.renderer.ForwardRenderer(),
             _shadowmapShader,
             _scene,
             pickingQueue = null,
@@ -10867,18 +11321,26 @@ KICK.namespace = function (ns_string) {
             projectionMatrix = mat4.create(),
             viewMatrix = mat4.create(),
             viewProjectionMatrix = mat4.create(),
-            lightViewProjectionMatrix = mat4.create(),
+            lightMatrix = mat4.create(),
             engineUniforms = {
                     viewMatrix: viewMatrix,
                     projectionMatrix: projectionMatrix,
                     viewProjectionMatrix:viewProjectionMatrix,
-                    lightViewProjectionMatrix:lightViewProjectionMatrix
+                    lightMatrix:lightMatrix
                 },
             renderableComponentsBackGroundAndGeometry = [],
             renderableComponentsTransparent = [],
             renderableComponentsOverlay = [],
             renderableComponentsArray = [renderableComponentsBackGroundAndGeometry,renderableComponentsTransparent,renderableComponentsOverlay],
             _normalizedViewportRect = vec4.create([0,0,1,1]),
+            offsetMatrix = mat4.create([
+                0.5,0  ,0  ,0,
+                0  ,0.5,0  ,0,
+                0  ,0  ,0.5,0,
+                0.5,0.5,0.5,1
+            ]),
+            shadowLightProjection,
+            shadowLightOffsetFromCamera,
             isNumber = function (o) {
                 return typeof (o) === "number";
             },
@@ -11003,12 +11465,35 @@ KICK.namespace = function (ns_string) {
              * @param shader
              * @private
              */
-            renderSceneObjects = function(sceneLightObj,shader){
-                engineUniforms.sceneLights=sceneLightObj;
-                _renderer.render(renderableComponentsBackGroundAndGeometry,engineUniforms,shader);
-                _renderer.render(renderableComponentsTransparent,engineUniforms,shader);
-                _renderer.render(renderableComponentsOverlay,engineUniforms,shader);
-            },
+            renderSceneObjects = (function(){
+                var aabbWorldSpace = KICK.math.aabb.create(),
+                    frustumPlanes = new Float32Array(24);
+                return function(sceneLightObj,shader){
+                    var render = function(renderableComponents){
+                        var length = renderableComponents.length;
+                        for (var j=0;j<length;j++){
+                            var renderableComponent = renderableComponents[j];
+                            if (!cullByViewFrustum(renderableComponent)){
+                                renderableComponent.render(engineUniforms,shader);
+                            }
+                        }
+                    },
+                        cullByViewFrustum = function(component){
+                            var componentAabb = component.aabb;
+                            if (componentAabb){
+                                aabb.transform(componentAabb,component.gameObject.transform.getGlobalMatrix(),aabbWorldSpace);
+                                return frustum.intersectAabb(frustumPlanes,aabbWorldSpace) === frustum.OUTSIDE;
+                            }
+                            return false;
+                        };
+                    // update frustum planes
+                    frustum.extractPlanes(engineUniforms.viewProjectionMatrix,false,frustumPlanes);
+                    engineUniforms.sceneLights=sceneLightObj;
+                    render(renderableComponentsBackGroundAndGeometry);
+                    render(renderableComponentsTransparent);
+                    render(renderableComponentsOverlay);
+                };
+            })(),
             renderShadowMap = function(sceneLightObj){
                 var directionalLight = sceneLightObj.directionalLight,
                     directionalLightTransform = directionalLight.gameObject.transform,
@@ -11019,26 +11504,34 @@ KICK.namespace = function (ns_string) {
                 setupViewport(0,0,renderTextureWidth,renderTextureHeight);
 
                 shadowRenderTexture.bind();
-                setupClearColor([0,0,0,0]);
+                setupClearColor([1,1,1,1]);
                 gl.clear(16384 | 256);
 
-                mat4.ortho(-5, 5, -5, 5, // todo replace with fitting
-                    -10, 10, projectionMatrix);
+                // fitting:
+                // Using a sphere with the center in front of the camera (based on 0.5 * engine.config.shadowDistance)
+                // The actual light volume is a bit larget than the sphere (to include the corners).
+                // The near plane of the light volume is extended by the engine.config.shadowNearMultiplier
+                // Note that this is a very basic fitting algorithm with rooms for improvement
+                mat4.set(shadowLightProjection, projectionMatrix)
 
-//                var globalMatrixInv = quat4.toMat4(quat4.conjugate(directionalLightTransform.rotation,quat4.create())); // // todo replace with fitting
+                // find the position of the light 'center' in world space
+                var transformedOffsetFromCamera =quat4.multiplyVec3(transform.rotation,[0,0,-shadowLightOffsetFromCamera]);
+                var cameraPosition = vec3.add(transformedOffsetFromCamera,transform.position);
+                // adjust to reduce flicker when rotating camera
+                cameraPosition[0] = Math.round(cameraPosition[0]);
+                cameraPosition[1] = Math.round(cameraPosition[1]);
+                cameraPosition[2] = Math.round(cameraPosition[2]);
 
-                var globalMatrixInv = directionalLightTransform.getGlobalTRSInverse(); // // todo replace with fitting
-                mat4.set(globalMatrixInv, viewMatrix);
+                mat4.setTRSInverse(cameraPosition,directionalLightTransform.localRotation, [1,1,1],viewMatrix);
 
                 mat4.multiply(projectionMatrix,viewMatrix,viewProjectionMatrix);
+
+                // update light matrix (will be used when scene is rendering with shadow map shader)
+                mat4.multiply(mat4.multiply(offsetMatrix,projectionMatrix,lightMatrix),
+                    viewMatrix,lightMatrix);
+
                 renderSceneObjects(sceneLightObj,_shadowmapShader);
 
-                mat4.set(viewProjectionMatrix,lightViewProjectionMatrix);
-
-                // debug
-                directionalLight.shadowRenderTextureDebug.bind();
-                gl.clear(16384 | 256);
-                renderSceneObjects(sceneLightObj);
             };
 
         /**
@@ -11086,13 +11579,21 @@ KICK.namespace = function (ns_string) {
 
             if (engine.config.shadows){
                 _shadowmapShader = engine.project.load(engine.project.ENGINE_SHADER___SHADOWMAP);
+
+                // calculate the shadow projection based on engine.config parameters
+                shadowLightOffsetFromCamera = engine.config.shadowDistance*0.5; // first find radius
+                var  shadowRadius = shadowLightOffsetFromCamera*1.55377397403004; // sqrt(2+sqrt(2))
+                var nearPlanePosition = -shadowRadius*engine.config.shadowNearMultiplier;
+                shadowLightProjection = mat4.create();
+                mat4.ortho(-shadowRadius, shadowRadius, -shadowRadius, shadowRadius,
+                    nearPlanePosition, shadowRadius, shadowLightProjection);
+
             } else if (_renderShadow){
                 _renderShadow = false; // disable render shadow
                 if (ASSERT){
                     fail("engine.config.shadows must be enabled for shadows");
                 }
             }
-
         };
 
         /**
@@ -11250,24 +11751,6 @@ KICK.namespace = function (ns_string) {
                         }
                     } else {
                         _renderShadow = newValue;
-                    }
-                }
-            },
-            /**
-             * @property renderer
-             * @type KICK.renderer.Renderer
-             */
-            renderer:{
-                get:function(){ return _renderer;},
-                set:function(newValue){
-                    if (typeof newValue === "string"){
-                        var constructor = KICK.namespace(newValue);
-                        newValue = new constructor();
-                    }
-                    if (newValue && typeof newValue.render === "function"){
-                        _renderer = newValue;
-                    } else if (true){
-                        KICK.core.Util.fail("Camera.renderer should be a KICK.renderer.Renderer (must implement render function)");
                     }
                 }
             },
@@ -11526,7 +12009,6 @@ KICK.namespace = function (ns_string) {
                 config:{
                     enabled: _enabled,
                     renderShadow: _renderShadow,
-                    renderer:_renderer.name,
                     layerMask:_layerMask,
                     renderTarget:KICK.core.Util.getJSONReference(engine,_renderTarget),
                     fieldOfView:_fieldOfView,
@@ -11618,6 +12100,12 @@ KICK.namespace = function (ns_string) {
         };
 
         Object.defineProperties(this,{
+            // inherit documentation from component
+            aabb:{
+                get:function(){
+                    return _mesh.aabb;
+                }
+            },
             // inherit documentation from component
             renderOrder:{
                 get:function(){
@@ -11740,8 +12228,6 @@ KICK.namespace = function (ns_string) {
             _shadowBias = 0.05,
             _shadowTexture = null,
             _shadowRenderTexture = null,
-            _shadowTextureDebug = null,
-            _shadowRenderTextureDebug = null,
             attenuation = vec3.create([1,0,0]),
             intensity = 1,
             transform,
@@ -11762,23 +12248,12 @@ KICK.namespace = function (ns_string) {
                             flipY: false,
                             generateMipmaps:false
                         });
-                        _shadowTexture.setImageData(512,512,0,5121,null,"");
+                        var maxTextureSize = Math.min(engine.gl.getParameter(34024),
+                            engine.gl.getParameter(3379));
+                        maxTextureSize = Math.min(maxTextureSize,4096)*engine.config.shadowMapQuality;
+                        _shadowTexture.setImageData(maxTextureSize,maxTextureSize,0,5121,null,"");
                         _shadowRenderTexture = new KICK.texture.RenderTexture (engine,{
                             colorTexture:_shadowTexture
-                        });
-
-                        // debug info
-                        _shadowTextureDebug = new KICK.texture.Texture(engine,{
-                            minFilter:9728,
-                            magFilter:9728,
-                            wrapS:33071,
-                            wrapT:33071,
-                            flipY: false,
-                            generateMipmaps:false
-                        });
-                        _shadowTextureDebug.setImageData(512,512,0,5121,null,"");
-                        _shadowRenderTextureDebug = new KICK.texture.RenderTexture (engine,{
-                            colorTexture:_shadowTextureDebug
                         });
                     }
                 } else if (_shadowRenderTexture){
@@ -11789,16 +12264,6 @@ KICK.namespace = function (ns_string) {
                 }
             };
         Object.defineProperties(this,{
-            shadowRenderTextureDebug:{
-                get:function(){
-                    return _shadowRenderTextureDebug;
-                }
-            },
-            shadowTextureDebug:{
-                get:function(){
-                    return _shadowTextureDebug;
-                }
-            },
             /**
              * Short for lightObj.gameObject.transform
              * @property transform
@@ -12277,8 +12742,8 @@ KICK.namespace = function (ns_string) {
         var gl = engine.gl,
             _config = config || {},
             framebuffer = gl.createFramebuffer(),
-            colorTexture = _config.colorTexture,
-            _dimension = config.dimension,
+            colorTexture = null,
+            _dimension = vec2.create(),
             renderBuffers = [],
             thisObj = this,
             _name = "",
@@ -12341,13 +12806,18 @@ KICK.namespace = function (ns_string) {
 
         Object.defineProperties(this,{
             /**
-             * Read only. Computed the the active texture(s)
              * @property dimension
              * @type KICK.math.vec2
              */
             dimension:{
                 get:function(){
                     return _dimension;
+                },
+                set:function(newValue){
+                    _dimension = newValue;
+                    if (_dimension){
+                        initFBO();
+                    }
                 }
             },
             /**
@@ -12356,7 +12826,12 @@ KICK.namespace = function (ns_string) {
              */
             colorTexture:{
                 get: function(){ return colorTexture; },
-                set: function(newValue){ colorTexture = newValue; initFBO(); }
+                set: function(newValue){
+                    colorTexture = newValue;
+                    if (colorTexture){
+                        initFBO();
+                    }
+                }
             },
             /**
              * @property name
@@ -12392,7 +12867,8 @@ KICK.namespace = function (ns_string) {
         };
 
         (function init(){
-            initFBO();
+            // apply
+            applyConfig(thisObj, config);
             engine.project.registerObject(thisObj, "KICK.texture.RenderTexture");
         })();
     };
@@ -13233,106 +13709,6 @@ KICK.namespace = function (ns_string) {
 
 (function () {
     "use strict"; // force strict ECMAScript 5
-
-    var renderer = KICK.namespace("KICK.renderer"),
-        core = KICK.namespace("KICK.core"),
-        scene = KICK.namespace("KICK.scene"),
-        math = KICK.namespace("KICK.math");
-
-    /**
-     * Defines interface for render classes.
-     * @class Renderer
-     * @namespace KICK.renderer
-     * @constructor
-     */
-    /**
-     * @method
-     * @param renderableComponents
-     * @param engineUniforms
-     * @param overwriteShader
-     */
-    /**
-     * Name of the class
-     * @property name
-     * @type String
-     */
-
-    /**
-     * Does not render any components
-     * @class NullRenderer
-     * @namespace KICK.renderer
-     * @constructor
-     * @extends KICK.renderer.Renderer
-     */
-    renderer.NullRenderer = function () {};
-
-    renderer.NullRenderer.prototype.render = function (renderableComponents,engineUniforms,overwriteShader) {};
-
-    renderer.NullRenderer.prototype.name = "KICK.renderer.NullRenderer";
-    /**
-     * Forward renderer
-     * @class ForwardRenderer
-     * @namespace KICK.renderer
-     * @constructor
-     * @extends KICK.renderer.Renderer
-     */
-    renderer.ForwardRenderer = function () {
-        /**
-         *
-         * @param renderableComponents
-         * @param engineUniforms
-         * @param overwriteShader
-         */
-        this.render = function (renderableComponents,engineUniforms,overwriteShader) {
-            var length = renderableComponents.length;
-            for (var j=0;j<length;j++){
-                renderableComponents[j].render(engineUniforms,overwriteShader);
-            }
-        };
-
-        this.name = "KICK.renderer.ForwardRenderer";
-    };
-}());
-/*!
- * New BSD License
- *
- * Copyright (c) 2011, Morten Nobel-Joergensen, Kickstart Games ( http://www.kickstartgames.com/ )
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
- * following conditions are met:
- *
- * - Redistributions of source code must retain the above copyright notice, this list of conditions and the following
- * disclaimer.
- * - Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
- * disclaimer in the documentation and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-var KICK = KICK || {};
-KICK.namespace = function (ns_string) {
-    var parts = ns_string.split("."),
-        parent = window,
-        i;
-
-    for (i = 0; i < parts.length; i += 1) {
-        // create property if it doesn't exist
-        if (typeof parent[parts[i]] === "undefined") {
-            parent[parts[i]] = {};
-        }
-        parent = parent[parts[i]];
-    }
-    return parent;
-};
-
-(function () {
-    "use strict"; // force strict ECMAScript 5
     var material = KICK.namespace("KICK.material"),
         math = KICK.namespace("KICK.math"),
         mat3 = math.mat3,
@@ -13347,12 +13723,6 @@ KICK.namespace = function (ns_string) {
         tempMat4 = mat4.create(),
         tempMat3 = mat3.create(),
         tmpVec4 = vec4.create(),
-        offsetMatrix = mat4.create([
-            0.5,0  ,0  ,0.5,
-            0  ,0.5,0  ,0.5,
-            0  ,0  ,0.5,0.5,
-            0  ,0  ,0  ,1
-        ]),
         vec3Zero = math.vec3.create();
 
     /**
@@ -14273,9 +14643,8 @@ KICK.namespace = function (ns_string) {
                 currentTexture ++;
             }
             if (_lightMat){
-                globalTransform = globalTransform || transform.getGlobalMatrix();
-                var lightModelViewProjection = mat4.multiply(engineUniforms.lightViewProjectionMatrix,globalTransform,tempMat4);
-                gl.uniformMatrix4fv(_lightMat.location,false,mat4.multiply(offsetMatrix,lightModelViewProjection,tempMat4));
+                globalTransform = transform.getGlobalMatrix();
+                gl.uniformMatrix4fv(_lightMat.location,false,mat4.multiply(engineUniforms.lightMatrix,globalTransform,tempMat4));
             }
         }
     };
@@ -15309,6 +15678,20 @@ KICK.namespace = function (ns_string) {
                 node = node.nextElementSibling;
             }
         }
+        if (rotate90x){
+            // ideally it would be better to transform the geometry
+            // instead of introducing a new parent
+            var parent = scene.createGameObject({name:"Collada Parent"});
+            var parentTransform = parent.transform;
+            parentTransform.localRotationEuler = [-90,0,0];
+            for (i=0;i<allGameObjects.length;i++){
+                var goTransform = allGameObjects[i].transform;
+                if (!goTransform.parent){
+                    goTransform.parent = parentTransform;
+                }
+            }
+            allGameObjects.push(parent);
+        }
         return {mesh:allMeshes, gameObjects:allGameObjects, materials:allMaterials};
     };
 })();/*!
@@ -15463,6 +15846,7 @@ KICK.namespace = function (ns_string) {
                         }
                     }
                 }
+
                 meshData.vertex = meshDataVertices;
                 if (meshDataNormals.length){
                     meshData.normal = meshDataNormals;
@@ -15507,6 +15891,12 @@ KICK.namespace = function (ns_string) {
                 allGameObjects.push(gameObject);
                 triangles = [];
             };
+
+        var transformMatrix = mat4.identity(mat4.create());
+        if (rotate90x){
+            mat4.rotateX(transformMatrix,-90*0.01745329251994);
+        }
+
         for (var i=0;i<linesLength;i++){
             var line = trim(lines[i]);
             var tokenIndex = line.indexOf(' ');
@@ -15527,9 +15917,13 @@ KICK.namespace = function (ns_string) {
                     submeshes[submeshes.length] = triangles;
                 }
             } else if (token === "v"){
-                vertices.push(strAsArray(value));
+                var vertex = strAsArray(value);
+                mat4.multiplyVec3(transformMatrix,vertex);
+                vertices.push(vertex);
             } else if (token === "vn"){
-                normals.push(strAsArray(value));
+                var normal = strAsArray(value);
+                mat4.multiplyVec3Vector(transformMatrix,normal);
+                normals.push(normal);
             } else if (token === "vt"){
                 textureCoordinates.push(strAsArray(value));
             } else if (token === "f"){
@@ -15761,7 +16155,7 @@ KICK.namespace = function (ns_string) {
 
         this.getMeshData = function(url,meshDestination){
             var oReq = new XMLHttpRequest();
-
+            var resourceTracker = engine.project.createResourceTracker();
             function handler()
             {
                 if (oReq.readyState == 4 /* complete */) {
@@ -15770,11 +16164,14 @@ KICK.namespace = function (ns_string) {
                         var meshData = new KICK.mesh.MeshData();
                         if (meshData.deserialize(arrayBuffer)){
                             meshDestination.meshData = meshData;
+                            resourceTracker.resourceReady();
                         } else {
                             fail("Cannot deserialize meshdata "+url);
+                            resourceTracker.resourceFailed();
                         }
                     } else {
                         fail("Cannot load meshdata "+url+". Server responded "+oReq.status);
+                        resourceTracker.resourceFailed();
                     }
                 }
             }
@@ -15787,16 +16184,20 @@ KICK.namespace = function (ns_string) {
 
         this.getImageData = function(uri,textureDestination){
             var img = new Image();
+            var resourceTracker = engine.project.createResourceTracker();
             img.onload = function(){
                 try{
                     textureDestination.setImage(img,uri);
+                    resourceTracker.resourceReady();
                 } catch (e){
                     fail("Exception when loading image "+uri);
+                    resourceTracker.resourceFailed();
                 }
             };
             img.onerror = function(e){
                 fail(e);
                 fail("Exception when loading image "+uri);
+                resourceTracker.resourceFailed();
             };
             img.crossOrigin = "anonymous"; // Ask for a CORS image
             img.src = uri;
@@ -16091,12 +16492,17 @@ KICK.namespace = function (ns_string) {
                 var logoResource = "data:image/png;base64,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";
                 textureDestination.setTemporaryTexture();
                 var img = document.createElement("img");
+                var resourceTracker = engine.project.createResourceTracker();
                 img.onload = function(){
                     textureDestination.generateMipmaps = true;
                     textureDestination.internalFormat = 6407;
                     textureDestination.magFilter = 9729;
                     textureDestination.minFilter = 9987;
                     textureDestination.setImage(img,"kickjs://texture/logo/");
+                    resourceTracker.resourceReady();
+                };
+                img.onerror = function(){
+                    resourceTracker.resourceFailed();
                 };
                 img.src = logoResource;
                 return;

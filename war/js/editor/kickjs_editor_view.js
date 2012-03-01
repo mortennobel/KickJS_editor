@@ -325,19 +325,22 @@ var SceneEditorView = function(Y){
      * @method loadProject
      * @param {Object} projectConfig
      */
-    this.loadProject = function(projectConfig){
-        engine.project.loadProject(projectConfig);
-        editorScene = getEditorScene();
-        if (engine.activeScene && engine.activeScene.name.indexOf("__") !== 0){
-            engine.project.removeCacheReference(engine.activeScene.uid);
-        }
-        engine.activeScene = editorScene;
-        var projectSettingsName = "Project settings";
-        var projectSettingsType = "ProjectSettings";
-        var projectSettings = engine.project.loadByName(projectSettingsName, projectSettingsType);
-        if (!projectSettings){
-            new ProjectSettings(engine,{name:projectSettingsName});
-        }
+    this.loadProject = function(projectConfig, onSuccess){
+        engine.project.loadProject(projectConfig, function(){
+            editorScene = getEditorScene();
+            if (engine.activeScene && engine.activeScene.name.indexOf("__") !== 0){
+                engine.project.removeCacheReference(engine.activeScene.uid);
+            }
+            engine.activeScene = editorScene;
+            var projectSettingsName = "Project settings";
+            var projectSettingsType = "ProjectSettings";
+            var projectSettings = engine.project.loadByName(projectSettingsName, projectSettingsType);
+            if (!projectSettings){
+                new ProjectSettings(engine,{name:projectSettingsName});
+            }
+            onSuccess();
+        });
+
     };
 
     Object.defineProperties(this,{

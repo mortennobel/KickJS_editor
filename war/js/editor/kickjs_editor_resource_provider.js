@@ -37,17 +37,20 @@ KICKED.LocalStorageResourceProvider = function(engine){
         var urlContent = url.substring(thisObj.protocol.length).split("/"),
             projectName = urlContent[0],
             uid = parseInt(urlContent[1]);
+        var resourceTracker = engine.project.createResourceTracker();
         var onSuccess = function(res){
             var meshData = new KICK.mesh.MeshData();
             if (meshData.deserialize(res)){
                 meshDestination.meshData = meshData;
+                resourceTracker.resourceReady();
             } else {
                 console.log("Cannot deserialize mesh data "+url);
+                resourceTracker.resourceFailed();
             }
-            console.log(res);
         };
         var onError = function(res){
             console.log("Error",res);
+            resourceTracker.resourceFailed();
         };
         KICKED.localStorage.resource.load(projectName,uid,onSuccess,onError);
 
@@ -75,6 +78,7 @@ KICKED.LocalStorageResourceProvider = function(engine){
         var urlContent = url.substring(thisObj.protocol.length).split("/"),
             projectName = urlContent[0],
             uid = parseInt(urlContent[1]);
+        var resourceTracker = engine.project.createResourceTracker();
         var onSuccess = function(res){
             var bb = new BlobBuilder();
             bb.append(res);
@@ -86,15 +90,18 @@ KICKED.LocalStorageResourceProvider = function(engine){
             img.onload = function(e) {
                 textureDestination.setImage(img,url);
                 URL.revokeObjectURL(img.src); // Clean up
+                resourceTracker.resourceReady();
             };
             img.onerror = function(e){
                 console.log("error get image data");
                 console.log(e);
+                resourceTracker.resourceFailed();
             };
             img.src = URL.createObjectURL(blob);
         };
         var onError = function(res){
             console.log("Error",res);
+            resourceTracker.resourceFailed();
         };
         KICKED.localStorage.resource.load(projectName,uid,onSuccess,onError);
     };
