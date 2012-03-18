@@ -122,7 +122,7 @@ function ProjectBuild(Y,engine,panel){
                     canvasHeight:projectSettings.canvasHeight,
                     projectName: projectName
                 });
-            addTextResourceByURL("/js/kick-min-0.3.1.js"+reloadTS,"kick-min-0.3.1.js");
+            addTextResourceByURL("/js/kick-min-0.3.2.js"+reloadTS,"kick-min-0.3.2.js");
             addTextResourceByURL("/dist/initKickJS.handlebar"+reloadTS,"initKickJS.js",projectSettings);
             addTextResourceByURL("/dist/readme.html","readme.html");
             addBinaryResourceByURL("/dist/SimpleWebServer.jar","SimpleWebServer.jar");

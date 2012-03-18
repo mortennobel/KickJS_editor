@@ -1,5 +1,5 @@
 window.kickjsDefaultProject = {
-   "engineVersion": "0.3.1",
+   "engineVersion": "0.3.2",
    "maxUID": 28,
    "activeScene": 1,
    "resourceDescriptors": [
