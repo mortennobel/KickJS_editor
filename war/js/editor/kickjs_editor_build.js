@@ -101,7 +101,7 @@ function ProjectBuild(Y,engine,panel){
                 var resourceDescriptor = projectJson.resourceDescriptors[i];
                 var url = null;
                 if (resourceDescriptor.type === "KICK.mesh.Mesh"){
-                    url = resourceDescriptor.uid+".mesh";
+                    url = resourceDescriptor.uid+".kickjs";
                 }
                 else if (resourceDescriptor.type === "KICK.texture.Texture"){
                     url = resourceDescriptor.uid+".png";
